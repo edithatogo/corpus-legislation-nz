@@ -15,3 +15,4 @@
 - Required credential values are not present in the local environment.
 - The isolated repository has no GitHub remote, so `gh secret list` and secret/variable writes cannot resolve a target repository.
 - Base-repo cross-check did not locate an existing `NZ_LEGISLATION_API_KEY`: the likely base GitHub repo `edithatogo/nz-legislation` has no matching repo-level or environment-level secret/variable.
+- VUW Outlook search found PCO API announcement and acknowledgement threads but did not locate an issued key value.

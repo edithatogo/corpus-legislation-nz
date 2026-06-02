@@ -46,6 +46,12 @@ confirm all credentials and GitHub variables required for live corpus operations
   - `edithatogo/nz-legislation` repo secrets contain only `CODECOV_TOKEN` and `NPM_TOKEN`; no `NZ_LEGISLATION_API_KEY`.
   - `edithatogo/nz-legislation` repo variables contain only `ENABLE_AUTOMATED_NPM_PUBLISH`; no NZ legislation corpus variables.
   - `edithatogo/nz-legislation` environments are `github-pages`, `prerelease`, and `stable`; environment secrets and variables are empty.
+- VUW Outlook mailbox cross-check on 2026-06-02:
+  - Outlook Web search used authenticated VUW account `mordaudy@staff.vuw.ac.nz`.
+  - Found PCO announcement from `andrew.jacombs@pco.govt.nz`, subject `New Legislation API available now`, dated 2026-02-11.
+  - Found PCO acknowledgement thread, subject `API Key`, dated 2026-03-26.
+  - Searches for `NZ_LEGISLATION_API_KEY`, `API key legislation`, `X-Api-Key`, `api_key`, and `pco.govt.nz key` did not locate an issued API key value.
+  - The official API docs state authentication uses `api_key` or `X-Api-Key` and missing/invalid keys return `401`.
 - Zenodo production decision:
   - Use `zenodo-sandbox` for test drafts.
   - Use `zenodo-production` with required reviewers for production drafts/publication.
@@ -56,6 +62,7 @@ confirm all credentials and GitHub variables required for live corpus operations
 
 - Cannot confirm live NZ Legislation API access until `NZ_LEGISLATION_API_KEY` is supplied.
 - Base-repo checks did not locate an existing `NZ_LEGISLATION_API_KEY`.
+- VUW Outlook checks found API announcement and acknowledgement threads, but no issued key value.
 - Cannot confirm Hugging Face write access until `HF_TOKEN` and final `HF_REPO_ID` are supplied.
 - Cannot confirm Zenodo sandbox access until `ZENODO_TOKEN` is supplied.
 - Cannot store GitHub secrets or variables until a GitHub remote/repository is configured.
