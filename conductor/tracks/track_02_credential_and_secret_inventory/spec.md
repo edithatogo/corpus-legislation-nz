@@ -38,6 +38,14 @@ confirm all credentials and GitHub variables required for live corpus operations
 - Git repository:
   - Isolated local repository exists.
   - No GitHub remote is configured yet.
+- Base repository / GitHub cross-check on 2026-06-02:
+  - Parent Git root resolves to `C:/Users/60217257/OneDrive - Flinders`.
+  - Obvious local base env file found: `.env.example` only; the file is OneDrive offline and no usable local `.env` credential file was found in bounded scans.
+  - Documented default GitHub repo `edithatogo/nz-legislation-corpus-pipeline` is not resolvable by the authenticated GitHub account.
+  - Likely base GitHub repo `edithatogo/nz-legislation` is accessible.
+  - `edithatogo/nz-legislation` repo secrets contain only `CODECOV_TOKEN` and `NPM_TOKEN`; no `NZ_LEGISLATION_API_KEY`.
+  - `edithatogo/nz-legislation` repo variables contain only `ENABLE_AUTOMATED_NPM_PUBLISH`; no NZ legislation corpus variables.
+  - `edithatogo/nz-legislation` environments are `github-pages`, `prerelease`, and `stable`; environment secrets and variables are empty.
 - Zenodo production decision:
   - Use `zenodo-sandbox` for test drafts.
   - Use `zenodo-production` with required reviewers for production drafts/publication.
@@ -47,6 +55,7 @@ confirm all credentials and GitHub variables required for live corpus operations
 ## Blocked Items
 
 - Cannot confirm live NZ Legislation API access until `NZ_LEGISLATION_API_KEY` is supplied.
+- Base-repo checks did not locate an existing `NZ_LEGISLATION_API_KEY`.
 - Cannot confirm Hugging Face write access until `HF_TOKEN` and final `HF_REPO_ID` are supplied.
 - Cannot confirm Zenodo sandbox access until `ZENODO_TOKEN` is supplied.
 - Cannot store GitHub secrets or variables until a GitHub remote/repository is configured.
