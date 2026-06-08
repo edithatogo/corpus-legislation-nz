@@ -11,7 +11,7 @@ Run a pilot discovery first:
 ```bash
 uv run nzlc discover-work-ids \
   --search-terms "act,bill,regulation,order,notice" \
-  --legislation-status historical \
+  --legislation-status none \
   --legislation-types "act,bill,secondary_legislation,amendment_paper" \
   --max-pages 2 \
   --max-works 50 \
@@ -20,6 +20,10 @@ uv run nzlc discover-work-ids \
 ```
 
 The GitHub workflow `historical_work_id_discovery.yml` runs the same command and uploads the generated seed/provenance files as an Actions artifact.
+
+The live API rejected `legislation_status=historical` with HTTP 403 during the
+first pilot. Use `none` to omit the status filter while discovering which live
+status values and search filters are valid for the historical boundary.
 
 ## Phase 2: review and promote the seed
 

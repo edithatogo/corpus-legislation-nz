@@ -8,9 +8,9 @@ on:
         type: string
         default: "act,bill,regulation,order,notice"
       legislation_status:
-        description: "Status filter, usually historical for old-corpus discovery"
+        description: "Status filter; use none to omit while discovering valid historical boundaries"
         type: string
-        default: "historical"
+        default: "none"
       legislation_types:
         description: "Comma-separated legislation types"
         type: string
