@@ -7,7 +7,7 @@ Finish bootstrapping the NZ legislation corpus pipeline with minimum long-term m
 ## Immediate P0 tasks before creating the GitHub repo
 
 1. Run `scripts/pre_handoff_check.sh` from the repository root.
-2. Confirm `uv.lock` is committed and CI install steps use `uv sync --all-extras --frozen`.
+2. Confirm `uv.lock` is committed and CI install steps avoid optional heavyweight extras unless the workflow exercises them.
 3. Confirm the Hugging Face repository layout is root-based:
    - `parquet/`
    - `raw_xml/`

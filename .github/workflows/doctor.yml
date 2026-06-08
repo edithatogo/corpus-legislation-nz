@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -euo pipefail
-          uv sync --all-extras --frozen
+          uv sync --frozen
       - name: Check API and repository connectivity
         env:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}

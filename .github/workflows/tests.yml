@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -euo pipefail
-          uv sync --all-extras --frozen
+          uv sync --extra dev --frozen
       - name: Validate shell scripts
         run: |
           set -euo pipefail

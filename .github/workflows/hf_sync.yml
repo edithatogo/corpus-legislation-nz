@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -euo pipefail
-          uv sync --all-extras --frozen
+          uv sync --frozen
 
       - name: Doctor
         env:

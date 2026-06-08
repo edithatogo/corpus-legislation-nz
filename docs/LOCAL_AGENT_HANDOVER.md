@@ -11,7 +11,7 @@ This repo is ready for local-agent bootstrap once account-specific secrets and v
 1. Generate and commit a local lockfile:
 
    ```bash
-   uv sync --all-extras --frozen
+   uv sync --extra dev --frozen
    ```
 
 2. Run the offline smoke test:
@@ -56,7 +56,7 @@ The official NZ Legislation API is search-oriented. A search-term bootstrap is n
 
 ## Recommended local-agent tasks
 
-1. Run `uv sync --all-extras --frozen`, `uv run ruff check .`, `uv run pytest -q`, and `./scripts/first_run_local.sh`.
+1. Run `uv sync --extra dev --frozen`, `uv run ruff check .`, `uv run pytest -q`, and `./scripts/first_run_local.sh`.
 2. Create the Hugging Face dataset shell and verify root layout.
 3. Create the GitHub repo and configure secrets/variables.
 4. Manually run `Hugging Face live sync` with `max_works=5`.
