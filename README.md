@@ -70,6 +70,7 @@ HF_TOKEN='...' ./scripts/create_huggingface_dataset_repo.sh edithatogo/nz-legisl
 NZ_LEGISLATION_API_KEY
 HF_TOKEN
 ZENODO_TOKEN
+ZENODO_SANDBOX_TOKEN  # optional; use when sandbox and production Zenodo tokens differ
 ```
 
 ## Core repository variables

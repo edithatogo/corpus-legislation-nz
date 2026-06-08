@@ -13,6 +13,10 @@ Required for annual archive:
 - `ZENODO_TOKEN`
 - `ARCHIVE_CREATORS_JSON`
 
+Required for Zenodo sandbox proof if `ZENODO_TOKEN` is production-scoped:
+
+- `ZENODO_SANDBOX_TOKEN`
+
 Optional:
 
 - `ZENODO_DEPOSITION_ID`
