@@ -2,7 +2,7 @@
 
 Decision status: do not launch yet.
 
-Decision date: 2026-06-07.
+Decision date: 2026-06-08.
 
 ## Launch gate
 
@@ -11,9 +11,9 @@ Public launch requires every gate below to be satisfied or explicitly waived in 
 | Gate | Current status | Evidence required |
 | --- | --- | --- |
 | Tracks 01-14 done or explicitly waived | Blocked | Track status review showing no unresolved blockers, or dated waiver for each blocker. See issues #10-#14. |
-| Hugging Face live dataset exists | Blocked | Dataset URL, revision, manifest hash, and sample Parquet read. See issue #13. |
-| Dataset scope is accurate | Blocked | Track 04 source-discovery evidence or public partial-scope wording retained everywhere. See issue #11. |
-| First full or intentionally partial corpus uploaded | Blocked | Upload run URL, `manifests/latest_manifest.json`, and re-download/query proof. See issues #12 and #13. |
+| Hugging Face live dataset exists | Ready | Dataset URL: `https://huggingface.co/datasets/edithatogo/nz-legislation-corpus`; revision: `8d48d807c5c8da73f8ad164734245d9ea73046f3`; manifest hash: `134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2`; sample Parquet read passed. See issue #13. |
+| Dataset scope is accurate | Ready for intentional partial/API-discovery launch | No authoritative `seeds/work_ids.txt` exists and current public wording retains the partial/API-discovery boundary. See issue #11 and `docs/source_inventory_status.md`. |
+| First full or intentionally partial corpus uploaded | Ready for intentional partial/API-discovery launch | `hf_sync.yml` uploaded a six-record validated corpus. Current content hash: `da764d2dc63a86b6da00d573843abe33e27d73bc80254bef65ca837316a83ebc`; current record count: 6. See issues #12 and #13. |
 | GitHub scheduled sync enabled and passing | Blocked | `hf_sync.yml` run URL after first upload and scheduled-run confirmation. See issue #12. |
 | Zenodo sandbox archive passed | Blocked | Sandbox draft URL, archive filename, manifest, and checksum. See issue #14. |
 | Public README, dataset card, and citation files match actual coverage | Ready for current prelaunch state | README, dataset card, and citation text currently state coverage is not proven complete and avoid fixed DOI claims. Recheck after live corpus publication. |
@@ -54,7 +54,7 @@ Final reviewer:
 
 ## Current rationale
 
-Launching now would overstate operational readiness. The local code and documentation are close to launch-ready, and the GitHub repository now exists at `https://github.com/edithatogo/nz-legislation-corpus-pipeline`, but the external corpus publication path is not proven: required live secrets are missing, the Hugging Face dataset has not been verified, the full corpus has not been bootstrapped, scheduled sync has not run with credentials, and Zenodo sandbox archival has not passed.
+Launching now would still overstate operational readiness. The GitHub repository exists at `https://github.com/edithatogo/nz-legislation-corpus-pipeline`, and the Hugging Face dataset now exists with a verified intentionally partial/API-discovery corpus. Full coverage is not claimed. Launch remains blocked because the first scheduled sync proof has not completed and Zenodo sandbox archival has not passed.
 
 ## Tracking issues
 

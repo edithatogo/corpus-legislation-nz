@@ -1,12 +1,12 @@
 # Source inventory status
 
-Checked: 2026-06-07
+Checked: 2026-06-08
 
 ## Current source
 
 The official New Zealand Legislation API is the current source-of-truth intake path for this pipeline.
 
-Public documentation checked on 2026-06-07 describes the API as equivalent to the website search function and lists these endpoints:
+Public documentation checked on 2026-06-08 describes the API as equivalent to the website search function and lists these endpoints:
 
 - `/v0/works`: search for works.
 - `/v0/works/{work_id}/versions`: get all versions of a work.
@@ -23,6 +23,8 @@ The examples under `seeds/` are format examples only. They are not a complete in
 ## Coverage implication
 
 Until an official export, authoritative inventory, or fully reconciled seed list exists, the project must describe itself as an automated API-first corpus pipeline, not a proven complete New Zealand legislation corpus.
+
+For the current launch gate, the intended public boundary is therefore an intentionally partial/API-discovery dataset. The Hugging Face corpus can be used as live operational evidence, but it is not evidence of full New Zealand legislation coverage.
 
 ## Required next step
 

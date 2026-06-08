@@ -8,20 +8,20 @@ The New Zealand Legislation Corpus is an API-first pipeline and dataset for mach
 
 ## Coverage
 
-Coverage status at launch: to be filled from the final launch checklist.
+Coverage status at launch: intentionally partial/API-discovery based unless Track 04 later proves a complete authoritative inventory.
 
 Do not claim full New Zealand legislation coverage unless Track 04 has proven the discovery method against an authoritative inventory. If Track 04 is not proven, state the dataset is partial or API-discovery based and include the configured discovery boundary.
 
 Fields to fill:
 
 ```text
-Record count:
-Legislation types included:
-Statuses included:
-Discovery method:
-Known gaps:
-Manifest hash:
-Hugging Face revision:
+Record count: 6
+Legislation types included: act
+Statuses included: in_force, not_in_force
+Discovery method: API-first search/discovery workflow; no authoritative seed inventory yet
+Known gaps: full New Zealand legislation coverage is not proven; no authoritative seeds/work_ids.txt exists
+Manifest hash: 134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2
+Hugging Face revision: 8d48d807c5c8da73f8ad164734245d9ea73046f3
 ```
 
 ## Caveats
