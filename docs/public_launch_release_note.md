@@ -39,7 +39,7 @@ The intended operating model is:
 - daily or regular Hugging Face sync after the first verified upload;
 - weekly non-destructive service doctor checks;
 - monthly coverage/reconciliation review;
-- annual Zenodo archive workflow, sandbox first and production only after approval.
+- annual Zenodo archive workflow, production draft first and publication only after approval.
 
 ## Citation
 
@@ -53,4 +53,4 @@ For fixed-version academic citation, cite the annual Zenodo DOI snapshot once av
 
 ## Archive plan
 
-The live dataset is maintained on Hugging Face. Annual immutable snapshots are intended for Zenodo DOI-backed archival release after sandbox verification and production approval.
+The live dataset is maintained on Hugging Face. Annual immutable snapshots are intended for Zenodo DOI-backed archival release after production-draft verification and production approval.

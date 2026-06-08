@@ -12,9 +12,9 @@ on:
         required: false
         default: ""
       use_sandbox:
-        description: "Use Zenodo sandbox API for manual tests"
+        description: "Use Zenodo sandbox API for explicit manual tests"
         type: boolean
-        default: true
+        default: false
       publish:
         description: "Publish the Zenodo draft. Keep false until reviewed."
         type: boolean
@@ -31,7 +31,7 @@ jobs:
   archive:
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    # Scheduled runs create production Zenodo drafts; manual sandbox runs use the sandbox environment.
+    # Scheduled and default manual runs create production Zenodo drafts; explicit manual sandbox runs use the sandbox environment.
     # Publication still requires publish=true and should be protected by the zenodo-production environment.
     environment: ${{ (github.event_name != 'workflow_dispatch' || inputs.use_sandbox == false) && 'zenodo-production' || 'zenodo-sandbox' }}
     steps:

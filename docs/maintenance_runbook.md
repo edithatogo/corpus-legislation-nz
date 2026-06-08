@@ -24,12 +24,11 @@
 
 ## Annual Zenodo archive
 
-1. Run the annual workflow with `use_sandbox=true` and `publish=false`.
+1. Run the annual workflow with `use_sandbox=false` and `publish=false`.
 2. Verify archive checksums.
-3. Run production draft with `use_sandbox=false` and `publish=false`.
-4. Review the production draft on Zenodo.
-5. Re-run with `publish=true` only after approval through the `zenodo-production` environment.
-6. Store the published DOI in `CITATION.cff` and the Hugging Face dataset card.
+3. Review the production draft on Zenodo.
+4. Re-run with `publish=true` only after approval through the `zenodo-production` environment.
+5. Store the published DOI in `CITATION.cff` and the Hugging Face dataset card.
 
 ## Incident response
 
@@ -47,6 +46,6 @@
 
 ### Zenodo failures
 
-- Retry sandbox first.
+- Retry as a production draft with `publish=false` first.
 - Never delete a published record.
 - If a draft contains duplicate files, the uploader attempts to replace duplicate filenames before uploading.

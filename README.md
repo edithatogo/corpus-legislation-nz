@@ -158,10 +158,10 @@ For the public launch gate and release-note template, see `docs/public_launch_de
 
 ## Annual Zenodo archive
 
-Sandbox/draft first:
+Production draft first:
 
 ```bash
-export ZENODO_API_URL=https://sandbox.zenodo.org/api
+export ZENODO_API_URL=https://zenodo.org/api
 export ZENODO_TOKEN='...'
 export ARCHIVE_CREATORS_JSON='[{"name":"Your Name"}]'
 export ARCHIVE_LICENSE=cc-by-4.0
@@ -170,12 +170,12 @@ uv run nzlc archive --year 2026 --output-dir dist/archive
 uv run nzlc zenodo-upload --year 2026 --archive-dir dist/archive
 ```
 
-Production publication should use the GitHub workflow with `use_sandbox=false` and `publish=true`, after configuring required reviewers on the `zenodo-production` environment.
+Production publication should use the GitHub workflow with `use_sandbox=false` and `publish=true`, after reviewing a production draft and approving through the `zenodo-production` environment.
 
 ## Workflows
 
 - `hf_sync.yml`: scheduled/manual live corpus sync to Hugging Face.
-- `annual_zenodo_archive.yml`: annual sandbox/draft archive and optional production publish.
+- `annual_zenodo_archive.yml`: annual production draft archive and optional production publish.
 - `tests.yml`: unit tests, shell syntax checks, fixture sync, validation, and manifest generation.
 - `doctor.yml`: non-destructive weekly connectivity/config check.
 - `codeql.yml` and `scorecard.yml`: optional low-touch security/supply-chain checks.
@@ -191,7 +191,7 @@ Weekly or monthly:
 
 Annually:
 
-- Run a Zenodo sandbox archive.
+- Run a Zenodo production draft archive with `publish=false`.
 - Review metadata, licensing, and citation text.
 - Publish the production Zenodo snapshot only after approval.
 - Update DOI references in `CITATION.cff` and `DATASET_CARD.md`.
