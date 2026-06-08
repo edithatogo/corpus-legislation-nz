@@ -93,7 +93,7 @@ ZENODO_DEPOSITION_ID   # optional after first production Zenodo record
 ## Local install
 
 ```bash
-uv sync --all-extras --frozen
+uv sync --extra dev --frozen
 uv run nzlc doctor
 ```
 

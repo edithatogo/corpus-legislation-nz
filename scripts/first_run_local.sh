@@ -7,7 +7,7 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 rm -rf data dist
-uv sync --all-extras --frozen
+uv sync --extra dev --frozen
 ARCHIVE_CREATORS_JSON='[{"name":"Local Smoke Test"}]' uv run nzlc smoke-fixture --output-dir data
 NZLC_OUTPUT_DIR=data uv run nzlc validate
 NZLC_OUTPUT_DIR=data uv run nzlc manifest

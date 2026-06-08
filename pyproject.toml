@@ -9,7 +9,7 @@ authors = [{ name = "Maintainer" }]
 dependencies = [
   "requests>=2.32.0",
   "typer>=0.26.7",
-  "rich>=13.7.0,<15",
+  "rich>=13.7.0,<16",
   "pyarrow>=21.0.0",
   "defusedxml>=0.7.1",
   "huggingface_hub>=0.34.0",
@@ -35,7 +35,7 @@ embeddings = [
 nzlc = "nz_legislation_corpus.cli:app"
 
 [build-system]
-requires = ["hatchling>=1.25.0"]
+requires = ["hatchling>=1.30.1"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

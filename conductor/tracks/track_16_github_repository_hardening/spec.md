@@ -19,7 +19,11 @@ make the GitHub repository safe to operate as the automation controller for the 
 - First passing CI run URL.
 
 ## Current Evidence
-- No Git remote is configured, so the final GitHub repository URL, branch protection summary, enabled security settings, and CI run URL cannot be recorded yet.
+- GitHub repository URL: `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- Branch protection summary: `main` requires strict `tests`, one approving review, admin enforcement, linear history, no force pushes, and no deletions.
+- Enabled security settings: Dependabot security updates, secret scanning, and push protection.
+- First passing CI run: baseline `Tests` run `27087158077` and `CodeQL` run `27087158073` passed on 2026-06-07.
+- Remaining blocker: Scorecard workflow fix must be merged through branch protection before the next Scorecard run can pass.
 - Local hardening helper `scripts/configure_github_hardening.sh` now attempts repo defaults, Dependabot vulnerability alerts, secret scanning, push protection, Dependabot security updates, branch protection, and a required tests status check.
 - Local repository remains code-only: generated corpus/archive/cache paths are ignored and no tracked files exist under `data/`, `dist/`, `archive/`, `.tmp/`, `.hf_cache/`, `.pytest-tmp/`, `test-tmp/`, or `.track15-smoke/`.
 - Local public-repo support files and minimum workflow permissions were reviewed.
