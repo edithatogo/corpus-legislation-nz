@@ -86,7 +86,7 @@ The live Hugging Face dataset is intended for daily or regular updates. DOI-back
 
 ## Citation
 
-Use the annual Zenodo DOI for academic or fixed-version citation once available. For live use, cite the Hugging Face repository, access date, and the manifest hash from `manifests/latest_manifest.json`.
+For academic or fixed-version citation, cite the Zenodo snapshot DOI: `10.5281/zenodo.20592540`. For live use, cite the Hugging Face repository, access date, and the manifest hash from `manifests/latest_manifest.json`.
 
 ## Licensing and legal caveat
 

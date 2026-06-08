@@ -150,7 +150,7 @@ Current coverage status: not proven complete. The pipeline is API-first and curr
 
 The repository code is licensed under this repository's code license. The legislation text and source material are not relicensed by this project. The official NZ Legislation copyright page should be treated as the source for Crown copyright and attribution terms for legislation website material. Incorporated-by-reference material, third-party material, agency website text, logos, emblems, and non-legislative linked content may have separate rights or restrictions.
 
-For live/current use, cite the Hugging Face dataset repository together with the manifest hash from `data/manifests/latest_manifest.json`. For academic or fixed-version citation, cite the annual Zenodo DOI snapshot once available.
+For live/current use, cite the Hugging Face dataset repository together with the manifest hash from `data/manifests/latest_manifest.json`. For academic or fixed-version citation, cite the Zenodo snapshot DOI `10.5281/zenodo.20592540`.
 
 For downstream querying and field definitions, see `docs/researcher_quickstart.md` and `docs/data_dictionary.md`.
 For validation gates, schema versioning, warning severity, and coverage history, see `docs/schema_governance.md`.

@@ -1,6 +1,6 @@
 # Draft public launch release note
 
-Status: draft only. Do not publish until `docs/public_launch_decision.md` is changed to a launch decision with live evidence.
+Status: draft only. Do not publish until `docs/public_launch_decision.md` is changed to a launch decision with scheduled-sync evidence.
 
 ## New Zealand Legislation Corpus
 
@@ -22,6 +22,8 @@ Discovery method: API-first search/discovery workflow; no authoritative seed inv
 Known gaps: full New Zealand legislation coverage is not proven; no authoritative seeds/work_ids.txt exists
 Manifest hash: 134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2
 Hugging Face revision: 8d48d807c5c8da73f8ad164734245d9ea73046f3
+Zenodo DOI: 10.5281/zenodo.20592540
+Zenodo record: https://zenodo.org/records/20592540
 ```
 
 ## Caveats
@@ -49,8 +51,8 @@ For live/current use, cite:
 New Zealand Legislation Corpus, Hugging Face dataset URL, access date, and manifest hash.
 ```
 
-For fixed-version academic citation, cite the annual Zenodo DOI snapshot once available.
+For fixed-version academic citation, cite the Zenodo snapshot DOI: `10.5281/zenodo.20592540`.
 
 ## Archive plan
 
-The live dataset is maintained on Hugging Face. Annual immutable snapshots are intended for Zenodo DOI-backed archival release after production-draft verification and production approval.
+The live dataset is maintained on Hugging Face. Annual immutable snapshots are published to Zenodo for DOI-backed archival release. The 2026 snapshot is published at `https://zenodo.org/records/20592540`.

@@ -15,7 +15,7 @@ Public launch requires every gate below to be satisfied or explicitly waived in 
 | Dataset scope is accurate | Ready for intentional partial/API-discovery launch | No authoritative `seeds/work_ids.txt` exists and current public wording retains the partial/API-discovery boundary. See issue #11 and `docs/source_inventory_status.md`. |
 | First full or intentionally partial corpus uploaded | Ready for intentional partial/API-discovery launch | `hf_sync.yml` uploaded a six-record validated corpus. Current content hash: `da764d2dc63a86b6da00d573843abe33e27d73bc80254bef65ca837316a83ebc`; current record count: 6. See issues #12 and #13. |
 | GitHub scheduled sync enabled and passing | Blocked | `hf_sync.yml` run URL after first upload and scheduled-run confirmation. See issue #12. |
-| Zenodo production draft archive passed | Ready | Production draft URL: `https://zenodo.org/deposit/20592540`; run: `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27132519663`; publish requested: false; uploaded archive, manifest, and checksum files. See issue #14. |
+| Zenodo production archive published | Ready | Published record: `https://zenodo.org/records/20592540`; DOI: `10.5281/zenodo.20592540`; concept DOI: `10.5281/zenodo.20592539`; run: `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27132519663`; archive, manifest, and checksum files are present. See issue #14. |
 | Public README, dataset card, and citation files match actual coverage | Ready for current prelaunch state | README, dataset card, and citation text currently state coverage is not proven complete and avoid fixed DOI claims. Recheck after live corpus publication. |
 | Monthly and annual operating checklist exists | Ready locally | `docs/maintenance_runbook.md`, `docs/reconciliation_runbook.md`, `docs/runtime_capacity_runbook.md`, and `docs/schema_governance.md`. |
 
@@ -29,7 +29,7 @@ Before changing this decision to launch:
 4. Run a sample Hugging Face Parquet read and save the output path or query result.
 5. Confirm `hf_sync.yml` has passed after the first upload.
 6. Confirm the weekly doctor workflow has passed.
-7. Confirm the Zenodo production draft archive has passed and checksums match.
+7. Confirm the Zenodo production archive has passed and checksums match.
 8. Re-read `README.md`, `DATASET_CARD.md`, and `CITATION.cff` against the actual coverage state.
 9. Keep full-coverage language out of all public pages unless Track 04 is proven.
 10. Update `docs/public_launch_release_note.md` with the real URLs, dates, manifest hash, coverage count, and archive evidence.
@@ -47,14 +47,14 @@ Coverage statement:
 Record count:
 First passing scheduled sync URL:
 Doctor workflow URL:
-Zenodo production draft archive URL: https://zenodo.org/deposit/20592540
-Zenodo production DOI, if any:
+Zenodo production archive URL: https://zenodo.org/records/20592540
+Zenodo production DOI: 10.5281/zenodo.20592540
 Final reviewer:
 ```
 
 ## Current rationale
 
-Launching now would still overstate operational readiness. The GitHub repository exists at `https://github.com/edithatogo/nz-legislation-corpus-pipeline`, the Hugging Face dataset now exists with a verified intentionally partial/API-discovery corpus, and the Zenodo production draft archive has passed with `publish=false`. Full coverage is not claimed. Launch remains blocked because the first scheduled sync proof has not completed.
+Launching now would still overstate operational readiness. The GitHub repository exists at `https://github.com/edithatogo/nz-legislation-corpus-pipeline`, the Hugging Face dataset now exists with a verified intentionally partial/API-discovery corpus, and the Zenodo production archive has been published. Full coverage is not claimed. Launch remains blocked because the first scheduled sync proof has not completed.
 
 ## Tracking issues
 
