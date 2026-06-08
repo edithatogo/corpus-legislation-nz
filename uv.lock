@@ -1751,7 +1751,7 @@ requires-dist = [
     { name = "pyarrow", specifier = ">=21.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
     { name = "requests", specifier = ">=2.32.0" },
-    { name = "rich", specifier = ">=13.7.0,<16" },
+    { name = "rich", specifier = ">=15.0.0,<16" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.16" },
     { name = "torch", marker = "extra == 'embeddings'", specifier = ">=2.0.0" },
     { name = "transformers", marker = "extra == 'embeddings'", specifier = ">=5.10.2" },
