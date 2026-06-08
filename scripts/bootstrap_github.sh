@@ -142,7 +142,8 @@ set_var NZLC_SEARCH_FIELD "${NZLC_SEARCH_FIELD:-title}"
 set_var NZLC_LEGISLATION_TYPES "${NZLC_LEGISLATION_TYPES:-act,bill,secondary_legislation,amendment_paper}"
 set_var NZLC_LEGISLATION_STATUS "${NZLC_LEGISLATION_STATUS:-}"
 set_var NZLC_PUBLISHER "${NZLC_PUBLISHER:-}"
-set_var ARCHIVE_CREATORS_JSON "${ARCHIVE_CREATORS_JSON:-[{\"name\":\"$OWNER\"}]}"
+DEFAULT_ARCHIVE_CREATORS_JSON="$(printf '[{"name":"%s"}]' "$OWNER")"
+set_var ARCHIVE_CREATORS_JSON "${ARCHIVE_CREATORS_JSON:-$DEFAULT_ARCHIVE_CREATORS_JSON}"
 set_var ARCHIVE_TITLE "${ARCHIVE_TITLE:-New Zealand Legislation Corpus}"
 set_var ARCHIVE_LICENSE "${ARCHIVE_LICENSE:-cc-by-4.0}"
 set_var ARCHIVE_PUBLISH "${ARCHIVE_PUBLISH:-false}"
@@ -155,17 +156,20 @@ set_secret HF_TOKEN "${HF_TOKEN:-}"
 set_secret ZENODO_TOKEN "${ZENODO_TOKEN:-}"
 
 # Create deployment environments used by the annual archive workflow.
-gh api --method PUT "repos/$FULL_REPO/environments/zenodo-sandbox" -f wait_timer=0 >/dev/null || true
+printf '{"wait_timer":0}' \
+  | gh api --method PUT "repos/$FULL_REPO/environments/zenodo-sandbox" --input - >/dev/null || true
 if [[ "$PROTECT_PRODUCTION" == "true" ]]; then
   USER_ID="$(gh api user --jq .id)"
   if printf '{"wait_timer":0,"reviewers":[{"type":"User","id":%s}],"deployment_branch_policy":null}' "$USER_ID"     | gh api --method PUT "repos/$FULL_REPO/environments/zenodo-production" --input - >/dev/null; then
     echo "Configured zenodo-production with the authenticated user as required reviewer."
   else
     echo "Could not configure required reviewers automatically; created zenodo-production without reviewer rules." >&2
-    gh api --method PUT "repos/$FULL_REPO/environments/zenodo-production" -f wait_timer=0 >/dev/null || true
+    printf '{"wait_timer":0}' \
+      | gh api --method PUT "repos/$FULL_REPO/environments/zenodo-production" --input - >/dev/null || true
   fi
 else
-  gh api --method PUT "repos/$FULL_REPO/environments/zenodo-production" -f wait_timer=0 >/dev/null || true
+  printf '{"wait_timer":0}' \
+    | gh api --method PUT "repos/$FULL_REPO/environments/zenodo-production" --input - >/dev/null || true
 fi
 
 echo

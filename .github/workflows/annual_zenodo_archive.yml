@@ -35,20 +35,20 @@ jobs:
     # Publication still requires publish=true and should be protected by the zenodo-production environment.
     environment: ${{ (github.event_name != 'workflow_dispatch' || inputs.use_sandbox == false) && 'zenodo-production' || 'zenodo-sandbox' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
         run: |
           set -euo pipefail
-          uv sync --all-extras --frozen
+          uv sync --frozen
 
       - name: Resolve archive settings
         id: settings
