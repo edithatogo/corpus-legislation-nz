@@ -1,0 +1,73 @@
+name: Historical work ID discovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      search_terms:
+        description: "Comma-separated search terms"
+        type: string
+        default: "act,bill,regulation,order,notice"
+      legislation_status:
+        description: "Status filter, usually historical for old-corpus discovery"
+        type: string
+        default: "historical"
+      legislation_types:
+        description: "Comma-separated legislation types"
+        type: string
+        default: "act,bill,secondary_legislation,amendment_paper"
+      max_pages:
+        description: "Optional page limit per search/type query for pilots"
+        type: string
+        default: "2"
+      max_works:
+        description: "Optional total discovered-work limit for pilots"
+        type: string
+        default: "50"
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Discover historical work IDs
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+        run: |
+          set -euo pipefail
+          args=(
+            --search-terms "${{ inputs.search_terms }}"
+            --legislation-status "${{ inputs.legislation_status }}"
+            --legislation-types "${{ inputs.legislation_types }}"
+            --output-path generated/historical-work-ids.txt
+            --provenance-path generated/historical-work-ids.provenance.json
+          )
+          if [ -n "${{ inputs.max_pages }}" ]; then args+=(--max-pages "${{ inputs.max_pages }}"); fi
+          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          uv run nzlc discover-work-ids "${args[@]}"
+
+      - name: Upload discovery artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-work-id-discovery
+          path: generated/
+          if-no-files-found: error

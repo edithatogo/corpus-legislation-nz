@@ -11,6 +11,7 @@ from rich.console import Console
 
 from .archive import build_archive
 from .config import Settings, require
+from .discovery import build_work_id_inventory
 from .manifest import build_change_report, build_manifest
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
@@ -36,7 +37,17 @@ logging.basicConfig(level=os.getenv("NZLC_LOG_LEVEL", "INFO"), format="%(levelna
 def _load_seed_work_ids(path: Path | None) -> list[str]:
     if not path or not path.exists():
         return []
-    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")]
+    return [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+
+
+def _split_option(value: str | None, default: list[str]) -> list[str]:
+    if value is None or not value.strip():
+        return default
+    return [part.strip() for part in value.split(",") if part.strip()]
 
 
 def _safe_write_raw(raw_dir: Path, stable_id: str, content: bytes, suffix: str = ".xml") -> Path:
@@ -49,7 +60,9 @@ def _safe_write_raw(raw_dir: Path, stable_id: str, content: bytes, suffix: str =
 
 @app.command()
 def doctor(
-    network: Annotated[bool, typer.Option(help="Check remote services as well as local config.")] = False,
+    network: Annotated[
+        bool, typer.Option(help="Check remote services as well as local config.")
+    ] = False,
 ) -> None:
     """Check local configuration without doing destructive work."""
     settings = Settings.from_env()
@@ -89,24 +102,43 @@ def doctor(
             timeout=settings.request_timeout_seconds,
         )
         if response.status_code >= 400:
-            raise RuntimeError(f"Zenodo API check failed: HTTP {response.status_code} {response.text[:200]}")
+            raise RuntimeError(
+                f"Zenodo API check failed: HTTP {response.status_code} {response.text[:200]}"
+            )
         console.print(f"[OK] Zenodo API reachable at {settings.zenodo_api_url}")
 
 
 @app.command()
 def sync(
-    seed_work_ids: Annotated[Path | None, typer.Option(help="Optional file containing work IDs, one per line.")] = None,
-    latest_only: Annotated[bool, typer.Option(help="Only pull latest matching version for discovered works.")] = False,
-    max_works: Annotated[int | None, typer.Option(help="Limit work discovery for smoke tests.")] = None,
-    allow_no_search_terms: Annotated[bool, typer.Option(help="Allow no search terms if seed work IDs are supplied.")] = False,
-    replace: Annotated[bool, typer.Option(help="Replace existing records instead of merging into records.jsonl.")] = False,
-    embeddings: Annotated[bool, typer.Option(help="Generate dense, sparse, and ColBERT embeddings for each record using BAAI/bge-m3.")] = False,
+    seed_work_ids: Annotated[
+        Path | None, typer.Option(help="Optional file containing work IDs, one per line.")
+    ] = None,
+    latest_only: Annotated[
+        bool, typer.Option(help="Only pull latest matching version for discovered works.")
+    ] = False,
+    max_works: Annotated[
+        int | None, typer.Option(help="Limit work discovery for smoke tests.")
+    ] = None,
+    allow_no_search_terms: Annotated[
+        bool, typer.Option(help="Allow no search terms if seed work IDs are supplied.")
+    ] = False,
+    replace: Annotated[
+        bool, typer.Option(help="Replace existing records instead of merging into records.jsonl.")
+    ] = False,
+    embeddings: Annotated[
+        bool,
+        typer.Option(
+            help="Generate dense, sparse, and ColBERT embeddings for each record using BAAI/bge-m3."
+        ),
+    ] = False,
 ) -> None:
     """Fetch legislation metadata/content, normalize records, and write JSONL + Parquet."""
     settings = Settings.from_env()
     seed_ids = _load_seed_work_ids(seed_work_ids)
     if not settings.search_terms and not seed_ids and not allow_no_search_terms:
-        raise typer.BadParameter("Set NZLC_SEARCH_TERMS or pass --seed-work-ids for deterministic discovery.")
+        raise typer.BadParameter(
+            "Set NZLC_SEARCH_TERMS or pass --seed-work-ids for deterministic discovery."
+        )
 
     settings.output_dir.mkdir(parents=True, exist_ok=True)
     settings.raw_xml_dir.mkdir(parents=True, exist_ok=True)
@@ -117,10 +149,16 @@ def sync(
     existing_rows = read_jsonl(settings.records_jsonl_path)
     known_versions: dict[str, str] = dict(state.get("versions", {}))
     if not known_versions:
-        known_versions = {str(r.get("stable_id")): str(r.get("source_hash")) for r in existing_rows if r.get("stable_id") and r.get("source_hash")}
+        known_versions = {
+            str(r.get("stable_id")): str(r.get("source_hash"))
+            for r in existing_rows
+            if r.get("stable_id") and r.get("source_hash")
+        }
     client = NZLegislationClient(settings)
     stats = SyncStats()
-    existing_records = {} if replace else {str(r.get("stable_id")): r for r in existing_rows if r.get("stable_id")}
+    existing_records = (
+        {} if replace else {str(r.get("stable_id")): r for r in existing_rows if r.get("stable_id")}
+    )
     records: list[dict] = []
     seen_work_ids_for_stats: set[str] = set()
 
@@ -138,13 +176,21 @@ def sync(
             seen_work_ids_for_stats.add(work_id_for_stats)
             stats.works_checked += 1
         try:
-            version = client.get_version(version_id) if version_id and "administering_agencies" not in version_stub else version_stub
+            version = (
+                client.get_version(version_id)
+                if version_id and "administering_agencies" not in version_stub
+                else version_stub
+            )
             raw_url = client.format_url(version, "xml") or client.format_url(version, "html")
             raw_content = b""
             raw_type = None
             if raw_url:
                 raw_content = client.download_url(raw_url)
-                raw_type = "application/xml" if raw_url.lower().endswith(".xml/") or ".xml" in raw_url.lower() else "text/html"
+                raw_type = (
+                    "application/xml"
+                    if raw_url.lower().endswith(".xml/") or ".xml" in raw_url.lower()
+                    else "text/html"
+                )
             record = normalize_version_record(
                 version,
                 raw_content=raw_content,
@@ -154,21 +200,26 @@ def sync(
             )
             if raw_content:
                 suffix = ".xml" if raw_type == "application/xml" else ".html"
-                raw_path = _safe_write_raw(settings.raw_xml_dir, record["stable_id"], raw_content, suffix=suffix)
+                raw_path = _safe_write_raw(
+                    settings.raw_xml_dir, record["stable_id"], raw_content, suffix=suffix
+                )
                 record["raw_content_path"] = raw_path.relative_to(settings.output_dir).as_posix()
             previous_hash = known_versions.get(record["stable_id"])
             prior_record = existing_records.get(record["stable_id"])
-            
+
             has_changed = (previous_hash is None) or (previous_hash != record["source_hash"])
             if embeddings and has_changed and record.get("text"):
                 try:
                     from .embeddings import compute_all_three_embeddings
+
                     emb = compute_all_three_embeddings(record["text"])
                     record["embedding_dense"] = emb["dense"]
                     record["embedding_sparse"] = json.dumps(emb["lexical_weights"])
                     record["embedding_colbert"] = emb["colbert_multivector"]
                 except Exception as emb_exc:
-                    stats.warnings.append(f"Failed to generate embeddings for {record['stable_id']}: {emb_exc}")
+                    stats.warnings.append(
+                        f"Failed to generate embeddings for {record['stable_id']}: {emb_exc}"
+                    )
 
             if previous_hash is None:
                 stats.records_added += 1
@@ -193,25 +244,108 @@ def sync(
             stats.warnings.append(f"version {version_id or '<unknown>'} failed: {exc}")
 
     if not records:
-        console.print("No newly fetched records. Discovery may need seed work IDs or broader NZLC_SEARCH_TERMS.")
+        console.print(
+            "No newly fetched records. Discovery may need seed work IDs or broader NZLC_SEARCH_TERMS."
+        )
     merged_records = sorted(existing_records.values(), key=lambda r: str(r.get("stable_id", "")))
     records_changed_on_disk = write_jsonl_if_changed(settings.records_jsonl_path, merged_records)
-    parquet_missing = not settings.parquet_dir.exists() or not any(settings.parquet_dir.rglob("*.parquet"))
+    parquet_missing = not settings.parquet_dir.exists() or not any(
+        settings.parquet_dir.rglob("*.parquet")
+    )
     if merged_records and (records_changed_on_disk or parquet_missing):
         written = write_partitioned_parquet(merged_records, settings.parquet_dir)
     else:
         written = []
     stats.parquet_files_written = len(written)
 
-    write_json(settings.sync_state_path, {"versions": known_versions, "last_stats": stats.as_dict(), "records_changed_on_disk": records_changed_on_disk})
+    write_json(
+        settings.sync_state_path,
+        {
+            "versions": known_versions,
+            "last_stats": stats.as_dict(),
+            "records_changed_on_disk": records_changed_on_disk,
+        },
+    )
     console.print_json(data=stats.as_dict())
+
+
+@app.command("discover-work-ids")
+def discover_work_ids_cmd(
+    output_path: Annotated[
+        Path, typer.Option(help="Write discovered work IDs, one per line.")
+    ] = Path("seeds/discovered_work_ids.txt"),
+    provenance_path: Annotated[
+        Path,
+        typer.Option(help="Write discovery provenance JSON."),
+    ] = Path("seeds/discovered_work_ids.provenance.json"),
+    search_terms: Annotated[
+        str | None,
+        typer.Option(help="Comma-separated search terms. Defaults to NZLC_SEARCH_TERMS."),
+    ] = None,
+    legislation_types: Annotated[
+        str | None,
+        typer.Option(help="Comma-separated legislation types. Defaults to NZLC_LEGISLATION_TYPES."),
+    ] = None,
+    legislation_status: Annotated[
+        str | None,
+        typer.Option(
+            help="Legislation status filter, e.g. historical or current. Defaults to NZLC_LEGISLATION_STATUS."
+        ),
+    ] = None,
+    max_pages: Annotated[
+        int | None, typer.Option(help="Optional page limit per search/type query.")
+    ] = None,
+    max_works: Annotated[
+        int | None, typer.Option(help="Optional total discovered-work limit for pilots.")
+    ] = None,
+) -> None:
+    """Discover work IDs for deterministic seed-based bootstraps."""
+    settings = Settings.from_env()
+    terms = _split_option(search_terms, settings.search_terms)
+    if not terms:
+        raise typer.BadParameter("Set NZLC_SEARCH_TERMS or pass --search-terms.")
+    types = _split_option(legislation_types, settings.legislation_types)
+    status = legislation_status if legislation_status is not None else settings.legislation_status
+    client = NZLegislationClient(settings)
+    inventory = build_work_id_inventory(
+        client,
+        search_terms=terms,
+        search_field=settings.search_field,
+        legislation_types=types,
+        legislation_status=status,
+        sort_by=settings.search_sort_by,
+        publisher=settings.publisher,
+        max_pages=max_pages,
+        max_works=max_works,
+    )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    provenance_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        "\n".join(inventory["work_ids"]) + ("\n" if inventory["work_ids"] else ""), encoding="utf-8"
+    )
+    write_json(provenance_path, inventory)
+    console.print_json(
+        data={
+            "work_id_count": inventory["record_count"],
+            "output_path": str(output_path),
+            "provenance_path": str(provenance_path),
+            "coverage_warning": inventory["coverage_warning"],
+        }
+    )
 
 
 @app.command("validate")
 def validate_cmd(
-    records_path: Annotated[Path | None, typer.Option(help="Defaults to $NZLC_OUTPUT_DIR/records.jsonl")] = None,
-    schema_path: Annotated[Path, typer.Option(help="JSON Schema path")] = Path("schemas/legislation_record.schema.json"),
-    allow_empty_text: Annotated[bool, typer.Option(help="Allow empty text for metadata-only tests.")] = False,
+    records_path: Annotated[
+        Path | None, typer.Option(help="Defaults to $NZLC_OUTPUT_DIR/records.jsonl")
+    ] = None,
+    schema_path: Annotated[Path, typer.Option(help="JSON Schema path")] = Path(
+        "schemas/legislation_record.schema.json"
+    ),
+    allow_empty_text: Annotated[
+        bool, typer.Option(help="Allow empty text for metadata-only tests.")
+    ] = False,
 ) -> None:
     settings = Settings.from_env()
     path = records_path or settings.records_jsonl_path
@@ -239,8 +373,12 @@ def manifest_cmd() -> None:
 
 @app.command("hf-upload")
 def hf_upload_cmd(
-    force: Annotated[bool, typer.Option(help="Upload even if remote manifest hash matches.")] = False,
-    private: Annotated[bool, typer.Option(help="Create dataset repo as private if missing.")] = False,
+    force: Annotated[
+        bool, typer.Option(help="Upload even if remote manifest hash matches.")
+    ] = False,
+    private: Annotated[
+        bool, typer.Option(help="Create dataset repo as private if missing.")
+    ] = False,
 ) -> None:
     from .hf_sync import create_dataset_repo_if_needed, remote_manifest, upload_large_folder
 
@@ -260,21 +398,29 @@ def hf_upload_cmd(
     create_dataset_repo_if_needed(repo_id, token=token, private=private)
     local_manifest = read_json(settings.manifests_dir / "latest_manifest.json", default=None)
     if not local_manifest:
-        local_manifest = build_manifest(settings.output_dir, manifest_path=settings.manifests_dir / "latest_manifest.json")
+        local_manifest = build_manifest(
+            settings.output_dir, manifest_path=settings.manifests_dir / "latest_manifest.json"
+        )
     remote = remote_manifest(repo_id, token=token, revision=settings.hf_revision)
     local_content = local_manifest.get("content_sha256") or local_manifest.get("manifest_sha256")
     remote_content = (remote or {}).get("content_sha256") or (remote or {}).get("manifest_sha256")
     if not force and remote and remote_content == local_content:
-        console.print("No corpus content changes relative to remote manifest; skipping Hugging Face upload.")
+        console.print(
+            "No corpus content changes relative to remote manifest; skipping Hugging Face upload."
+        )
         return
-    url = upload_large_folder(repo_id, settings.output_dir, token=token, revision=settings.hf_revision)
+    url = upload_large_folder(
+        repo_id, settings.output_dir, token=token, revision=settings.hf_revision
+    )
     console.print(url)
 
 
 @app.command("archive")
 def archive_cmd(
     year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
-    output_dir: Annotated[Path, typer.Option(help="Archive output directory.")] = Path("dist/archive"),
+    output_dir: Annotated[Path, typer.Option(help="Archive output directory.")] = Path(
+        "dist/archive"
+    ),
 ) -> None:
     settings = Settings.from_env()
     result = build_archive(settings.output_dir, output_dir, year=year)
@@ -285,7 +431,9 @@ def archive_cmd(
 def zenodo_upload_cmd(
     year: Annotated[str, typer.Option(help="Archive year.")] = "2026",
     archive_dir: Annotated[Path, typer.Option(help="Archive directory.")] = Path("dist/archive"),
-    publish: Annotated[bool, typer.Option(help="Publish the Zenodo draft. Default false for safety.")] = False,
+    publish: Annotated[
+        bool, typer.Option(help="Publish the Zenodo draft. Default false for safety.")
+    ] = False,
 ) -> None:
     settings = Settings.from_env()
     token = require(settings.zenodo_token, "ZENODO_TOKEN")
@@ -354,13 +502,20 @@ def smoke_fixture(output_dir: Annotated[Path, typer.Option()] = Path("data")) ->
         "formats": [{"type": "xml", "url": "https://example.invalid/sample.xml"}],
         "is_latest_version": True,
     }
-    record = normalize_version_record(version, raw_content=xml_bytes, raw_content_url="https://example.invalid/sample.xml", raw_content_type="application/xml")
+    record = normalize_version_record(
+        version,
+        raw_content=xml_bytes,
+        raw_content_url="https://example.invalid/sample.xml",
+        raw_content_type="application/xml",
+    )
     settings.output_dir.mkdir(parents=True, exist_ok=True)
     settings.raw_xml_dir.mkdir(parents=True, exist_ok=True)
     _safe_write_raw(settings.raw_xml_dir, record["stable_id"], xml_bytes, ".xml")
     write_jsonl(settings.records_jsonl_path, [record])
     write_partitioned_parquet([record], settings.parquet_dir)
-    build_manifest(settings.output_dir, manifest_path=settings.manifests_dir / "latest_manifest.json")
+    build_manifest(
+        settings.output_dir, manifest_path=settings.manifests_dir / "latest_manifest.json"
+    )
     console.print(f"Wrote smoke fixture corpus to {settings.output_dir}")
 
 
@@ -376,9 +531,15 @@ def coverage_report_cmd() -> None:
     missing_xml = 0
     ephemeral_ids = 0
     for record in records:
-        by_type[str(record.get("legislation_type") or "unknown")] = by_type.get(str(record.get("legislation_type") or "unknown"), 0) + 1
-        by_status[str(record.get("legislation_status") or "unknown")] = by_status.get(str(record.get("legislation_status") or "unknown"), 0) + 1
-        by_year[str(record.get("year") or "unknown")] = by_year.get(str(record.get("year") or "unknown"), 0) + 1
+        by_type[str(record.get("legislation_type") or "unknown")] = (
+            by_type.get(str(record.get("legislation_type") or "unknown"), 0) + 1
+        )
+        by_status[str(record.get("legislation_status") or "unknown")] = (
+            by_status.get(str(record.get("legislation_status") or "unknown"), 0) + 1
+        )
+        by_year[str(record.get("year") or "unknown")] = (
+            by_year.get(str(record.get("year") or "unknown"), 0) + 1
+        )
         if not str(record.get("text") or "").strip():
             missing_text += 1
         if not str(record.get("xml_url") or "").strip():
@@ -397,7 +558,9 @@ def coverage_report_cmd() -> None:
             "missing_xml_url_records": missing_xml,
             "ephemeral_identifier_records": ephemeral_ids,
         },
-        "recommendation": "Use a seed work-id list or official bulk source before claiming corpus completeness." if records else "No records found.",
+        "recommendation": "Use a seed work-id list or official bulk source before claiming corpus completeness."
+        if records
+        else "No records found.",
     }
     write_json(settings.manifests_dir / "coverage_report.json", report)
     history_path = settings.manifests_dir / "coverage_history.jsonl"
