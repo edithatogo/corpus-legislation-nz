@@ -9,7 +9,17 @@ from typing import Any
 from .schema import RECORD_SCHEMA_ID, RECORD_SCHEMA_VERSION
 from .utils import sha256_file, sha256_text, utc_now_iso, write_json
 
-_EXCLUDED_DIRS = {".git", ".hg", ".svn", "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", "cache"}
+_EXCLUDED_DIRS = {
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    "cache",
+    ".cache",
+}
 _EXCLUDED_TOP_LEVEL_DIRS = {"manifests", "_state"}
 _EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 _EXCLUDED_NAMES = {".DS_Store"}
@@ -88,9 +98,15 @@ def build_manifest(root_dir: Path, *, manifest_path: Path | None = None) -> dict
         "files": files,
     }
     content_payload = _content_signature_payload(payload)
-    payload["content_sha256"] = sha256_text(json.dumps(content_payload, sort_keys=True, ensure_ascii=False))
-    manifest_payload = {k: v for k, v in payload.items() if k not in {"generated_at_utc", "manifest_sha256"}}
-    payload["manifest_sha256"] = sha256_text(json.dumps(manifest_payload, sort_keys=True, ensure_ascii=False))
+    payload["content_sha256"] = sha256_text(
+        json.dumps(content_payload, sort_keys=True, ensure_ascii=False)
+    )
+    manifest_payload = {
+        k: v for k, v in payload.items() if k not in {"generated_at_utc", "manifest_sha256"}
+    }
+    payload["manifest_sha256"] = sha256_text(
+        json.dumps(manifest_payload, sort_keys=True, ensure_ascii=False)
+    )
     if manifest_path:
         write_json(manifest_path, payload)
     return payload
@@ -102,9 +118,13 @@ def build_change_report(previous: dict[str, Any] | None, current: dict[str, Any]
     added = sorted(set(cur_files) - set(prev_files))
     removed = sorted(set(prev_files) - set(cur_files))
     changed = sorted(
-        path for path in set(cur_files) & set(prev_files) if cur_files[path].get("sha256") != prev_files[path].get("sha256")
+        path
+        for path in set(cur_files) & set(prev_files)
+        if cur_files[path].get("sha256") != prev_files[path].get("sha256")
     )
-    previous_content = (previous or {}).get("content_sha256") or (previous or {}).get("manifest_sha256")
+    previous_content = (previous or {}).get("content_sha256") or (previous or {}).get(
+        "manifest_sha256"
+    )
     current_content = current.get("content_sha256") or current.get("manifest_sha256")
     return {
         "schema_version": "1.1",
