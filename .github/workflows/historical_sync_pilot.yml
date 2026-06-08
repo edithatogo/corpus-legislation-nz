@@ -98,6 +98,25 @@ jobs:
           uv run nzlc manifest
           uv run nzlc coverage-report
 
+      - name: Record publication policy
+        run: |
+          set -euo pipefail
+          mkdir -p data-historical-pilot/manifests
+          cat > data-historical-pilot/manifests/publication_policy.json <<'JSON'
+          {
+            "schema_version": "1.0",
+            "policy": "artifact_only_historical_candidate",
+            "live_huggingface_dataset": "edithatogo/nz-legislation-corpus",
+            "live_dataset_boundary": "verified partial/API-discovery corpus",
+            "historical_upload_allowed": false,
+            "historical_publication_policy_doc": "docs/historical_publication_policy.md",
+            "notes": [
+              "Do not upload historical pilot outputs over the live Hugging Face dataset.",
+              "Use a separate historical target only after seed, manifest, coverage, and failed-version state are reviewed."
+            ]
+          }
+          JSON
+
       - name: Upload pilot artifacts
         uses: actions/upload-artifact@v4
         with:

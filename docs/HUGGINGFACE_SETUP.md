@@ -10,6 +10,9 @@ Recommended default:
 edithatogo/nz-legislation-corpus
 ```
 
+This target is for the live partial/API-discovery corpus line. Historical corpus
+pilots must not upload over it; see `docs/historical_publication_policy.md`.
+
 ## What can be automated
 
 The repository can be created and initialised through the Hugging Face API or CLI once `HF_TOKEN` is available. The included script creates the dataset repository, uploads a dataset card, sets `.gitattributes`, creates lightweight placeholder directories at repository root, and removes any older `data/...` bootstrap placeholders.
