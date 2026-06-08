@@ -61,7 +61,7 @@ Core fields are documented in `docs/data_dictionary.md`. They include:
 ```python
 from datasets import load_dataset
 
-ds = load_dataset("your-name/nz-legislation-corpus", split="train", streaming=True)
+ds = load_dataset("edithatogo/nz-legislation-corpus", split="train", streaming=True)
 for row in ds.take(1):
     print(row["title"])
 ```
@@ -76,7 +76,7 @@ table = dataset.to_table(columns=["title", "legislation_type", "text"])
 ```sql
 -- DuckDB example
 SELECT title, legislation_type
-FROM read_parquet('hf://datasets/your-name/nz-legislation-corpus/parquet/**/*.parquet')
+FROM read_parquet('hf://datasets/edithatogo/nz-legislation-corpus/parquet/**/*.parquet')
 LIMIT 10;
 ```
 

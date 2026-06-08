@@ -95,6 +95,11 @@ jobs:
           fi
           uv run nzlc sync "${args[@]}"
 
+      - name: Stage Hugging Face dataset card
+        run: |
+          set -euo pipefail
+          cp DATASET_CARD.md data/README.md
+
       - name: Validate corpus
         env:
           NZLC_OUTPUT_DIR: data
