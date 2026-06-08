@@ -28,7 +28,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
-          ZENODO_API_URL: https://sandbox.zenodo.org/api
+          ZENODO_API_URL: ${{ vars.ZENODO_API_URL || 'https://zenodo.org/api' }}
           ARCHIVE_CREATORS_JSON: ${{ vars.ARCHIVE_CREATORS_JSON }}
         run: |
           set -euo pipefail
