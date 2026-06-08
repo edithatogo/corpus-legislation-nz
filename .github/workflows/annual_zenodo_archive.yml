@@ -110,8 +110,11 @@ jobs:
 
       - name: Upload Zenodo draft
         env:
-          # Prefer environment-scoped ZENODO_TOKEN. Repository-level fallback also works.
+          # Prefer environment-scoped ZENODO_TOKEN. For manual sandbox tests, a
+          # repo/environment ZENODO_SANDBOX_TOKEN can be used without replacing
+          # the production token.
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_SANDBOX_TOKEN: ${{ secrets.ZENODO_SANDBOX_TOKEN }}
           ZENODO_DEPOSITION_ID: ${{ vars.ZENODO_DEPOSITION_ID }}
           ARCHIVE_CREATORS_JSON: ${{ vars.ARCHIVE_CREATORS_JSON }}
           ARCHIVE_TITLE: ${{ vars.ARCHIVE_TITLE }}
@@ -120,6 +123,10 @@ jobs:
           ZENODO_API_URL: ${{ steps.settings.outputs.zenodo_api_url }}
         run: |
           set -euo pipefail
+          if [ "${{ steps.settings.outputs.zenodo_env }}" = "sandbox" ] && [ -n "${ZENODO_SANDBOX_TOKEN:-}" ]; then
+            export ZENODO_TOKEN="$ZENODO_SANDBOX_TOKEN"
+          fi
+          unset ZENODO_SANDBOX_TOKEN
           args=(--year "${{ steps.settings.outputs.year }}" --archive-dir dist/archive)
           if [ "${{ steps.settings.outputs.publish }}" = "true" ]; then args+=(--publish); fi
           uv run nzlc zenodo-upload "${args[@]}"

@@ -34,7 +34,7 @@ while [[ $# -gt 0 ]]; do
 Usage: scripts/bootstrap_github.sh [--repo NAME] [--owner OWNER] [--public|--private|--internal] [--protect-production] [--allow-existing]
 
 Environment variables can also be used: GITHUB_OWNER/REPO_OWNER/GH_OWNER, REPO_NAME,
-REPO_VISIBILITY, HF_REPO_ID, ARCHIVE_CREATORS_JSON, NZ_LEGISLATION_API_KEY, HF_TOKEN, ZENODO_TOKEN.
+REPO_VISIBILITY, HF_REPO_ID, ARCHIVE_CREATORS_JSON, NZ_LEGISLATION_API_KEY, HF_TOKEN, ZENODO_TOKEN, ZENODO_SANDBOX_TOKEN.
 HELP
       exit 0 ;;
     *) echo "Unknown argument: $1" >&2; exit 2 ;;
@@ -154,6 +154,7 @@ set_var ZENODO_DEPOSITION_ID "${ZENODO_DEPOSITION_ID:-}"
 set_secret NZ_LEGISLATION_API_KEY "${NZ_LEGISLATION_API_KEY:-}"
 set_secret HF_TOKEN "${HF_TOKEN:-}"
 set_secret ZENODO_TOKEN "${ZENODO_TOKEN:-}"
+set_secret ZENODO_SANDBOX_TOKEN "${ZENODO_SANDBOX_TOKEN:-}"
 
 # Create deployment environments used by the annual archive workflow.
 printf '{"wait_timer":0}' \
