@@ -8,6 +8,7 @@ license = { text = "MIT" }
 authors = [{ name = "Maintainer" }]
 dependencies = [
   "requests>=2.32.0",
+  "click>=8.1.0",
   "typer>=0.26.7",
   "rich>=15.0.0,<16",
   "pyarrow>=21.0.0",
