@@ -79,7 +79,18 @@ jobs:
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}
         run: |
           set -euo pipefail
-          uv run hf download "$HF_REPO_ID" --repo-type dataset --local-dir data
+          uv run python - <<'PY'
+          import os
+          from huggingface_hub import snapshot_download
+
+          snapshot_download(
+              repo_id=os.environ["HF_REPO_ID"],
+              repo_type="dataset",
+              token=os.environ.get("HF_TOKEN"),
+              local_dir="data",
+          )
+          PY
+          rm -rf data/.cache
 
       - name: Validate downloaded corpus
         env:
