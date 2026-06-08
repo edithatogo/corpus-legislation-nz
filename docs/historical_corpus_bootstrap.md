@@ -50,6 +50,11 @@ NZLC_OUTPUT_DIR=data-historical-pilot uv run nzlc manifest
 NZLC_OUTPUT_DIR=data-historical-pilot uv run nzlc coverage-report
 ```
 
+The GitHub workflow `historical_sync_pilot.yml` performs this as a no-upload
+Actions pilot: it discovers a bounded seed, syncs to `data-historical-pilot`,
+validates the records, builds manifests and coverage, and uploads those outputs
+as workflow artifacts only.
+
 Do not upload the pilot over the live Hugging Face corpus until the merge policy is explicit. The live corpus currently contains a verified six-record partial corpus.
 
 ## Phase 4: full historical bootstrap

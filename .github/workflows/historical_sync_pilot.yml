@@ -1,0 +1,110 @@
+name: Historical corpus sync pilot
+
+on:
+  workflow_dispatch:
+    inputs:
+      search_terms:
+        description: "Comma-separated search terms for seed discovery"
+        type: string
+        default: "act,bill,regulation,order,notice"
+      legislation_status:
+        description: "Status filter; use none to omit"
+        type: string
+        default: "none"
+      legislation_types:
+        description: "Comma-separated legislation types"
+        type: string
+        default: "act,bill,secondary_legislation,amendment_paper"
+      max_pages:
+        description: "Optional page limit per search/type query"
+        type: string
+        default: "2"
+      max_works:
+        description: "Total discovered-work and sync limit"
+        type: string
+        default: "50"
+      min_seconds_between_requests:
+        description: "Optional request spacing override in seconds"
+        type: string
+        default: "0.5"
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Discover pilot seed
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
+          fi
+          args=(
+            --search-terms "${{ inputs.search_terms }}"
+            --legislation-status "${{ inputs.legislation_status }}"
+            --legislation-types "${{ inputs.legislation_types }}"
+            --output-path generated/historical-work-ids.txt
+            --provenance-path generated/historical-work-ids.provenance.json
+          )
+          if [ -n "${{ inputs.max_pages }}" ]; then args+=(--max-pages "${{ inputs.max_pages }}"); fi
+          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          uv run nzlc discover-work-ids "${args[@]}"
+
+      - name: Sync pilot corpus
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_OUTPUT_DIR: data-historical-pilot
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
+          fi
+          args=(
+            --seed-work-ids generated/historical-work-ids.txt
+            --allow-no-search-terms
+            --replace
+          )
+          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          uv run nzlc sync "${args[@]}"
+
+      - name: Validate and summarize pilot
+        env:
+          NZLC_OUTPUT_DIR: data-historical-pilot
+        run: |
+          set -euo pipefail
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Upload pilot artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-sync-pilot
+          path: |
+            generated/
+            data-historical-pilot/records.jsonl
+            data-historical-pilot/manifests/
+            data-historical-pilot/_state/
+          if-no-files-found: error
