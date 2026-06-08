@@ -11,7 +11,7 @@ Run a pilot discovery first:
 ```bash
 uv run nzlc discover-work-ids \
   --search-terms "act,bill,regulation,order,notice" \
-  --legislation-status historical \
+  --legislation-status none \
   --legislation-types "act,bill,secondary_legislation,amendment_paper" \
   --max-pages 2 \
   --max-works 50 \
@@ -20,6 +20,10 @@ uv run nzlc discover-work-ids \
 ```
 
 The GitHub workflow `historical_work_id_discovery.yml` runs the same command and uploads the generated seed/provenance files as an Actions artifact.
+
+The live API rejected `legislation_status=historical` with HTTP 403 during the
+first pilot. Use `none` to omit the status filter while discovering which live
+status values and search filters are valid for the historical boundary.
 
 ## Phase 2: review and promote the seed
 
@@ -45,6 +49,11 @@ NZLC_OUTPUT_DIR=data-historical-pilot uv run nzlc validate
 NZLC_OUTPUT_DIR=data-historical-pilot uv run nzlc manifest
 NZLC_OUTPUT_DIR=data-historical-pilot uv run nzlc coverage-report
 ```
+
+The GitHub workflow `historical_sync_pilot.yml` performs this as a no-upload
+Actions pilot: it discovers a bounded seed, syncs to `data-historical-pilot`,
+validates the records, builds manifests and coverage, and uploads those outputs
+as workflow artifacts only.
 
 Do not upload the pilot over the live Hugging Face corpus until the merge policy is explicit. The live corpus currently contains a verified six-record partial corpus.
 

@@ -50,6 +50,16 @@ def _split_option(value: str | None, default: list[str]) -> list[str]:
     return [part.strip() for part in value.split(",") if part.strip()]
 
 
+def _optional_filter(value: str | None, default: str | None) -> str | None:
+    candidate = default if value is None else value
+    if candidate is None:
+        return None
+    candidate = candidate.strip()
+    if not candidate or candidate.lower() in {"none", "null", "-"}:
+        return None
+    return candidate
+
+
 def _safe_write_raw(raw_dir: Path, stable_id: str, content: bytes, suffix: str = ".xml") -> Path:
     path = raw_dir / f"{slug_for_path(stable_id)}{suffix}"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -289,7 +299,10 @@ def discover_work_ids_cmd(
     legislation_status: Annotated[
         str | None,
         typer.Option(
-            help="Legislation status filter, e.g. historical or current. Defaults to NZLC_LEGISLATION_STATUS."
+            help=(
+                "Legislation status filter, e.g. current. Use none/null/- to omit. "
+                "Defaults to NZLC_LEGISLATION_STATUS."
+            )
         ),
     ] = None,
     max_pages: Annotated[
@@ -305,7 +318,7 @@ def discover_work_ids_cmd(
     if not terms:
         raise typer.BadParameter("Set NZLC_SEARCH_TERMS or pass --search-terms.")
     types = _split_option(legislation_types, settings.legislation_types)
-    status = legislation_status if legislation_status is not None else settings.legislation_status
+    status = _optional_filter(legislation_status, settings.legislation_status)
     client = NZLegislationClient(settings)
     inventory = build_work_id_inventory(
         client,

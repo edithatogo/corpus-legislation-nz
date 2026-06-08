@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from nz_legislation_corpus.cli import _optional_filter
 from nz_legislation_corpus.discovery import build_work_id_inventory
 
 
@@ -74,3 +75,12 @@ def test_build_work_id_inventory_honors_max_works() -> None:
 
     assert inventory["work_ids"] == ["work-2"]
     assert inventory["record_count"] == 1
+
+
+def test_optional_filter_omits_blank_and_none_sentinels() -> None:
+    assert _optional_filter(None, "current") == "current"
+    assert _optional_filter(" historical ", None) == "historical"
+    assert _optional_filter("", "current") is None
+    assert _optional_filter("none", "current") is None
+    assert _optional_filter("NULL", "current") is None
+    assert _optional_filter("-", "current") is None
