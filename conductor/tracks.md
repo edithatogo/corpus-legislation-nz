@@ -795,7 +795,6 @@ Evidence to record:
 
 Remaining external evidence:
 
-- Dry-run/no-upload GitHub Actions run URL is pending execution on GitHub.
 - First reviewed historical upload run URL remains intentionally pending until
   historical target and batch-plan review are approved.
 
@@ -810,6 +809,10 @@ Current evidence:
   workflow with `workflow_dispatch`, fail-closed `HF_HISTORICAL_REPO_ID`
   checks, dry-run artifacts, and an upload step gated by
   `upload_confirmed=true`.
+- Dry-run/no-upload proof passed:
+  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27194196559`.
+  The upload step was skipped because `upload_confirmed=false`, and dry-run
+  artifacts were uploaded.
 - `conductor/tracks/track_23_manual_historical_upload_workflow/spec.md`
   records the workflow contract.
 - `conductor/tracks/track_23_manual_historical_upload_workflow/plan.md`

@@ -11,15 +11,26 @@
   dataset by default.
 - [x] Parent workflow owner completes and verifies
   `.github/workflows/historical_hf_upload.yml`.
-- [ ] Record a dry-run/no-upload workflow run URL after merge.
+- [x] Record a dry-run/no-upload workflow run URL after merge.
 - [ ] Record the first reviewed historical upload run URL
   only after Track 21 and Track 22 pass.
 
 ## Remaining external evidence
 
-- Dry-run/no-upload GitHub Actions run URL is pending execution on GitHub.
 - First reviewed historical upload run URL remains pending until the historical
   target and batch plan are approved for writes.
+
+## Dry-run proof
+
+- Run URL:
+  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27194196559`.
+- Event: `workflow_dispatch`.
+- Result: success.
+- Inputs: `upload_confirmed=false`, `search_terms=act`,
+  `legislation_status=none`, `legislation_types=act`, `max_pages=1`,
+  `max_works=1`, `min_seconds_between_requests=1.0`.
+- Upload behavior: `Upload to historical Hugging Face dataset` was skipped and
+  dry-run artifacts were uploaded.
 
 ## Documentation evidence
 

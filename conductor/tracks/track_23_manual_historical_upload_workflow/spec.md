@@ -62,8 +62,15 @@ uv run nzlc hf-upload
   `upload_confirmed=true`.
 - Local validation completed with YAML parsing and `actionlint`.
 
+## Dry-run Evidence
+
+- Dry-run/no-upload Actions run:
+  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27194196559`.
+- Result: success.
+- Upload behavior: upload step skipped because `upload_confirmed=false`; dry-run
+  artifacts uploaded.
+
 ## Remaining External Evidence
 
-- Dry-run/no-upload Actions run URL pending after merge.
 - Reviewed historical upload run URL pending after historical target and batch
   plan approval.
