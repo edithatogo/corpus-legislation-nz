@@ -50,6 +50,18 @@ The `hf_sync.yml` workflow will:
 4. generate manifests and coverage reports;
 5. upload the corpus folder to Hugging Face with `hf upload-large-folder`.
 
+Scheduled runs are intentionally bounded by default so routine operations do not
+start an unreviewed broad historical crawl. Unless overridden by repository
+variables, `schedule` events use:
+
+```text
+NZLC_SCHEDULE_MAX_WORKS=5
+NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS=1.0
+```
+
+Manual `workflow_dispatch` runs can still pass explicit `max_works` and
+`min_seconds_between_requests` inputs for smoke tests or reviewed larger runs.
+
 ## Why Xet matters
 
 Hugging Face Hub uses Xet-backed storage for large files. Xet deduplicates content at the chunk level, so stable Parquet files with stable ordering reduce repeat upload cost. This is why the pipeline avoids daily monolithic archives and instead writes stable partitions.

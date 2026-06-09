@@ -86,13 +86,23 @@ jobs:
           NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
           NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
           NZLC_OUTPUT_DIR: data
+          NZLC_MANUAL_MAX_WORKS: ${{ github.event.inputs.max_works || '' }}
+          NZLC_SCHEDULE_MAX_WORKS: ${{ vars.NZLC_SCHEDULE_MAX_WORKS || '5' }}
+          NZLC_MANUAL_MIN_SECONDS_BETWEEN_REQUESTS: ${{ github.event.inputs.min_seconds_between_requests || '' }}
+          NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS: ${{ vars.NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS || '1.0' }}
         run: |
           set -euo pipefail
           args=()
           if [ "${{ github.event.inputs.latest_only || 'false' }}" = "true" ]; then args+=(--latest-only); fi
-          if [ -n "${{ github.event.inputs.max_works || '' }}" ]; then args+=(--max-works "${{ github.event.inputs.max_works }}"); fi
-          if [ -n "${{ github.event.inputs.min_seconds_between_requests || '' }}" ]; then
-            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ github.event.inputs.min_seconds_between_requests }}"
+          if [ -n "$NZLC_MANUAL_MAX_WORKS" ]; then
+            args+=(--max-works "$NZLC_MANUAL_MAX_WORKS")
+          elif [ "${{ github.event_name }}" = "schedule" ] && [ -n "$NZLC_SCHEDULE_MAX_WORKS" ]; then
+            args+=(--max-works "$NZLC_SCHEDULE_MAX_WORKS")
+          fi
+          if [ -n "$NZLC_MANUAL_MIN_SECONDS_BETWEEN_REQUESTS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$NZLC_MANUAL_MIN_SECONDS_BETWEEN_REQUESTS"
+          elif [ "${{ github.event_name }}" = "schedule" ] && [ -n "$NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS"
           fi
           uv run nzlc sync "${args[@]}"
 
