@@ -96,7 +96,7 @@ Do not delete Git-tracked files. Safe generated paths are:
 - `.hf_cache/`
 - `.pytest_cache/`
 - `.ruff_cache/`
-- `.mypy_cache/`
+- `.ty_cache/`
 - `test-tmp/`
 
 On Windows, resolve the target path before deleting and verify it is inside the repository root. Prefer moving a generated directory to a dated quarantine folder first if there is any uncertainty.

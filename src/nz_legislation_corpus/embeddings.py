@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import logging
 from typing import Any
 
@@ -12,12 +13,12 @@ def get_bge_m3_model() -> Any:
     global _model
     if _model is None:
         try:
-            from FlagEmbedding import BGEM3FlagModel
+            flag_embedding = importlib.import_module("FlagEmbedding")
             logger.info("Loading BAAI/bge-m3 model (this may take a few seconds)...")
             # Set use_fp16=True if GPU is available to speed up execution
-            import torch
+            torch = importlib.import_module("torch")
             use_fp16 = torch.cuda.is_available()
-            _model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=use_fp16)
+            _model = flag_embedding.BGEM3FlagModel("BAAI/bge-m3", use_fp16=use_fp16)
             logger.info("BAAI/bge-m3 model loaded successfully.")
         except ImportError as e:
             raise ImportError(

@@ -21,7 +21,8 @@
 
 - `pytest` for tests.
 - `ruff` for linting and import sorting.
-- `mypy` for static typing.
+- `ty` for static typing, with all available rules promoted to errors where
+  the current `ty` release supports that severity.
 - `pre-commit` for local checks.
 
 ## Data and artifact formats
@@ -70,7 +71,7 @@ Future Zenodo draft/archive workflow changes should use or formally evaluate htt
 
 ## Bleeding-edge automation target
 
-The corpus-family target is documented in `docs/bleeding-edge-versioning-ci-quality.md`. Prefer Rust-backed tooling where practical: `uv` for Python dependency management, `ruff` for lint/format/imports, `typos` for spelling/identifier checks, `zizmor` for GitHub Actions security linting, `taplo` for TOML linting, and local `ripgrep` for maintenance audits. Retain best-in-class non-Rust tools where needed, including `mypy` or `pyright`, CodeQL, OpenSSF Scorecard, Renovate, and `actionlint`.
+The corpus-family target is documented in `docs/bleeding-edge-versioning-ci-quality.md`. Prefer Rust-backed tooling where practical: `uv` for Python dependency management, `ruff` for lint/format/imports, `ty` for Python type checking, `typos` for spelling/identifier checks, `zizmor` for GitHub Actions security linting, `taplo` for TOML linting, and local `ripgrep` for maintenance audits. Retain best-in-class non-Rust tools where needed, including CodeQL, OpenSSF Scorecard, Renovate, and `actionlint`.
 
 Release automation should separate code/package versions, dataset versions, schema versions, Hugging Face revisions, Zenodo DOI snapshots, and manifest hashes. Zenodo draft workflows should use or formally evaluate `https://github.com/zenodraft/zenodraft`.
 

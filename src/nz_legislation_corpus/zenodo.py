@@ -33,12 +33,15 @@ class ZenodoClient:
         return {**self.headers, "Content-Type": "application/json"}
 
     def _request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
+        response: requests.Response | None = None
         for attempt in range(1, 6):
             response = self.session.request(method, url, timeout=self.timeout, **kwargs)
             if response.status_code >= 500 and attempt < 5:
                 time.sleep(min(60, 2**attempt))
                 continue
             return response
+        if response is None:
+            raise RuntimeError(f"Zenodo request loop did not execute: {method} {url}")
         return response
 
     def create_deposition(self) -> dict[str, Any]:

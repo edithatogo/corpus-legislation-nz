@@ -1,11 +1,23 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
 
 class WorkSearchClient(Protocol):
-    def iter_search_works(self, **kwargs: Any): ...
+    def iter_search_works(
+        self,
+        *,
+        search_term: str,
+        search_field: str = "title",
+        per_page: int | None = None,
+        max_pages: int | None = None,
+        legislation_type: str | None = None,
+        legislation_status: str | None = None,
+        sort_by: str | None = None,
+        publisher: str | None = None,
+    ) -> Iterator[dict[str, Any]]: ...
 
 
 def build_work_id_inventory(
@@ -21,7 +33,7 @@ def build_work_id_inventory(
     max_works: int | None,
 ) -> dict[str, Any]:
     """Discover unique work IDs from search-oriented API results."""
-    type_filters: list[str | None] = legislation_types or [None]
+    type_filters: list[str | None] = list(legislation_types) if legislation_types else [None]
     seen_work_ids: set[str] = set()
     works: list[dict[str, Any]] = []
     queries: list[dict[str, Any]] = []

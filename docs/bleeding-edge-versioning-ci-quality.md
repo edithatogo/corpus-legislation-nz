@@ -54,7 +54,7 @@ Prefer fast, low-maintenance Rust-backed tools where practical:
 | GitHub Actions security lint | `zizmor` | Rust-backed; audit workflow security and permissions. |
 | TOML formatting/linting | `taplo` | Rust-backed; useful once pyproject/TOML config expands. |
 | Search/local audit | `ripgrep` | Rust-backed; local maintenance helper, not required in CI. |
-| Python type checking | `mypy` or `pyright` | Not Rust-backed, but still required until a robust Rust-backed alternative exists. |
+| Python type checking | `ty` | Rust-backed Astral type checker; configure all supported rules as errors for the strictest available project mode. |
 | GitHub Action syntax | `actionlint` | Go-backed; still recommended because it is best-in-class. |
 
 ## CI/CD baseline
@@ -66,7 +66,7 @@ Every repository should converge on:
 - `uv sync --frozen` for Python dependency resolution once `pyproject.toml` and lockfile exist.
 - `ruff check` and `ruff format --check`.
 - pytest as the test runner, even if unittest tests are still collected during transition.
-- type checking for packaged modules.
+- `ty check` for packaged modules with `[tool.ty.rules] all = "error"` or the strictest supported equivalent for the installed `ty` release.
 - `typos` spell/identifier check.
 - `zizmor` GitHub Actions security lint.
 - CodeQL.

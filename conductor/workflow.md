@@ -25,7 +25,7 @@
 
 - Run `pytest` for Python behavior changes.
 - Run `ruff` for formatting and lint checks when code changes are made.
-- Run `mypy` when type-sensitive code changes are made.
+- Run `ty check` when type-sensitive code changes are made.
 - Prefer narrow, task-specific validation over broad unrelated sweeps.
 - Mock or isolate networked services in tests unless the task explicitly
   requires live verification.

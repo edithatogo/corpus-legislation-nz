@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -169,7 +169,7 @@ def sync(
     existing_records = (
         {} if replace else {str(r.get("stable_id")): r for r in existing_rows if r.get("stable_id")}
     )
-    records: list[dict] = []
+    records: list[dict[str, Any]] = []
     seen_work_ids_for_stats: set[str] = set()
 
     for version_stub in client.discover_versions(

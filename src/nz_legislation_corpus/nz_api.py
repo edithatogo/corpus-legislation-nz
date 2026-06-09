@@ -5,7 +5,7 @@ import random
 import time
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol, cast
 from urllib.parse import urljoin
 
 import requests
@@ -21,6 +21,21 @@ class NZAPIResponse:
     headers: dict[str, str]
 
 
+class HTTPResponse(Protocol):
+    status_code: int
+    headers: Mapping[str, str]
+    content: bytes
+    text: str
+
+    def json(self) -> Any: ...
+    def raise_for_status(self) -> None: ...
+
+
+class HTTPSession(Protocol):
+    def request(self, method: str, url: str, **kwargs: Any) -> HTTPResponse: ...
+    def get(self, url: str, **kwargs: Any) -> HTTPResponse: ...
+
+
 class NZLegislationClient:
     """Client for the official New Zealand Legislation API.
 
@@ -29,11 +44,13 @@ class NZLegislationClient:
     limit event.
     """
 
-    def __init__(self, settings: Settings, session: requests.Session | None = None):
+    def __init__(self, settings: Settings, session: HTTPSession | None = None):
         self.settings = settings
         self.api_key = require(settings.nz_api_key, "NZ_LEGISLATION_API_KEY")
         self.base_url = settings.nz_api_base_url.rstrip("/") + "/"
-        self.session = session or requests.Session()
+        self.session: HTTPSession = (
+            session if session is not None else cast(HTTPSession, requests.Session())
+        )
         self.last_request_at = 0.0
 
     def _url(self, path: str) -> str:
@@ -77,7 +94,7 @@ class NZLegislationClient:
         time.sleep(sleep_seconds)
 
     @staticmethod
-    def _retry_after_seconds(response: requests.Response, *, fallback_attempt: int) -> float:
+    def _retry_after_seconds(response: HTTPResponse, *, fallback_attempt: int) -> float:
         retry_after = response.headers.get("Retry-After")
         if retry_after is not None:
             try:
@@ -179,7 +196,7 @@ class NZLegislationClient:
             params["sort_by"] = sort_by
         if publisher:
             params["publisher"] = publisher
-        return self.request_json("GET", "works/", params=params).data  # type: ignore[return-value]
+        return cast(dict[str, Any], self.request_json("GET", "works/", params=params).data)
 
     def iter_search_works(
         self,
@@ -221,7 +238,10 @@ class NZLegislationClient:
                 break
 
     def get_work_versions(self, work_id: str, *, sort: str = "desc") -> dict[str, Any]:
-        return self.request_json("GET", f"works/{work_id}/versions/", params={"sort": sort}).data  # type: ignore[return-value]
+        return cast(
+            dict[str, Any],
+            self.request_json("GET", f"works/{work_id}/versions/", params={"sort": sort}).data,
+        )
 
     def iter_work_versions(self, work_id: str, *, sort: str = "desc") -> Iterator[dict[str, Any]]:
         payload = self.get_work_versions(work_id, sort=sort)
@@ -229,7 +249,7 @@ class NZLegislationClient:
         yield from results
 
     def get_version(self, version_id: str) -> dict[str, Any]:
-        return self.request_json("GET", f"versions/{version_id}/").data  # type: ignore[return-value]
+        return cast(dict[str, Any], self.request_json("GET", f"versions/{version_id}/").data)
 
     @staticmethod
     def format_url(version: dict[str, Any], fmt: str) -> str | None:

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 import requests
@@ -14,13 +16,9 @@ from nz_legislation_corpus.nz_api import NZLegislationClient
 class FakeResponse:
     status_code: int
     payload: object | None = None
-    headers: dict[str, str] | None = None
+    headers: Mapping[str, str] = field(default_factory=dict)
     content: bytes = b""
     text: str = ""
-
-    def __post_init__(self) -> None:
-        if self.headers is None:
-            self.headers = {}
 
     def json(self) -> object:
         return self.payload
@@ -35,16 +33,16 @@ class FakeSession:
         self.responses = list(responses)
         self.requests: list[tuple[str, str]] = []
 
-    def request(self, method: str, url: str, **kwargs):
+    def request(self, method: str, url: str, **kwargs: Any) -> FakeResponse:
         self.requests.append((method, url))
         return self.responses.pop(0)
 
-    def get(self, url: str, **kwargs):
+    def get(self, url: str, **kwargs: Any) -> FakeResponse:
         return self.request("GET", url, **kwargs)
 
 
-def make_settings(**overrides) -> Settings:
-    values = dict(
+def make_settings(**overrides: Any) -> Settings:
+    values: dict[str, Any] = dict(
         nz_api_key="secret",
         nz_api_base_url="https://api.example.invalid/v0",
         output_dir=Path("data"),
@@ -73,7 +71,7 @@ def make_settings(**overrides) -> Settings:
         pipeline_version="test",
     )
     values.update(overrides)
-    return Settings(**values)
+    return Settings(**cast(Any, values))
 
 
 def test_request_json_respects_minimum_spacing(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -154,13 +152,15 @@ def test_discover_versions_honors_max_works() -> None:
     works = [{"work_id": str(index), "title": f"Work {index}"} for index in range(1, 11)]
     seen_work_ids: list[str] = []
 
-    client.iter_search_works = lambda **kwargs: iter(works)  # type: ignore[method-assign]
+    client.iter_search_works = lambda **kwargs: iter(works)  # ty: ignore[invalid-assignment]
 
-    def fake_iter_work_versions(work_id: str, *, sort: str = "desc"):
+    def fake_iter_work_versions(
+        work_id: str, *, sort: str = "desc"
+    ) -> Iterator[dict[str, str]]:
         seen_work_ids.append(work_id)
         return iter([{"version_id": f"{work_id}-v1", "work_id": work_id}])
 
-    client.iter_work_versions = fake_iter_work_versions  # type: ignore[method-assign]
+    client.iter_work_versions = fake_iter_work_versions  # ty: ignore[invalid-assignment]
 
     versions = list(client.discover_versions(search_terms=["acts"], search_field="title", max_works=5))
 
@@ -173,13 +173,15 @@ def test_discover_versions_honors_max_works_for_seed_ids() -> None:
     seed_ids = [f"seed-{index}" for index in range(1, 8)]
     seen_work_ids: list[str] = []
 
-    client.iter_search_works = lambda **kwargs: iter([{"work_id": "search-1", "title": "Search"}])  # type: ignore[method-assign]
+    client.iter_search_works = lambda **kwargs: iter([{"work_id": "search-1", "title": "Search"}])  # ty: ignore[invalid-assignment]
 
-    def fake_iter_work_versions(work_id: str, *, sort: str = "desc"):
+    def fake_iter_work_versions(
+        work_id: str, *, sort: str = "desc"
+    ) -> Iterator[dict[str, str]]:
         seen_work_ids.append(work_id)
         return iter([{"version_id": f"{work_id}-v1", "work_id": work_id}])
 
-    client.iter_work_versions = fake_iter_work_versions  # type: ignore[method-assign]
+    client.iter_work_versions = fake_iter_work_versions  # ty: ignore[invalid-assignment]
 
     versions = list(
         client.discover_versions(

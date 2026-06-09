@@ -24,7 +24,7 @@ dependencies = [
 dev = [
   "pytest>=8.2.0",
   "ruff>=0.15.16",
-  "mypy>=1.10.0",
+  "ty>=0.0.46",
   "pre-commit>=4.0.0",
 ]
 embeddings = [
@@ -54,3 +54,10 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ty.environment]
+root = ["src", "tests"]
+python-version = "3.11"
+
+[tool.ty.rules]
+all = "error"
