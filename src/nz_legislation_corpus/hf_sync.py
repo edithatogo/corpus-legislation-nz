@@ -21,6 +21,18 @@ DEFAULT_EXCLUDES = [
     ".cache/**",
 ]
 
+MANAGED_PATH_PREFIXES = (
+    "_state/",
+    "manifests/",
+    "parquet/",
+    "raw_xml/",
+)
+
+MANAGED_ROOT_FILES = {
+    "README.md",
+    "records.jsonl",
+}
+
 
 def remote_manifest(repo_id: str, *, token: str | None = None, revision: str = "main") -> dict[str, Any] | None:
     try:
@@ -41,6 +53,66 @@ def create_dataset_repo_if_needed(repo_id: str, *, token: str | None = None, pri
     api.create_repo(repo_id=repo_id, repo_type="dataset", private=private, exist_ok=True)
 
 
+def _is_managed_remote_path(path: str) -> bool:
+    return path in MANAGED_ROOT_FILES or path.startswith(MANAGED_PATH_PREFIXES)
+
+
+def _local_repo_paths(folder: Path) -> set[str]:
+    paths: set[str] = set()
+    for path in folder.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(folder).as_posix()
+        if any(path.match(pattern) for pattern in DEFAULT_EXCLUDES):
+            continue
+        paths.add(rel)
+    return paths
+
+
+def _stale_remote_paths(
+    repo_id: str,
+    folder: Path,
+    *,
+    token: str | None = None,
+    revision: str = "main",
+) -> list[str]:
+    api = HfApi(token=token)
+    try:
+        remote_paths = api.list_repo_files(repo_id=repo_id, repo_type="dataset", revision=revision)
+    except RepositoryNotFoundError:
+        return []
+    local_paths = _local_repo_paths(folder)
+    return sorted(
+        path
+        for path in remote_paths
+        if _is_managed_remote_path(path) and path not in local_paths
+    )
+
+
+def prune_stale_remote_paths(
+    repo_id: str,
+    stale_paths: list[str],
+    *,
+    token: str | None = None,
+    revision: str = "main",
+) -> int:
+    if not stale_paths:
+        return 0
+    api = HfApi(token=token)
+    for path in stale_paths:
+        try:
+            api.delete_file(
+                path_in_repo=path,
+                repo_id=repo_id,
+                repo_type="dataset",
+                revision=revision,
+                commit_message=f"Prune stale NZ legislation corpus file: {path}",
+            )
+        except EntryNotFoundError:
+            continue
+    return len(stale_paths)
+
+
 def upload_large_folder(
     repo_id: str,
     folder: Path,
@@ -49,6 +121,7 @@ def upload_large_folder(
     revision: str = "main",
     quiet: bool = True,
     num_workers: int | None = None,
+    prune: bool = True,
 ) -> str:
     """Upload with `hf upload-large-folder`, falling back to HfApi.upload_folder.
 
@@ -76,9 +149,16 @@ def upload_large_folder(
         cmd.extend(["--num-workers", str(num_workers)])
     for pattern in DEFAULT_EXCLUDES:
         cmd.extend(["--exclude", pattern])
+    stale_paths = (
+        _stale_remote_paths(repo_id, folder, token=token, revision=revision) if prune else []
+    )
     try:
         result = subprocess.run(cmd, check=True, text=True, capture_output=True, env=env)
-        return result.stdout.strip() or result.stderr.strip() or f"https://huggingface.co/datasets/{repo_id}/tree/{revision}"
+        url = (
+            result.stdout.strip()
+            or result.stderr.strip()
+            or f"https://huggingface.co/datasets/{repo_id}/tree/{revision}"
+        )
     except (FileNotFoundError, subprocess.CalledProcessError):
         api = HfApi(token=token)
         api.upload_folder(
@@ -90,4 +170,10 @@ def upload_large_folder(
             commit_message="Sync NZ legislation corpus",
             ignore_patterns=DEFAULT_EXCLUDES,
         )
-        return f"https://huggingface.co/datasets/{repo_id}/tree/{revision}"
+        url = f"https://huggingface.co/datasets/{repo_id}/tree/{revision}"
+    pruned = prune_stale_remote_paths(
+        repo_id, stale_paths, token=token, revision=revision
+    )
+    if pruned:
+        return f"{url}\nPruned {pruned} stale managed file(s)."
+    return url
