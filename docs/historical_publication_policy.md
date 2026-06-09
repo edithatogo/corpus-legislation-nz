@@ -11,26 +11,51 @@ publication workflow are ready.
 
 - Keep `edithatogo/nz-legislation-corpus` for the current verified partial
   corpus line.
+- Use `edithatogo/nz-legislation-corpus-historical` as the historical corpus
+  publication target.
 - Treat `historical_sync_pilot.yml` outputs as artifact-only publication
   candidates.
 - Do not publish historical records to Hugging Face from the pilot workflow.
-- If historical outputs are published later, use a separate dataset repository
-  such as `edithatogo/nz-legislation-corpus-historical`, or another explicitly
-  documented historical target.
+- If historical outputs are published later, publish them only to
+  `edithatogo/nz-legislation-corpus-historical`, unless a later reviewed change
+  records a replacement historical target.
+- Configure GitHub historical upload workflows with `HF_HISTORICAL_REPO_ID`.
+  They must not fall back to `HF_REPO_ID`.
+- Keep historical upload workflows manual-only. Do not add a `schedule` trigger
+  unless a later reviewed track deliberately approves maintenance automation.
+- Make the first workflow proof a dry-run/no-upload run. Real historical writes
+  require an explicit manual upload choice after target and batch-plan review.
 - Keep public wording explicit that search-derived historical seeds are partial
   until reconciled against an authoritative inventory.
 
 ## Required proof before historical publication
 
-Before any historical upload workflow is added or enabled:
+Before any real historical upload run is enabled or performed:
 
 - run a bounded artifact-only pilot from `historical_sync_pilot.yml`;
 - review `generated/historical-work-ids.provenance.json`;
 - review `data-historical-pilot/manifests/latest_manifest.json`;
 - review `data-historical-pilot/manifests/coverage_report.json`;
 - confirm failed-version state in `data-historical-pilot/_state/sync_state.json`;
-- record the intended Hugging Face target dataset and whether it is separate
-  from the current live partial corpus.
+- confirm `HF_HISTORICAL_REPO_ID` is set to
+  `edithatogo/nz-legislation-corpus-historical`;
+- confirm `HF_HISTORICAL_REPO_ID` is not equal to `HF_REPO_ID`;
+- confirm the planned workflow has no scheduled trigger and fails before upload
+  when `HF_HISTORICAL_REPO_ID` is absent or equal to `HF_REPO_ID`.
+
+## Historical upload guardrails
+
+The historical upload path is fail-closed:
+
+- If `HF_HISTORICAL_REPO_ID` is absent, stop before any data sync or upload.
+- If `HF_HISTORICAL_REPO_ID` equals `HF_REPO_ID`, stop before any data sync or
+  upload.
+- If the manual run is not explicitly approved for upload, run validation,
+  manifest, and coverage generation only.
+- Do not write to `edithatogo/nz-legislation-corpus` from historical workflows.
+
+This keeps the live partial/API-discovery dataset protected by default while
+allowing a reviewed historical dataset to be staged separately.
 
 ## Current pilot evidence
 

@@ -2,6 +2,10 @@
 
 The live Hugging Face dataset currently contains an intentionally partial API-discovery corpus. It is not the old or full historical corpus.
 
+Historical publication uses a separate Hugging Face dataset:
+`edithatogo/nz-legislation-corpus-historical`. Do not upload historical records
+to `edithatogo/nz-legislation-corpus`.
+
 Historical bootstrap starts with a deterministic work-ID inventory. Do not run a full historical sync from broad search terms directly, because broad search discovery is not proof of full coverage and is hard to resume or audit.
 
 ## Phase 1: discover work IDs
@@ -61,6 +65,30 @@ live Hugging Face dataset remains the verified partial/API-discovery corpus, and
 historical outputs stay artifact-only until a separate historical publication
 target is explicitly reviewed.
 
-## Phase 4: full historical bootstrap
+## Phase 4: reviewed bootstrap plan
 
-After seed review, split the seed file into batches and follow `docs/runtime_capacity_runbook.md`. Preserve `data/_state/sync_state.json` between batches. Upload to Hugging Face only after validation, manifest, and coverage outputs are reviewed.
+Track 22 review is recorded in `docs/historical_bootstrap_review.md`.
+
+The reviewed historical publication target is
+`edithatogo/nz-legislation-corpus-historical`. Do not upload historical records
+to `edithatogo/nz-legislation-corpus`.
+
+The successful pilot artifact from GitHub Actions run `27138352849` produced 52
+validated records from 10 search-derived work IDs. It proves the pilot path and
+resume state, but not full historical coverage.
+
+After seed review, split the seed file into batches and follow
+`docs/runtime_capacity_runbook.md`. Preserve `records.jsonl`, `raw_xml/`,
+`parquet/`, `data/_state/sync_state.json`, manifests, and coverage outputs
+between batches. Upload to Hugging Face only after validation, manifest,
+coverage, failed-version state, and the separate historical target are reviewed.
+
+Historical upload configuration must use:
+
+```text
+HF_HISTORICAL_REPO_ID=edithatogo/nz-legislation-corpus-historical
+```
+
+Do not reuse `HF_REPO_ID` for historical publication. The future historical
+upload workflow should fail closed unless the historical repository variable is
+set and differs from the live partial corpus target.

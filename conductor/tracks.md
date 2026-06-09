@@ -652,16 +652,19 @@ Evidence to record:
 
 Current evidence:
 
-- Launch date: not assigned; current decision is `do not launch yet`.
-- Hugging Face revision: blocked until the live dataset is published or verified.
-- GitHub release or tag: blocked until a release/tag is created in `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- Launch date: 2026-06-09; current decision is launch approved for the
+  intentional partial/API-discovery dataset.
+- Hugging Face revision:
+  `8d48d807c5c8da73f8ad164734245d9ea73046f3`.
+- GitHub release or tag: `v0.1.0-partial.20260609`,
+  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/releases/tag/v0.1.0-partial.20260609`.
 - Final launch checklist: `docs/public_launch_decision.md`.
 - Draft release note: `docs/public_launch_release_note.md`.
 - Tracking issues: #10 through #15 in `edithatogo/nz-legislation-corpus-pipeline`.
 
 ## Track 20 - GitHub Release Tag For Partial Launch
 
-Status: `ready`
+Status: `done`
 
 Goal: create a GitHub release and tag for the approved intentional partial/API-discovery launch.
 
@@ -681,19 +684,22 @@ Acceptance criteria:
 
 Evidence to record:
 
-- GitHub release URL.
-- Tag name and commit SHA.
-- Commit updating launch docs.
+- GitHub release URL:
+  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/releases/tag/v0.1.0-partial.20260609`.
+- Tag name and commit SHA: `v0.1.0-partial.20260609` at
+  `3196fb415276e1d1e8edd3c394ddeac30d4485a9`.
+- Commit updating launch docs: this implementation branch records the release
+  URL in `docs/public_launch_decision.md`.
 
 ## Track 21 - Separate Historical Hugging Face Corpus
 
-Status: `ready`
+Status: `done`
 
 Goal: prepare historical corpus publication as a separate Hugging Face dataset, following the Hansard-style separation pattern and avoiding overwrite of the live six-record dataset.
 
 Actions:
 
-- Use a separate Hugging Face dataset target such as `edithatogo/nz-legislation-corpus-historical`.
+- Use the separate Hugging Face dataset target `edithatogo/nz-legislation-corpus-historical`.
 - Document that `edithatogo/nz-legislation-corpus` remains the live partial/API-discovery dataset.
 - Confirm or create the historical Hugging Face dataset shell with root-level layout.
 - Configure a separate repository variable such as `HF_HISTORICAL_REPO_ID`.
@@ -711,9 +717,15 @@ Evidence to record:
 - Root layout or creation command output.
 - GitHub variable names, not secret values.
 
+Completion evidence:
+
+- Historical target documented as `edithatogo/nz-legislation-corpus-historical`.
+- Live target `edithatogo/nz-legislation-corpus` remains the partial/API-discovery corpus and must not be overwritten.
+- GitHub variable contract documented as `HF_HISTORICAL_REPO_ID=edithatogo/nz-legislation-corpus-historical`.
+
 ## Track 22 - Historical Bootstrap Review Plan
 
-Status: `ready`
+Status: `done`
 
 Goal: turn the historical pilot into a reviewed bootstrap plan before any historical publication workflow is enabled.
 
@@ -736,14 +748,22 @@ Acceptance criteria:
 
 Evidence to record:
 
-- Pilot workflow run URL and artifact name.
-- Work ID count, record count, manifest hash, and coverage summary.
-- Failed-version summary.
-- Batch plan and historical Hugging Face target.
+- Pilot workflow run URL and artifact name:
+  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27138352849`,
+  artifact `historical-sync-pilot`.
+- Work ID count, record count, manifest hash, and coverage summary: reviewed in
+  `docs/historical_bootstrap_review.md`; 10 work IDs, 52 validated records,
+  manifest SHA-256
+  `3a6e6abdccaa6a8124fece672a708a8f6e61389cd32b575ccc13367a5d23b0ae`.
+- Failed-version summary: `records_failed: 0`, warnings empty, 52 version hash
+  entries available for resume.
+- Batch plan and historical Hugging Face target: documented in
+  `docs/historical_bootstrap_review.md`; target
+  `edithatogo/nz-legislation-corpus-historical`.
 
 ## Track 23 - Manual Historical Upload Workflow
 
-Status: `blocked`
+Status: `done`
 
 Goal: add a disabled/manual historical upload workflow only after the historical target and bootstrap plan are explicit.
 
@@ -753,13 +773,18 @@ Actions:
 - Wait for Track 22 to approve pilot evidence, batch sizes, and publication policy.
 - Add a manual-only workflow separate from `hf_sync.yml`.
 - Require an explicit `HF_HISTORICAL_REPO_ID` repository variable or workflow input.
+- Fail closed if `HF_HISTORICAL_REPO_ID` is absent or equals `HF_REPO_ID`.
 - Keep historical upload disabled for schedules unless a later track deliberately enables maintenance automation.
+- Default to dry-run/no-upload behavior until the historical target and batch plan are approved.
 - Add guardrails preventing writes to the live `HF_REPO_ID` by default.
 
 Acceptance criteria:
 
 - Historical upload workflow is manual-only and separate from live sync.
 - Workflow fails closed unless the historical target is explicitly configured.
+- Workflow rejects `HF_HISTORICAL_REPO_ID=HF_REPO_ID`.
+- Workflow has no scheduled trigger.
+- Dry-run/no-upload behavior is documented for first proof runs.
 - Documentation states that historical outputs must not overwrite the live dataset.
 
 Evidence to record:
@@ -768,7 +793,24 @@ Evidence to record:
 - Dry-run or no-upload workflow run URL.
 - First reviewed historical upload run URL, only after Track 21 and Track 22 pass.
 
-Current blocker:
+Remaining external evidence:
 
-- Track 21 has not yet recorded the separate historical Hugging Face target.
-- Track 22 has not yet reviewed the pilot artifact and approved batch/publication parameters.
+- Dry-run/no-upload GitHub Actions run URL is pending execution on GitHub.
+- First reviewed historical upload run URL remains intentionally pending until
+  historical target and batch-plan review are approved.
+
+Current evidence:
+
+- `docs/HUGGINGFACE_SETUP.md` records the manual historical upload contract:
+  distinct `HF_HISTORICAL_REPO_ID`, fail-closed target checks, no schedule, and
+  dry-run/no-upload first proof.
+- `docs/historical_publication_policy.md` records the publication guardrails
+  that protect the live `HF_REPO_ID` dataset from historical writes by default.
+- `.github/workflows/historical_hf_upload.yml` adds a separate manual-only
+  workflow with `workflow_dispatch`, fail-closed `HF_HISTORICAL_REPO_ID`
+  checks, dry-run artifacts, and an upload step gated by
+  `upload_confirmed=true`.
+- `conductor/tracks/track_23_manual_historical_upload_workflow/spec.md`
+  records the workflow contract.
+- `conductor/tracks/track_23_manual_historical_upload_workflow/plan.md`
+  records the implementation and local verification state.
