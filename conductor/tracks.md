@@ -658,3 +658,117 @@ Current evidence:
 - Final launch checklist: `docs/public_launch_decision.md`.
 - Draft release note: `docs/public_launch_release_note.md`.
 - Tracking issues: #10 through #15 in `edithatogo/nz-legislation-corpus-pipeline`.
+
+## Track 20 - GitHub Release Tag For Partial Launch
+
+Status: `ready`
+
+Goal: create a GitHub release and tag for the approved intentional partial/API-discovery launch.
+
+Actions:
+
+- Confirm `docs/public_launch_decision.md` records launch approval and the scheduled-run waiver.
+- Choose a release tag, for example `v0.1.0-partial.20260609`.
+- Create a GitHub release on `main` for the partial/API-discovery dataset launch.
+- Update `docs/public_launch_decision.md` so `GitHub release or tag` records the real tag.
+- Confirm release notes do not claim full New Zealand legislation coverage.
+
+Acceptance criteria:
+
+- A GitHub release/tag exists for the approved partial launch.
+- Launch docs record the release/tag.
+- Public wording remains clear that the dataset is partial/API-discovery based.
+
+Evidence to record:
+
+- GitHub release URL.
+- Tag name and commit SHA.
+- Commit updating launch docs.
+
+## Track 21 - Separate Historical Hugging Face Corpus
+
+Status: `ready`
+
+Goal: prepare historical corpus publication as a separate Hugging Face dataset, following the Hansard-style separation pattern and avoiding overwrite of the live six-record dataset.
+
+Actions:
+
+- Use a separate Hugging Face dataset target such as `edithatogo/nz-legislation-corpus-historical`.
+- Document that `edithatogo/nz-legislation-corpus` remains the live partial/API-discovery dataset.
+- Confirm or create the historical Hugging Face dataset shell with root-level layout.
+- Configure a separate repository variable such as `HF_HISTORICAL_REPO_ID`.
+- Ensure historical pilots and uploads cannot write to `HF_REPO_ID` unless explicitly intended.
+
+Acceptance criteria:
+
+- Historical publication target is documented and separate from the live dataset.
+- Historical dataset shell exists or has a precise creation runbook.
+- Repository variables/secrets distinguish live and historical upload targets.
+
+Evidence to record:
+
+- Historical Hugging Face dataset URL.
+- Root layout or creation command output.
+- GitHub variable names, not secret values.
+
+## Track 22 - Historical Bootstrap Review Plan
+
+Status: `ready`
+
+Goal: turn the historical pilot into a reviewed bootstrap plan before any historical publication workflow is enabled.
+
+Actions:
+
+- Retrieve the latest `historical-sync-pilot` artifact produced by a
+  `historical_sync_pilot.yml` workflow run.
+- Review `generated/historical-work-ids.provenance.json`.
+- Review `data-historical-pilot/manifests/latest_manifest.json`.
+- Review `data-historical-pilot/manifests/coverage_report.json`.
+- Review `data-historical-pilot/_state/sync_state.json`, including failed-version state.
+- Define batch sizes, pacing, resume checkpoints, and stop conditions for the historical bootstrap.
+- Record the chosen publication target from Track 21.
+
+Acceptance criteria:
+
+- Pilot artifact evidence is reviewed and summarized.
+- Failed versions and coverage caveats are documented.
+- Batch plan and publication target are approved before upload code is added.
+
+Evidence to record:
+
+- Pilot workflow run URL and artifact name.
+- Work ID count, record count, manifest hash, and coverage summary.
+- Failed-version summary.
+- Batch plan and historical Hugging Face target.
+
+## Track 23 - Manual Historical Upload Workflow
+
+Status: `blocked`
+
+Goal: add a disabled/manual historical upload workflow only after the historical target and bootstrap plan are explicit.
+
+Actions:
+
+- Wait for Track 21 to define the separate historical Hugging Face target.
+- Wait for Track 22 to approve pilot evidence, batch sizes, and publication policy.
+- Add a manual-only workflow separate from `hf_sync.yml`.
+- Require an explicit `HF_HISTORICAL_REPO_ID` repository variable or workflow input.
+- Keep historical upload disabled for schedules unless a later track deliberately enables maintenance automation.
+- Add guardrails preventing writes to the live `HF_REPO_ID` by default.
+
+Acceptance criteria:
+
+- Historical upload workflow is manual-only and separate from live sync.
+- Workflow fails closed unless the historical target is explicitly configured.
+- Documentation states that historical outputs must not overwrite the live dataset.
+
+Evidence to record:
+
+- Pull request URL adding the workflow.
+- Dry-run or no-upload workflow run URL.
+- First reviewed historical upload run URL, only after Track 21 and Track 22 pass.
+
+Current blocker:
+
+- Track 21 has not yet recorded the separate historical Hugging Face target.
+- Track 22 has not yet reviewed the pilot artifact and approved batch/publication parameters.
