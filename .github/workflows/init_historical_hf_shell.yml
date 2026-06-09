@@ -59,7 +59,7 @@ jobs:
           HF_PRIVATE: ${{ inputs.private }}
         run: |
           set -euo pipefail
-          ./scripts/create_huggingface_dataset_repo.sh "$HF_REPO_ID"
+          bash ./scripts/create_huggingface_dataset_repo.sh "$HF_REPO_ID"
           {
             echo "Initialized historical Hugging Face dataset shell."
             echo "Dataset: https://huggingface.co/datasets/$HF_REPO_ID"
