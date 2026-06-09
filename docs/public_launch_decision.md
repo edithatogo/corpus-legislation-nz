@@ -1,8 +1,9 @@
 # Public launch decision
 
-Decision status: do not launch yet.
+Decision status: launch approved for the intentional partial/API-discovery
+dataset.
 
-Decision date: 2026-06-08.
+Decision date: 2026-06-09.
 
 ## Launch gate
 
@@ -10,24 +11,24 @@ Public launch requires every gate below to be satisfied or explicitly waived in 
 
 | Gate | Current status | Evidence required |
 | --- | --- | --- |
-| Tracks 01-14 done or explicitly waived | Blocked | Track status review showing no unresolved blockers, or dated waiver for each blocker. See issues #10-#14. |
+| Tracks 01-14 done or explicitly waived | Ready for intentional partial/API-discovery launch | Track blockers that would overstate full coverage remain out of public wording. The scheduled-run gate in issue #12 was explicitly waived by the repository owner on 2026-06-09. See issues #10-#14. |
 | Hugging Face live dataset exists | Ready | Dataset URL: `https://huggingface.co/datasets/edithatogo/nz-legislation-corpus`; revision: `8d48d807c5c8da73f8ad164734245d9ea73046f3`; manifest hash: `134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2`; sample Parquet read passed. See issue #13. |
 | Dataset scope is accurate | Ready for intentional partial/API-discovery launch | No authoritative `seeds/work_ids.txt` exists and current public wording retains the partial/API-discovery boundary. See issue #11 and `docs/source_inventory_status.md`. |
 | First full or intentionally partial corpus uploaded | Ready for intentional partial/API-discovery launch | `hf_sync.yml` uploaded a six-record validated corpus. Current content hash: `da764d2dc63a86b6da00d573843abe33e27d73bc80254bef65ca837316a83ebc`; current record count: 6. See issues #12 and #13. |
-| GitHub scheduled sync enabled and passing | Blocked | `hf_sync.yml` run URL after first upload and scheduled-run confirmation. See issue #12. |
+| GitHub scheduled sync enabled and passing | Waived on 2026-06-09 | Manual live sync, restore/no-change, manifest, coverage, and upload proof passed. The first post-fix scheduled event did not dispatch after the temporary accelerated cron and stale-run cancellation, so the repository owner explicitly waived this launch gate on 2026-06-09. See issue #12. |
 | Zenodo production archive published | Ready | Published record: `https://zenodo.org/records/20592540`; DOI: `10.5281/zenodo.20592540`; concept DOI: `10.5281/zenodo.20592539`; run: `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27132519663`; archive, manifest, and checksum files are present. See issue #14. |
-| Public README, dataset card, and citation files match actual coverage | Ready for current prelaunch state | README, dataset card, and citation text currently state coverage is not proven complete and avoid fixed DOI claims. Recheck after live corpus publication. |
+| Public README, dataset card, and citation files match actual coverage | Ready for intentional partial/API-discovery launch | README, dataset card, and citation text state coverage is not proven complete and cite the Zenodo DOI only as the fixed-version snapshot. |
 | Monthly and annual operating checklist exists | Ready locally | `docs/maintenance_runbook.md`, `docs/reconciliation_runbook.md`, `docs/runtime_capacity_runbook.md`, and `docs/schema_governance.md`. |
 
 ## Final launch checklist
 
-Before changing this decision to launch:
+Completed launch evidence:
 
 1. Confirm `conductor/tracks.md` shows Tracks 01-14 as `done` or has dated waiver notes for each blocker.
 2. Record the GitHub repository URL and release/tag.
 3. Record the Hugging Face dataset URL, revision, and manifest hash.
 4. Run a sample Hugging Face Parquet read and save the output path or query result.
-5. Confirm `hf_sync.yml` has passed after the first upload.
+5. Confirm `hf_sync.yml` has passed after the first upload, or record an explicit waiver.
 6. Confirm the weekly doctor workflow has passed.
 7. Confirm the Zenodo production archive has passed and checksums match.
 8. Re-read `README.md`, `DATASET_CARD.md`, and `CITATION.cff` against the actual coverage state.
@@ -37,24 +38,29 @@ Before changing this decision to launch:
 ## Evidence fields to fill at launch
 
 ```text
-Launch date:
-GitHub repository URL:
-GitHub release or tag:
-Hugging Face dataset URL:
-Hugging Face revision:
-Manifest hash:
-Coverage statement:
-Record count:
-First passing scheduled sync URL:
-Doctor workflow URL:
+Launch date: 2026-06-09
+GitHub repository URL: https://github.com/edithatogo/nz-legislation-corpus-pipeline
+GitHub release or tag: not yet tagged
+Hugging Face dataset URL: https://huggingface.co/datasets/edithatogo/nz-legislation-corpus
+Hugging Face revision: 8d48d807c5c8da73f8ad164734245d9ea73046f3
+Manifest hash: 134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2
+Coverage statement: intentional partial/API-discovery corpus; full New Zealand legislation coverage is not proven
+Record count: 6
+First passing scheduled sync URL: waived by repository owner on 2026-06-09
+Doctor workflow URL: https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27116561990
 Zenodo production archive URL: https://zenodo.org/records/20592540
 Zenodo production DOI: 10.5281/zenodo.20592540
-Final reviewer:
+Final reviewer: repository owner waiver plus maintainer review
 ```
 
 ## Current rationale
 
-Launching now would still overstate operational readiness. The GitHub repository exists at `https://github.com/edithatogo/nz-legislation-corpus-pipeline`, the Hugging Face dataset now exists with a verified intentionally partial/API-discovery corpus, and the Zenodo production archive has been published. Full coverage is not claimed. Launch remains blocked because the first scheduled sync proof has not completed.
+Launch is approved for the intentional partial/API-discovery dataset. The GitHub
+repository exists at `https://github.com/edithatogo/nz-legislation-corpus-pipeline`,
+the Hugging Face dataset exists with a verified six-record corpus, and the
+Zenodo production archive has been published. Full New Zealand legislation
+coverage is not claimed. The first scheduled sync proof did not complete and was
+explicitly waived by the repository owner on 2026-06-09.
 
 ## Tracking issues
 

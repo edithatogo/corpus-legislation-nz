@@ -1,6 +1,8 @@
-# Draft public launch release note
+# Public launch release note
 
-Status: draft only. Do not publish until `docs/public_launch_decision.md` is changed to a launch decision with scheduled-sync evidence.
+Status: launch approved on 2026-06-09 for the intentional partial/API-discovery
+dataset. The scheduled-sync launch gate was explicitly waived by the repository
+owner on 2026-06-09.
 
 ## New Zealand Legislation Corpus
 
@@ -24,6 +26,7 @@ Manifest hash: 134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2
 Hugging Face revision: 8d48d807c5c8da73f8ad164734245d9ea73046f3
 Zenodo DOI: 10.5281/zenodo.20592540
 Zenodo record: https://zenodo.org/records/20592540
+Scheduled sync gate: waived by repository owner on 2026-06-09
 ```
 
 ## Caveats
