@@ -40,7 +40,7 @@ Completed launch evidence:
 ```text
 Launch date: 2026-06-09
 GitHub repository URL: https://github.com/edithatogo/nz-legislation-corpus-pipeline
-GitHub release or tag: not yet tagged
+GitHub release or tag: v0.1.0-partial.20260609; https://github.com/edithatogo/nz-legislation-corpus-pipeline/releases/tag/v0.1.0-partial.20260609
 Hugging Face dataset URL: https://huggingface.co/datasets/edithatogo/nz-legislation-corpus
 Hugging Face revision: 8d48d807c5c8da73f8ad164734245d9ea73046f3
 Manifest hash: 134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2

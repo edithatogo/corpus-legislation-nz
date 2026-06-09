@@ -1,0 +1,277 @@
+name: Historical Hugging Face upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_confirmed:
+        description: "Actually upload to HF_HISTORICAL_REPO_ID; false performs a no-upload dry run"
+        type: boolean
+        default: false
+      search_terms:
+        description: "Comma-separated search terms for seed discovery"
+        type: string
+        default: "act,bill,regulation,order,notice"
+      legislation_status:
+        description: "Status filter; use none to omit"
+        type: string
+        default: "none"
+      legislation_types:
+        description: "Comma-separated legislation types"
+        type: string
+        default: "act,bill,secondary_legislation,amendment_paper"
+      max_pages:
+        description: "Optional page limit per search/type query"
+        type: string
+        default: "2"
+      max_works:
+        description: "Total discovered-work and sync limit"
+        type: string
+        default: "50"
+      min_seconds_between_requests:
+        description: "Optional request spacing override in seconds"
+        type: string
+        default: "0.5"
+      force_upload:
+        description: "Upload even if the remote historical manifest content hash matches"
+        type: boolean
+        default: false
+      private:
+        description: "Create the historical dataset repo as private if missing"
+        type: boolean
+        default: false
+
+concurrency:
+  group: historical-hf-upload-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  historical-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      HISTORICAL_OUTPUT_DIR: data-historical-upload
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Guard historical dataset target
+        env:
+          HF_HISTORICAL_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HF_HISTORICAL_REPO_ID:-}" ]; then
+            echo "HF_HISTORICAL_REPO_ID must be configured as a repository variable." >&2
+            exit 1
+          fi
+          if [ -n "${HF_REPO_ID:-}" ] && [ "$HF_HISTORICAL_REPO_ID" = "$HF_REPO_ID" ]; then
+            echo "HF_HISTORICAL_REPO_ID must not equal HF_REPO_ID." >&2
+            exit 1
+          fi
+          case "$HF_HISTORICAL_REPO_ID" in
+            "edithatogo/nz-legislation-corpus")
+              echo "Refusing to write historical outputs to the live partial dataset." >&2
+              exit 1
+              ;;
+          esac
+          {
+            echo "Historical dataset target: $HF_HISTORICAL_REPO_ID"
+            echo "Upload confirmed: ${{ inputs.upload_confirmed }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Discover historical seed
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
+          fi
+          args=(
+            --search-terms "${{ inputs.search_terms }}"
+            --legislation-status "${{ inputs.legislation_status }}"
+            --legislation-types "${{ inputs.legislation_types }}"
+            --output-path generated/historical-work-ids.txt
+            --provenance-path generated/historical-work-ids.provenance.json
+          )
+          if [ -n "${{ inputs.max_pages }}" ]; then args+=(--max-pages "${{ inputs.max_pages }}"); fi
+          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          uv run nzlc discover-work-ids "${args[@]}"
+
+      - name: Sync historical corpus
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_OUTPUT_DIR: ${{ env.HISTORICAL_OUTPUT_DIR }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
+          fi
+          args=(
+            --seed-work-ids generated/historical-work-ids.txt
+            --allow-no-search-terms
+            --replace
+          )
+          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          uv run nzlc sync "${args[@]}"
+
+      - name: Stage historical dataset card
+        env:
+          HF_HISTORICAL_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          import os
+          import textwrap
+          from pathlib import Path
+
+          historical_repo_id = os.environ.get("HF_HISTORICAL_REPO_ID")
+          output_dir = os.environ.get("HISTORICAL_OUTPUT_DIR")
+          if not historical_repo_id:
+              raise SystemExit("HF_HISTORICAL_REPO_ID is required.")
+          if not output_dir:
+              raise SystemExit("HISTORICAL_OUTPUT_DIR is required.")
+          dataset_card = textwrap.dedent(f"""\
+          ---
+          license: other
+          language:
+          - en
+          tags:
+          - new-zealand
+          - legislation
+          - law
+          - legal-corpus
+          - historical
+          - parquet
+          pretty_name: New Zealand Legislation Historical Corpus
+          ---
+
+          # New Zealand Legislation Historical Corpus
+
+          This dataset is the separate historical publication target for New Zealand legislation records collected through the official New Zealand Legislation API.
+
+          It is distinct from the live partial/API-discovery dataset at `edithatogo/nz-legislation-corpus`. Historical uploads must target `{historical_repo_id}` and must not overwrite the live dataset.
+
+          Coverage is not yet proven complete until the historical bootstrap plan, failed-version state, manifest, and coverage report are reviewed.
+          """)
+          Path(output_dir, "README.md").write_text(
+              dataset_card,
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Validate and summarize historical corpus
+        env:
+          NZLC_OUTPUT_DIR: ${{ env.HISTORICAL_OUTPUT_DIR }}
+          HF_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Record historical publication guardrails
+        env:
+          HF_HISTORICAL_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HISTORICAL_OUTPUT_DIR/manifests"
+          uv run python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          historical_repo_id = os.environ.get("HF_HISTORICAL_REPO_ID")
+          output_dir = os.environ.get("HISTORICAL_OUTPUT_DIR")
+          if not historical_repo_id:
+              raise SystemExit("HF_HISTORICAL_REPO_ID is required.")
+          if not output_dir:
+              raise SystemExit("HISTORICAL_OUTPUT_DIR is required.")
+
+          policy = {
+              "schema_version": "1.0",
+              "policy": "manual_historical_upload",
+              "historical_huggingface_dataset": historical_repo_id,
+              "live_huggingface_dataset": os.environ.get("HF_REPO_ID"),
+              "live_dataset_boundary": "verified partial/API-discovery corpus",
+              "upload_confirmed": "${{ inputs.upload_confirmed }}",
+              "guards": [
+                  "HF_HISTORICAL_REPO_ID is required.",
+                  "HF_HISTORICAL_REPO_ID must not equal HF_REPO_ID.",
+                  "The live partial dataset is explicitly refused as a historical target.",
+                  "The workflow has no schedule and defaults to no-upload dry run.",
+              ],
+          }
+          Path(output_dir, "manifests", "publication_policy.json").write_text(
+              json.dumps(policy, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload dry-run artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-hf-upload-dry-run
+          path: |
+            generated/
+            ${{ env.HISTORICAL_OUTPUT_DIR }}/records.jsonl
+            ${{ env.HISTORICAL_OUTPUT_DIR }}/README.md
+            ${{ env.HISTORICAL_OUTPUT_DIR }}/manifests/
+            ${{ env.HISTORICAL_OUTPUT_DIR }}/_state/
+          if-no-files-found: error
+
+      - name: Upload to historical Hugging Face dataset
+        if: ${{ inputs.upload_confirmed }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
+          NZLC_OUTPUT_DIR: ${{ env.HISTORICAL_OUTPUT_DIR }}
+          HF_XET_HIGH_PERFORMANCE: "1"
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "${{ inputs.force_upload }}" = "true" ]; then args+=(--force); fi
+          if [ "${{ inputs.private }}" = "true" ]; then args+=(--private); fi
+          uv run nzlc hf-upload "${args[@]}"
+
+      - name: Dry-run notice
+        if: ${{ !inputs.upload_confirmed }}
+        run: |
+          set -euo pipefail
+          echo "No upload performed. Set upload_confirmed=true only after reviewing the artifact outputs." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Step summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Historical Hugging Face upload" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Workflow: manual only" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Upload confirmed: ${{ inputs.upload_confirmed }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$HISTORICAL_OUTPUT_DIR/_state/sync_state.json" ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$HISTORICAL_OUTPUT_DIR/_state/sync_state.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f "$HISTORICAL_OUTPUT_DIR/manifests/latest_manifest.json" ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$HISTORICAL_OUTPUT_DIR/manifests/latest_manifest.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
