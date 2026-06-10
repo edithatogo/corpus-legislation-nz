@@ -40,8 +40,11 @@ jobs:
           from __future__ import annotations
 
           import os
+          import tempfile
+          from pathlib import Path
 
-          from huggingface_hub import HfApi
+          from huggingface_hub import HfApi, snapshot_download
+          from huggingface_hub.errors import HfHubHTTPError
           from huggingface_hub.utils import RepositoryNotFoundError
 
           token = os.environ["HF_TOKEN"]
@@ -58,31 +61,65 @@ jobs:
               ),
           ]
 
-          for old_id, new_id in renames:
+          def repo_exists(repo_id: str) -> bool:
               try:
-                  api.repo_info(repo_id=new_id, repo_type="dataset")
-                  new_exists = True
+                  api.repo_info(repo_id=repo_id, repo_type="dataset")
+                  return True
               except RepositoryNotFoundError:
-                  new_exists = False
+                  return False
 
-              try:
-                  api.repo_info(repo_id=old_id, repo_type="dataset")
-                  old_exists = True
-              except RepositoryNotFoundError:
-                  old_exists = False
+          def copy_dataset(old_id: str, new_id: str) -> None:
+              print(f"Copying {old_id} -> {new_id}")
+              api.create_repo(
+                  repo_id=new_id,
+                  repo_type="dataset",
+                  private=False,
+                  exist_ok=True,
+              )
+              with tempfile.TemporaryDirectory() as tmp:
+                  local_dir = Path(
+                      snapshot_download(
+                          repo_id=old_id,
+                          repo_type="dataset",
+                          token=token,
+                          local_dir=Path(tmp) / "snapshot",
+                      )
+                  )
+                  api.upload_folder(
+                      repo_id=new_id,
+                      repo_type="dataset",
+                      folder_path=str(local_dir),
+                      path_in_repo=".",
+                      commit_message=f"Copy dataset from {old_id} after repository rename",
+                      ignore_patterns=[".cache/**"],
+                  )
+              api.repo_info(repo_id=new_id, repo_type="dataset")
+              print(f"Confirmed copied dataset: {new_id}")
+
+          for old_id, new_id in renames:
+              new_exists = repo_exists(new_id)
+              old_exists = repo_exists(old_id)
 
               if new_exists and not old_exists:
                   print(f"Already renamed: {new_id}")
                   continue
               if new_exists and old_exists:
-                  raise RuntimeError(
-                      f"Both source and target exist; refusing ambiguous move: {old_id} -> {new_id}"
+                  print(
+                      f"Target already exists while source remains; leaving both in place: {old_id} -> {new_id}"
                   )
+                  continue
               if not old_exists:
                   raise RuntimeError(f"Source dataset does not exist: {old_id}")
 
               print(f"Moving {old_id} -> {new_id}")
-              api.move_repo(from_id=old_id, to_id=new_id, repo_type="dataset")
-              api.repo_info(repo_id=new_id, repo_type="dataset")
-              print(f"Confirmed {new_id}")
+              try:
+                  api.move_repo(from_id=old_id, to_id=new_id, repo_type="dataset")
+                  api.repo_info(repo_id=new_id, repo_type="dataset")
+                  print(f"Confirmed moved dataset: {new_id}")
+              except HfHubHTTPError as exc:
+                  message = str(exc)
+                  if "Digital Object Identifier" not in message and "409 Conflict" not in message:
+                      raise
+                  print(f"Move blocked by Hugging Face DOI/409 policy for {old_id}; copying instead.")
+                  copy_dataset(old_id, new_id)
           PY
