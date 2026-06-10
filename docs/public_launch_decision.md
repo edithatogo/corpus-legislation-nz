@@ -12,7 +12,7 @@ Public launch requires every gate below to be satisfied or explicitly waived in 
 | Gate | Current status | Evidence required |
 | --- | --- | --- |
 | Tracks 01-14 done or explicitly waived | Ready for intentional partial/API-discovery launch | Track blockers that would overstate full coverage remain out of public wording. The scheduled-run gate in issue #12 was explicitly waived by the repository owner on 2026-06-09. See issues #10-#14. |
-| Hugging Face live dataset exists | Ready | Dataset URL: `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`; revision: `8d48d807c5c8da73f8ad164734245d9ea73046f3`; manifest hash: `134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2`; sample Parquet read passed. See issue #13. |
+| Hugging Face live dataset exists | Ready | Dataset URL: `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`; current verified revision after repository rename/card update: `6b082e2f85802cb374898d689d264017a047799b`; launch upload revision: `8d48d807c5c8da73f8ad164734245d9ea73046f3`; manifest hash: `134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2`; sample Parquet read passed. See issue #13. |
 | Dataset scope is accurate | Ready for intentional partial/API-discovery launch | No authoritative `seeds/work_ids.txt` exists and current public wording retains the partial/API-discovery boundary. See issue #11 and `docs/source_inventory_status.md`. |
 | First full or intentionally partial corpus uploaded | Ready for intentional partial/API-discovery launch | `hf_sync.yml` uploaded a six-record validated corpus. Current content hash: `da764d2dc63a86b6da00d573843abe33e27d73bc80254bef65ca837316a83ebc`; current record count: 6. See issues #12 and #13. |
 | GitHub scheduled sync enabled and passing | Waived on 2026-06-09 | Manual live sync, restore/no-change, manifest, coverage, and upload proof passed. The first post-fix scheduled event did not dispatch after the temporary accelerated cron and stale-run cancellation, so the repository owner explicitly waived this launch gate on 2026-06-09. See issue #12. |
@@ -24,7 +24,7 @@ Public launch requires every gate below to be satisfied or explicitly waived in 
 
 Completed launch evidence:
 
-1. Confirm `conductor/tracks.md` shows Tracks 01-14 as `done` or has dated waiver notes for each blocker.
+1. Confirm `conductor/tracks.md` distinguishes completed partial-launch gates from blockers that remain only for full-completeness claims.
 2. Record the GitHub repository URL and release/tag.
 3. Record the Hugging Face dataset URL, revision, and manifest hash.
 4. Run a sample Hugging Face Parquet read and save the output path or query result.
@@ -42,7 +42,7 @@ Launch date: 2026-06-09
 GitHub repository URL: https://github.com/edithatogo/corpus-legislation-nz
 GitHub release or tag: v0.1.0-partial.20260609; https://github.com/edithatogo/corpus-legislation-nz/releases/tag/v0.1.0-partial.20260609
 Hugging Face dataset URL: https://huggingface.co/datasets/edithatogo/corpus-legislation-nz
-Hugging Face revision: 8d48d807c5c8da73f8ad164734245d9ea73046f3
+Hugging Face revision: 6b082e2f85802cb374898d689d264017a047799b
 Manifest hash: 134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2
 Coverage statement: intentional partial/API-discovery corpus; full New Zealand legislation coverage is not proven
 Record count: 6
@@ -62,7 +62,15 @@ Zenodo production archive has been published. Full New Zealand legislation
 coverage is not claimed. The first scheduled sync proof did not complete and was
 explicitly waived by the repository owner on 2026-06-09.
 
+Current public-surface evidence is recorded in
+`docs/public_surface_evidence_ledger.md`.
+
 ## Tracking issues
+
+All launch tracking issues are closed as of the 2026-06-10 reconciliation. The
+remaining work is roadmap/completeness work, not an open launch blocker.
+
+Closed launch issues:
 
 - #10 Configure required repository secrets.
 - #11 Establish authoritative work-id inventory or partial-scope boundary.
@@ -70,3 +78,11 @@ explicitly waived by the repository owner on 2026-06-09.
 - #13 Create and verify Hugging Face dataset shell.
 - #14 Prove Zenodo production draft archive before publication.
 - #15 Make final public launch decision.
+
+## Post-launch rename note
+
+The public repository and primary Hugging Face dataset were renamed to
+`corpus-legislation-nz` on 2026-06-10. The Zenodo record now relates to
+`https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`. Published
+Zenodo archive filenames still contain the old launch prefix because those files
+are part of the immutable DOI snapshot.

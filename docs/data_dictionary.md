@@ -2,6 +2,11 @@
 
 This dictionary summarizes the stable record fields defined in `schemas/legislation_record.schema.json`. Parquet output omits `raw_version_metadata` by default to keep the analytical table compact.
 
+For generated cross-corpus metadata and endpoint exports, see the shared NZ
+corpus core schema in `docs/shared_nz_corpus_core_schema.md` and
+`schemas/shared_nz_corpus_core.schema.json`. That shared schema is a
+compatibility layer; it does not replace this legislation record schema.
+
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `record_schema_version` | string | yes | Public record schema version. Current value: `1.0`. |

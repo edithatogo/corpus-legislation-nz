@@ -5,6 +5,7 @@ This is intentionally safe and idempotent. It creates the dataset repository if 
 is missing, then uploads lightweight repository metadata only. It does not upload
 corpus data; the GitHub Actions sync workflow owns data publication.
 """
+
 from __future__ import annotations
 
 import os
@@ -33,12 +34,16 @@ def required_env(name: str) -> str:
 def main() -> int:
     repo_id = os.getenv("HF_REPO_ID") or (sys.argv[1] if len(sys.argv) > 1 else "")
     if not repo_id or "/" not in repo_id:
-        raise SystemExit("Usage: HF_TOKEN=... HF_REPO_ID=namespace/name scripts/init_huggingface_dataset.py")
+        raise SystemExit(
+            "Usage: HF_TOKEN=... HF_REPO_ID=namespace/name scripts/init_huggingface_dataset.py"
+        )
 
     token = required_env("HF_TOKEN")
     private = env_bool("HF_PRIVATE", default=False)
     pretty_name = os.getenv("HF_DATASET_PRETTY_NAME", "New Zealand Legislation Corpus")
-    source_repo = os.getenv("GITHUB_REPO_URL", "https://github.com/edithatogo/corpus-legislation-nz")
+    source_repo = os.getenv(
+        "GITHUB_REPO_URL", "https://github.com/edithatogo/corpus-legislation-nz"
+    )
     zenodo_placeholder = os.getenv("ZENODO_CONCEPT_DOI", "TBD after first annual snapshot")
     created_at = datetime.now(UTC).isoformat()
 
@@ -129,7 +134,7 @@ def main() -> int:
 
     dataset_infos = dedent(f"""\
     {{
-      "{repo_id.split('/')[-1]}": {{
+      "{repo_id.split("/")[-1]}": {{
         "description": "Live New Zealand legislation corpus pipeline maintained by an automated API-first workflow. Coverage is not proven complete until reconciled against an authoritative inventory.",
         "citation": "For live use, cite the Hugging Face dataset URL, access date, and manifest hash. Cite the annual Zenodo snapshot for fixed-version academic/legal references once available.",
         "homepage": "https://huggingface.co/datasets/{repo_id}",

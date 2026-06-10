@@ -1,7 +1,7 @@
 # Spec - Credential And Secret Inventory
 
 ## Status
-blocked
+done
 
 ## Goal
 confirm all credentials and GitHub variables required for live corpus operations are present, scoped correctly, and stored in the right place.

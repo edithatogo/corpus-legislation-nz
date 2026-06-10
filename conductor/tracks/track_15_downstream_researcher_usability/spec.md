@@ -1,7 +1,7 @@
 # Spec - Downstream Researcher Usability
 
 ## Status
-blocked
+ready
 
 ## Goal
 make the published corpus easy to inspect and query after the live hub is stable.

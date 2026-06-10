@@ -18,6 +18,11 @@ pretty_name: New Zealand Legislation Corpus
 
 This dataset is intended to contain machine-readable New Zealand legislation records collected through the official New Zealand Legislation API and published as optimized Parquet shards for live use. Coverage is not yet proven complete.
 
+This dataset is part of the NZ corpus-family roadmap. The preferred systematic
+family label is `corpus-nz-legislation`, while this published Hugging Face
+dataset intentionally remains `edithatogo/corpus-legislation-nz`. The sibling
+Hansard corpus is `corpus-nz-hansard`.
+
 ## Source provenance
 
 Records include source URLs, API URLs, format URLs, hashes, scrape timestamps, and pipeline version metadata.
@@ -90,4 +95,4 @@ For academic or fixed-version citation, cite the Zenodo snapshot DOI: `10.5281/z
 
 ## Licensing and legal caveat
 
-The code that builds this dataset is licensed separately in the source repository. This dataset card does not relicense legislation text or third-party source material. Check the official New Zealand Legislation copyright page and your own institution's policies before redistributing or relying on the dataset. This dataset is provided for information and research support, not legal advice.
+The code that builds this dataset is licensed separately in the source repository. This dataset card does not relicense legislation text or third-party source material. Check the official New Zealand Legislation copyright page and your own institution's policies before redistributing or relying on the dataset. Zenodo archive metadata may use `cc-by-4.0` for project-created metadata, packaging, manifests, checksums, and permitted source material; it must not be read as a blanket relicense of all upstream source material. This dataset is provided for information and research support, not legal advice.

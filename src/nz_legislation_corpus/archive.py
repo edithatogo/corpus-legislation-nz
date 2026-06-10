@@ -3,10 +3,19 @@ from __future__ import annotations
 import tarfile
 from pathlib import Path
 
+from .artifact_provenance import build_release_evidence
 from .manifest import build_manifest
 from .utils import sha256_file, write_json
 
-_EXCLUDED_PARTS = {".git", "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache", "cache", ".cache"}
+_EXCLUDED_PARTS = {
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    "cache",
+    ".cache",
+}
 _EXCLUDED_NAMES = {".DS_Store"}
 
 
@@ -19,7 +28,9 @@ def _tar_filter(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
     return tarinfo
 
 
-def build_archive(input_dir: Path, output_dir: Path, *, year: str, prefer_zstd: bool = True) -> dict[str, str]:
+def build_archive(
+    input_dir: Path, output_dir: Path, *, year: str, prefer_zstd: bool = True
+) -> dict[str, str]:
     output_dir.mkdir(parents=True, exist_ok=True)
     base = f"corpus-legislation-nz-{year}.tar"
     archive_path = output_dir / (base + ".zst")
@@ -54,14 +65,27 @@ def build_archive(input_dir: Path, output_dir: Path, *, year: str, prefer_zstd: 
     manifest["archive_compression"] = compression
     write_json(manifest_path, manifest)
 
+    provenance_path = output_dir / f"corpus-legislation-nz-{year}.release-evidence.json"
+    build_release_evidence(
+        artifact_class="annual_zenodo_archive",
+        output_path=provenance_path,
+        subjects=[archive_path, manifest_path],
+        manifest=manifest,
+        coverage_statement=(
+            "Coverage is not proven complete until reconciled against an authoritative inventory."
+        ),
+        publication_target="zenodo",
+    )
+
     checksums_path = output_dir / f"corpus-legislation-nz-{year}.SHA256SUMS.txt"
     lines = []
-    for path in [archive_path, manifest_path]:
+    for path in [archive_path, manifest_path, provenance_path]:
         lines.append(f"{sha256_file(path)}  {path.name}")
     checksums_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return {
         "archive_path": str(archive_path),
         "manifest_path": str(manifest_path),
+        "provenance_path": str(provenance_path),
         "checksums_path": str(checksums_path),
         "compression": compression,
     }

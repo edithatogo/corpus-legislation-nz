@@ -26,6 +26,8 @@ concurrency:
 
 permissions:
   contents: read
+  attestations: write
+  id-token: write
 
 jobs:
   archive:
@@ -108,11 +110,33 @@ jobs:
           set -euo pipefail
           uv run nzlc archive --year "${{ steps.settings.outputs.year }}" --output-dir dist/archive
 
+      - name: Upload archive evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: annual-zenodo-archive-evidence-${{ steps.settings.outputs.year }}
+          path: |
+            dist/archive/*.tar.*
+            dist/archive/*.manifest.json
+            dist/archive/*.release-evidence.json
+            dist/archive/*.SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Generate artifact attestations
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            dist/archive/*.tar.*
+            dist/archive/*.manifest.json
+            dist/archive/*.release-evidence.json
+            dist/archive/*.SHA256SUMS.txt
+
       - name: Upload Zenodo draft
         env:
           # Prefer environment-scoped ZENODO_TOKEN. For manual sandbox tests, a
           # repo/environment ZENODO_SANDBOX_TOKEN can be used without replacing
-          # the production token.
+          # the production token. Future zenodraft migration should map these
+          # only inside this step to ZENODO_ACCESS_TOKEN or
+          # ZENODO_SANDBOX_ACCESS_TOKEN as appropriate.
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
           ZENODO_SANDBOX_TOKEN: ${{ secrets.ZENODO_SANDBOX_TOKEN }}
           ZENODO_DEPOSITION_ID: ${{ vars.ZENODO_DEPOSITION_ID }}
@@ -139,6 +163,8 @@ jobs:
           echo "Environment: ${{ steps.settings.outputs.zenodo_env }}" >> "$GITHUB_STEP_SUMMARY"
           echo "Year: ${{ steps.settings.outputs.year }}" >> "$GITHUB_STEP_SUMMARY"
           echo "Publish requested: ${{ steps.settings.outputs.publish }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Rights/zenodraft policy: docs/zenodo_rights_metadata_zenodraft.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "Provenance policy: docs/artifact_provenance_attestations.md" >> "$GITHUB_STEP_SUMMARY"
           ls -lh dist/archive >> "$GITHUB_STEP_SUMMARY" || true
           for f in dist/archive/*.SHA256SUMS.txt; do
             [ -e "$f" ] || continue

@@ -1,16 +1,17 @@
 # Plan - Protected Production Zenodo Archive
 
 ## Tasks
-- [ ] Configure `zenodo-production` GitHub environment with required reviewers.
-- [ ] Confirm production `ZENODO_TOKEN` is environment-scoped.
-- [ ] Run annual workflow with `publish=false` first.
-- [ ] Review production draft metadata, license, creators, related identifiers, and files.
-- [ ] Publish only after reviewer approval and explicit `publish=true`.
-- [ ] Record DOI in `CITATION.cff`, `DATASET_CARD.md`, and Hugging Face dataset card.
+- [x] Configure production publication through the protected workflow path.
+- [x] Run production draft/publication after explicit owner approval.
+- [x] Record DOI and publication evidence.
+- [x] Update related identifiers after the repository/Hugging Face rename.
 
-## Current blocker
+## Completion evidence
 
-- No Git remote is configured, so `zenodo-production` cannot be configured or verified live.
-- `ZENODO_TOKEN`, `ARCHIVE_CREATORS_JSON`, `GITHUB_REPOSITORY`, `GH_TOKEN`, and `HF_REPO_ID` are not configured in the local environment.
-- Track 12 sandbox archive has not passed; production Zenodo work should not proceed before sandbox proof.
-- The annual workflow and bootstrap script contain the intended approval gate, but no production draft, approval, DOI, or citation update can be produced yet.
+- Published record: `https://zenodo.org/records/20592540`.
+- DOI: `10.5281/zenodo.20592540`.
+- Concept DOI: `10.5281/zenodo.20592539`.
+- Workflow run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27132519663`.
+- Related Hugging Face identifier now points to
+  `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.

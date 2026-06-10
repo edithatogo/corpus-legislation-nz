@@ -61,7 +61,9 @@ def normalize_version_record(
     raw_sha = sha256_bytes(raw_content) if raw_content else ""
     id_parts = f"{work_id} {version_id}"
     id_is_ephemeral = "~" in id_parts
-    id_ephemeral_reason = "contains ~ segment per NZ Legislation API identifier rules" if id_is_ephemeral else ""
+    id_ephemeral_reason = (
+        "contains ~ segment per NZ Legislation API identifier rules" if id_is_ephemeral else ""
+    )
     now = datetime.now(UTC).replace(microsecond=0)
     record = {
         "record_schema_version": RECORD_SCHEMA_VERSION,
@@ -73,13 +75,22 @@ def normalize_version_record(
         "country": "NZ",
         "source": "New Zealand Legislation API",
         "source_url": html_url or xml_url or pdf_url or raw_content_url or "",
-        "api_url": f"https://api.legislation.govt.nz/v0/versions/{version_id}/" if version_id else "",
+        "api_url": f"https://api.legislation.govt.nz/v0/versions/{version_id}/"
+        if version_id
+        else "",
         "xml_url": xml_url or "",
         "html_url": html_url or "",
         "pdf_url": pdf_url or "",
         "legislation_type": legislation_type,
-        "legislation_subtype": version.get("act_type") or version.get("bill_type") or version.get("instrument_type_group") or "",
-        "legislation_status": version.get("legislation_status") or version.get("act_status") or version.get("bill_status") or version.get("instrument_status") or "",
+        "legislation_subtype": version.get("act_type")
+        or version.get("bill_type")
+        or version.get("instrument_type_group")
+        or "",
+        "legislation_status": version.get("legislation_status")
+        or version.get("act_status")
+        or version.get("bill_status")
+        or version.get("instrument_status")
+        or "",
         "version_date": version.get("version_date") or version.get("date") or "",
         "year": year,
         "scrape_date": now.date().isoformat(),
@@ -88,7 +99,10 @@ def normalize_version_record(
         "is_latest_version": bool(version.get("is_latest_version", False)),
         "language": "en",
         "text": text,
-        "raw_xml_sha256": raw_sha if (raw_content_url or "").lower().endswith(".xml/") or "xml" in (raw_content_type or "").lower() else "",
+        "raw_xml_sha256": raw_sha
+        if (raw_content_url or "").lower().endswith(".xml/")
+        or "xml" in (raw_content_type or "").lower()
+        else "",
         "raw_content_sha256": raw_sha,
         "text_sha256": sha256_text(text),
         "source_hash": sha256_bytes(raw_content or version_json),

@@ -13,3 +13,8 @@
 - Public NZ Legislation API documentation checked on 2026-06-07 did not identify a complete work-ID export, bulk inventory endpoint, or modified-since enumeration endpoint.
 - No authoritative `seeds/work_ids.txt` exists in this repository.
 - The remaining tasks require an official export, authoritative inventory, or completed reconciliation source.
+- `nzlc reconcile-work-ids` and `.github/workflows/historical_seed_reconciliation.yml`
+  now provide a repeatable review step for comparing candidate work-ID
+  inventories before promotion.
+- `docs/historical_completeness_plan.md` records the staged process for moving
+  from bootstrap publication to reviewed completeness.

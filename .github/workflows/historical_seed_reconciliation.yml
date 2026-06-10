@@ -1,0 +1,101 @@
+name: Historical seed reconciliation
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_work_ids_path:
+        description: "Existing reviewed seed file"
+        type: string
+        required: true
+        default: "seeds/work_ids.txt"
+      candidate_work_ids_path:
+        description: "Candidate seed file to compare"
+        type: string
+        required: true
+      merged_output_path:
+        description: "Optional merged seed output path in the artifact"
+        type: string
+        default: "generated/historical-work-ids.merged.txt"
+      baseline_label:
+        description: "Baseline label for the report"
+        type: string
+        default: "reviewed-baseline"
+      candidate_label:
+        description: "Candidate label for the report"
+        type: string
+        default: "candidate"
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Reconcile candidate seed
+        run: |
+          set -euo pipefail
+          args=(
+            --baseline-work-ids "${{ inputs.baseline_work_ids_path }}"
+            --candidate-work-ids "${{ inputs.candidate_work_ids_path }}"
+            --report-path generated/historical-work-id-reconciliation.json
+            --baseline-label "${{ inputs.baseline_label }}"
+            --candidate-label "${{ inputs.candidate_label }}"
+          )
+          if [ -n "${{ inputs.merged_output_path }}" ]; then
+            args+=(--merged-output-path "${{ inputs.merged_output_path }}")
+          fi
+          uv run nzlc reconcile-work-ids "${args[@]}"
+
+      - name: Record summary
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+
+          report = json.loads(
+              Path("generated/historical-work-id-reconciliation.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          keys = [
+              "baseline_label",
+              "candidate_label",
+              "baseline_unique_count",
+              "candidate_unique_count",
+              "unchanged_count",
+              "added_count",
+              "removed_count",
+              "merged_unique_count",
+              "baseline_sha256",
+              "candidate_sha256",
+              "merged_sha256",
+              "coverage_warning",
+          ]
+          print("## Historical seed reconciliation")
+          print("```json")
+          print(json.dumps({key: report.get(key) for key in keys}, indent=2))
+          print("```")
+          PY
+
+      - name: Upload reconciliation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-seed-reconciliation
+          path: generated/
+          if-no-files-found: error

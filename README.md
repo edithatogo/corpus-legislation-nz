@@ -148,13 +148,24 @@ Search-based discovery is useful, but do not claim complete coverage until it is
 
 Current coverage status: not proven complete. The pipeline is API-first and currently search-based unless a provenance-backed `seeds/work_ids.txt`, official inventory, or documented reconciliation is supplied.
 
-The repository code is licensed under this repository's code license. The legislation text and source material are not relicensed by this project. The official NZ Legislation copyright page should be treated as the source for Crown copyright and attribution terms for legislation website material. Incorporated-by-reference material, third-party material, agency website text, logos, emblems, and non-legislative linked content may have separate rights or restrictions.
+The repository code is licensed under this repository's code license. The legislation text and source material are not relicensed by this project. The official NZ Legislation copyright page should be treated as the source for Crown copyright and attribution terms for legislation website material. Incorporated-by-reference material, third-party material, agency website text, logos, emblems, and non-legislative linked content may have separate rights or restrictions. See `NOTICE.md` and `docs/zenodo_rights_metadata_zenodraft.md` for the Zenodo archive rights-scope note.
 
 For live/current use, cite the Hugging Face dataset repository together with the manifest hash from `data/manifests/latest_manifest.json`. For academic or fixed-version citation, cite the Zenodo snapshot DOI `10.5281/zenodo.20592540`.
 
 For downstream querying and field definitions, see `docs/researcher_quickstart.md` and `docs/data_dictionary.md`.
 For validation gates, schema versioning, warning severity, and coverage history, see `docs/schema_governance.md`.
 For the public launch gate and release-note template, see `docs/public_launch_decision.md` and `docs/public_launch_release_note.md`.
+
+## Corpus family naming
+
+This project is part of the NZ corpus-family roadmap. The preferred systematic
+label for future metadata and planning is `corpus-nz-legislation`; the current
+published GitHub and Hugging Face surfaces intentionally remain
+`corpus-legislation-nz` until a migration plan protects existing citations and
+redirects. The sibling Hansard corpus is `corpus-nz-hansard`.
+
+See `docs/naming_publication_alignment.md` and
+`docs/corpus-family-design.md`.
 
 ## Annual Zenodo archive
 
@@ -171,6 +182,11 @@ uv run nzlc zenodo-upload --year 2026 --archive-dir dist/archive
 ```
 
 Production publication should use the GitHub workflow with `use_sandbox=false` and `publish=true`, after reviewing a production draft and approving through the `zenodo-production` environment.
+
+Zenodo metadata and future `zenodraft` migration policy are documented in
+`docs/zenodo_rights_metadata_zenodraft.md`. The current workflow remains
+draft-first by default; `zenodraft deposition publish` must stay separate from
+ordinary upload/update steps and behind protected environment approval.
 
 ## Workflows
 

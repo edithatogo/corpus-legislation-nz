@@ -1,7 +1,7 @@
 # Spec - GitHub Repository Hardening
 
 ## Status
-blocked
+done
 
 ## Goal
 make the GitHub repository safe to operate as the automation controller for the live Hugging Face corpus.

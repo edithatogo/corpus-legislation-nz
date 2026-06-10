@@ -91,13 +91,18 @@ The first confirmed historical Hugging Face bootstrap upload completed on
 - source type represented: `act`
 - failed versions: 104 reviewed 404 download failures recorded in
   `_state/sync_state.json`
-- Hugging Face revision:
+- Hugging Face revision at first upload:
   `776ef2737b1e7d629034ef8460d4918e7d979c68`
+- current verified Hugging Face revision after dataset-card/name updates:
+  `901a2ecc03e260758dc72bf965607a74a7417221`
 
 This upload proves the historical publication path. It is still a bootstrap,
 not a complete historical corpus. The remaining project problem is coverage:
 identify or generate a stable full work-ID inventory, reconcile it where
 possible, then publish in resumable chunks.
+
+The current completeness plan is recorded in
+`docs/historical_completeness_plan.md`.
 
 After seed review, split the seed file into deterministic batches and follow
 `docs/runtime_capacity_runbook.md`. Preserve or restore `records.jsonl`,

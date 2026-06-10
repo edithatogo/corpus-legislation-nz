@@ -1,7 +1,7 @@
 ﻿# Spec - SOTA Metadata Packages
 
 ## Status
-todo
+done
 
 ## Goal
 
@@ -19,3 +19,18 @@ Generate validated Croissant, RO-Crate, Frictionless, DCAT, and PROV-O metadata 
 ## Zenodo Requirement
 
 Any Zenodo draft/archive workflow work in this track must use or formally evaluate zenodraft from https://github.com/zenodraft/zenodraft. Publication commands must remain separate from draft upload/update commands and require protected approval.
+
+## Evidence Recorded
+
+- `docs/sota_metadata_packages.md` records the generated metadata package
+  contract, validation commands, publication-surface implications, and release
+  usage.
+- `src/nz_legislation_corpus/metadata_packages.py` generates Croissant,
+  RO-Crate, Frictionless, DCAT, PROV-O, a metadata-package manifest, and
+  checksums from canonical repo inputs.
+- `nzlc metadata-packages` and `nzlc validate-metadata-packages` expose
+  generation and validation through the project CLI.
+- `tests/test_metadata_packages.py` validates package generation, CLI behavior,
+  and corpus-family label retention.
+- No Zenodo publication or external metadata endpoint publication occurs in
+  this track.

@@ -1,15 +1,16 @@
 # Plan - First Hugging Face Smoke Upload
 
 ## Tasks
-- [ ] Run `uv run nzlc hf-upload` against the smoke data.
-- [ ] Download the Hugging Face dataset back into a clean local `data/` directory.
-- [ ] Confirm root-level remote files map to local `data/parquet/`, `data/raw_xml/`, `data/manifests/`, and `data/_state/`.
-- [ ] Rerun upload with unchanged content and confirm it skips or produces no content churn.
-- [ ] Inspect the Hugging Face dataset viewer and sample Parquet reads.
+- [x] Upload the partial/API-discovery smoke corpus to Hugging Face.
+- [x] Restore the Hugging Face dataset into a clean local data directory.
+- [x] Confirm no-change upload behavior.
+- [x] Inspect sample Parquet/read behavior.
 
-## Current blocker
+## Completion evidence
 
-- `HF_TOKEN` is not configured in the local environment.
-- `HF_REPO_ID` is not configured in the local environment.
-- `data/` and `data/manifests/latest_manifest.json` are absent, so there is no smoke corpus ready for upload.
-- Track 05 must complete first to produce the conservative live smoke data that this track uploads and verifies.
+- Live dataset: `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.
+- Current verified revision:
+  `6b082e2f85802cb374898d689d264017a047799b`.
+- Launch manifest hash:
+  `134b6cbca7a6703a512f914288fbdad2d6638e2f9048bef24c45371af0b647a2`.
+- Restore/no-change proof passed for the approved partial launch.

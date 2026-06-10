@@ -90,11 +90,15 @@ def test_request_json_respects_minimum_spacing(monkeypatch: pytest.MonkeyPatch) 
 def test_request_json_retries_on_429_with_retry_after(monkeypatch: pytest.MonkeyPatch) -> None:
     session = FakeSession(
         [
-            FakeResponse(status_code=429, payload={"error": "throttle"}, headers={"Retry-After": "7"}),
+            FakeResponse(
+                status_code=429, payload={"error": "throttle"}, headers={"Retry-After": "7"}
+            ),
             FakeResponse(status_code=200, payload={"ok": True}),
         ]
     )
-    client = NZLegislationClient(make_settings(min_seconds_between_requests=0.0, max_retries=2), session=session)
+    client = NZLegislationClient(
+        make_settings(min_seconds_between_requests=0.0, max_retries=2), session=session
+    )
     sleeps: list[float] = []
     monkeypatch.setattr("nz_legislation_corpus.nz_api.time.sleep", sleeps.append)
     monkeypatch.setattr("nz_legislation_corpus.nz_api.time.monotonic", lambda: 100.0)
@@ -103,7 +107,10 @@ def test_request_json_retries_on_429_with_retry_after(monkeypatch: pytest.Monkey
 
     assert response.data == {"ok": True}
     assert sleeps == [7.0]
-    assert session.requests == [("GET", "https://api.example.invalid/v0/works/"), ("GET", "https://api.example.invalid/v0/works/")]
+    assert session.requests == [
+        ("GET", "https://api.example.invalid/v0/works/"),
+        ("GET", "https://api.example.invalid/v0/works/"),
+    ]
 
 
 def test_request_json_retries_on_403_with_jittered_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -113,7 +120,9 @@ def test_request_json_retries_on_403_with_jittered_backoff(monkeypatch: pytest.M
             FakeResponse(status_code=200, payload={"ok": True}),
         ]
     )
-    client = NZLegislationClient(make_settings(min_seconds_between_requests=0.0, max_retries=2), session=session)
+    client = NZLegislationClient(
+        make_settings(min_seconds_between_requests=0.0, max_retries=2), session=session
+    )
     sleeps: list[float] = []
     monkeypatch.setattr("nz_legislation_corpus.nz_api.time.sleep", sleeps.append)
     monkeypatch.setattr("nz_legislation_corpus.nz_api.time.monotonic", lambda: 100.0)
@@ -154,15 +163,15 @@ def test_discover_versions_honors_max_works() -> None:
 
     client.iter_search_works = lambda **kwargs: iter(works)  # ty: ignore[invalid-assignment]
 
-    def fake_iter_work_versions(
-        work_id: str, *, sort: str = "desc"
-    ) -> Iterator[dict[str, str]]:
+    def fake_iter_work_versions(work_id: str, *, sort: str = "desc") -> Iterator[dict[str, str]]:
         seen_work_ids.append(work_id)
         return iter([{"version_id": f"{work_id}-v1", "work_id": work_id}])
 
     client.iter_work_versions = fake_iter_work_versions  # ty: ignore[invalid-assignment]
 
-    versions = list(client.discover_versions(search_terms=["acts"], search_field="title", max_works=5))
+    versions = list(
+        client.discover_versions(search_terms=["acts"], search_field="title", max_works=5)
+    )
 
     assert [version["work_id"] for version in versions] == ["1", "2", "3", "4", "5"]
     assert seen_work_ids == ["1", "2", "3", "4", "5"]
@@ -175,9 +184,7 @@ def test_discover_versions_honors_max_works_for_seed_ids() -> None:
 
     client.iter_search_works = lambda **kwargs: iter([{"work_id": "search-1", "title": "Search"}])  # ty: ignore[invalid-assignment]
 
-    def fake_iter_work_versions(
-        work_id: str, *, sort: str = "desc"
-    ) -> Iterator[dict[str, str]]:
+    def fake_iter_work_versions(work_id: str, *, sort: str = "desc") -> Iterator[dict[str, str]]:
         seen_work_ids.append(work_id)
         return iter([{"version_id": f"{work_id}-v1", "work_id": work_id}])
 

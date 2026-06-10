@@ -1,7 +1,7 @@
 # Spec - Zenodo Sandbox Archive
 
 ## Status
-blocked
+done
 
 ## Goal
 prove annual immutable archiving without publishing to production.

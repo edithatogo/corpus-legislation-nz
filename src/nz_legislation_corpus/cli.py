@@ -11,8 +11,14 @@ from rich.console import Console
 
 from .archive import build_archive
 from .config import Settings, require
-from .discovery import build_work_id_batch_manifest, build_work_id_inventory, normalize_work_ids
+from .discovery import (
+    build_work_id_batch_manifest,
+    build_work_id_inventory,
+    build_work_id_reconciliation_report,
+    normalize_work_ids,
+)
 from .manifest import build_change_report, build_manifest
+from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
 from .parquet_writer import write_partitioned_parquet
@@ -356,9 +362,7 @@ def split_work_id_batches_cmd(
     output_dir: Annotated[
         Path, typer.Option(help="Directory for generated batch seed files.")
     ] = Path("seeds/batches"),
-    batch_size: Annotated[
-        int, typer.Option(help="Number of unique work IDs per batch.")
-    ] = 250,
+    batch_size: Annotated[int, typer.Option(help="Number of unique work IDs per batch.")] = 250,
     filename_prefix: Annotated[
         str, typer.Option(help="Batch filename prefix.")
     ] = "historical-work-ids",
@@ -399,6 +403,65 @@ def split_work_id_batches_cmd(
     )
 
 
+@app.command("reconcile-work-ids")
+def reconcile_work_ids_cmd(
+    baseline_work_ids: Annotated[
+        Path, typer.Option(help="Existing reviewed seed file, one work ID per line.")
+    ],
+    candidate_work_ids: Annotated[
+        Path, typer.Option(help="Candidate seed file to compare against the baseline.")
+    ],
+    report_path: Annotated[Path, typer.Option(help="Write reconciliation report JSON.")] = Path(
+        "generated/work-id-reconciliation.json"
+    ),
+    merged_output_path: Annotated[
+        Path | None,
+        typer.Option(
+            help=(
+                "Optional path for a merged de-duplicated seed. Use only after review; "
+                "the merged seed is not automatically authoritative."
+            )
+        ),
+    ] = None,
+    baseline_label: Annotated[
+        str, typer.Option(help="Human-readable baseline inventory label.")
+    ] = "baseline",
+    candidate_label: Annotated[
+        str, typer.Option(help="Human-readable candidate inventory label.")
+    ] = "candidate",
+) -> None:
+    """Compare work-ID seed inventories before promoting historical batches."""
+    baseline_lines = baseline_work_ids.read_text(encoding="utf-8").splitlines()
+    candidate_lines = candidate_work_ids.read_text(encoding="utf-8").splitlines()
+    report = build_work_id_reconciliation_report(
+        baseline_lines=baseline_lines,
+        candidate_lines=candidate_lines,
+        baseline_label=baseline_label,
+        candidate_label=candidate_label,
+    )
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(report_path, report)
+    if merged_output_path is not None:
+        merged = normalize_work_ids(baseline_lines + candidate_lines)
+        merged_output_path.parent.mkdir(parents=True, exist_ok=True)
+        merged_output_path.write_text(
+            "\n".join(merged) + ("\n" if merged else ""),
+            encoding="utf-8",
+        )
+    console.print_json(
+        data={
+            "baseline_unique_count": report["baseline_unique_count"],
+            "candidate_unique_count": report["candidate_unique_count"],
+            "added_count": report["added_count"],
+            "removed_count": report["removed_count"],
+            "merged_unique_count": report["merged_unique_count"],
+            "report_path": str(report_path),
+            "merged_output_path": str(merged_output_path) if merged_output_path else None,
+            "coverage_warning": report["coverage_warning"],
+        }
+    )
+
+
 @app.command("validate")
 def validate_cmd(
     records_path: Annotated[
@@ -433,6 +496,32 @@ def manifest_cmd() -> None:
     changes = build_change_report(previous, current)
     write_json(settings.manifests_dir / "latest_changes.json", changes)
     console.print_json(data={"manifest_sha256": current["manifest_sha256"], "changes": changes})
+
+
+@app.command("metadata-packages")
+def metadata_packages_cmd(
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory for generated metadata package files.")
+    ] = Path("generated/metadata-packages"),
+) -> None:
+    """Generate Croissant, RO-Crate, Frictionless, DCAT, and PROV-O metadata packages."""
+    result = build_metadata_packages(Path.cwd(), output_dir)
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("validate-metadata-packages")
+def validate_metadata_packages_cmd(
+    metadata_dir: Annotated[
+        Path, typer.Option(help="Directory containing generated metadata package files.")
+    ] = Path("generated/metadata-packages"),
+) -> None:
+    """Validate generated SOTA metadata package files."""
+    result = validate_metadata_packages(metadata_dir, root=Path.cwd())
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
 
 
 @app.command("hf-upload")
@@ -508,6 +597,7 @@ def zenodo_upload_cmd(
         archive_dir / f"corpus-legislation-nz-{year}.tar.zst",
         archive_dir / f"corpus-legislation-nz-{year}.tar.gz",
         archive_dir / f"corpus-legislation-nz-{year}.manifest.json",
+        archive_dir / f"corpus-legislation-nz-{year}.release-evidence.json",
         archive_dir / f"corpus-legislation-nz-{year}.SHA256SUMS.txt",
     ]
     files = [path for path in files if path.exists()]

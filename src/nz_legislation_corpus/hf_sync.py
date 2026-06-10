@@ -34,7 +34,9 @@ MANAGED_ROOT_FILES = {
 }
 
 
-def remote_manifest(repo_id: str, *, token: str | None = None, revision: str = "main") -> dict[str, Any] | None:
+def remote_manifest(
+    repo_id: str, *, token: str | None = None, revision: str = "main"
+) -> dict[str, Any] | None:
     try:
         path = hf_hub_download(
             repo_id=repo_id,
@@ -48,7 +50,9 @@ def remote_manifest(repo_id: str, *, token: str | None = None, revision: str = "
         return None
 
 
-def create_dataset_repo_if_needed(repo_id: str, *, token: str | None = None, private: bool = False) -> None:
+def create_dataset_repo_if_needed(
+    repo_id: str, *, token: str | None = None, private: bool = False
+) -> None:
     api = HfApi(token=token)
     api.create_repo(repo_id=repo_id, repo_type="dataset", private=private, exist_ok=True)
 
@@ -83,9 +87,7 @@ def _stale_remote_paths(
         return []
     local_paths = _local_repo_paths(folder)
     return sorted(
-        path
-        for path in remote_paths
-        if _is_managed_remote_path(path) and path not in local_paths
+        path for path in remote_paths if _is_managed_remote_path(path) and path not in local_paths
     )
 
 
@@ -171,9 +173,7 @@ def upload_large_folder(
             ignore_patterns=DEFAULT_EXCLUDES,
         )
         url = f"https://huggingface.co/datasets/{repo_id}/tree/{revision}"
-    pruned = prune_stale_remote_paths(
-        repo_id, stale_paths, token=token, revision=revision
-    )
+    pruned = prune_stale_remote_paths(repo_id, stale_paths, token=token, revision=revision)
     if pruned:
         return f"{url}\nPruned {pruned} stale managed file(s)."
     return url

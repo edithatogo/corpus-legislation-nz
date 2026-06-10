@@ -60,8 +60,14 @@ Annual archive layout:
 dist/archive/
   corpus-legislation-nz-YYYY.tar.zst
   corpus-legislation-nz-YYYY.manifest.json
+  corpus-legislation-nz-YYYY.release-evidence.json
   corpus-legislation-nz-YYYY.SHA256SUMS.txt
 ```
+
+The release evidence file records repository commit, workflow run, publication
+target, manifest hash, schema version, record count, coverage statement, and
+artifact checksums. GitHub Actions archive builds generate GitHub artifact
+attestations before Zenodo draft upload.
 
 ## Safety contract
 

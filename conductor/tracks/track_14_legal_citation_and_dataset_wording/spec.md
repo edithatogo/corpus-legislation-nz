@@ -1,7 +1,7 @@
 # Spec - Legal, Citation, And Dataset Wording
 
 ## Status
-blocked
+done
 
 ## Goal
 keep public statements accurate about corpus coverage, licensing, and incorporated-by-reference material.

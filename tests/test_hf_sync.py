@@ -4,20 +4,12 @@ import subprocess
 from pathlib import Path
 
 
-def test_upload_large_folder_prunes_stale_managed_remote_files(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_upload_large_folder_prunes_stale_managed_remote_files(tmp_path: Path, monkeypatch) -> None:
     from nz_legislation_corpus import hf_sync
 
-    (tmp_path / "parquet" / "legislation_type=act" / "year=2026").mkdir(
-        parents=True
-    )
+    (tmp_path / "parquet" / "legislation_type=act" / "year=2026").mkdir(parents=True)
     (
-        tmp_path
-        / "parquet"
-        / "legislation_type=act"
-        / "year=2026"
-        / "part-00000.parquet"
+        tmp_path / "parquet" / "legislation_type=act" / "year=2026" / "part-00000.parquet"
     ).write_bytes(b"current")
     (tmp_path / "manifests").mkdir()
     (tmp_path / "manifests" / "latest_manifest.json").write_text("{}", encoding="utf-8")
@@ -29,9 +21,7 @@ def test_upload_large_folder_prunes_stale_managed_remote_files(
         def __init__(self, token: str | None = None) -> None:
             self.token = token
 
-        def list_repo_files(
-            self, repo_id: str, repo_type: str, revision: str
-        ) -> list[str]:
+        def list_repo_files(self, repo_id: str, repo_type: str, revision: str) -> list[str]:
             assert repo_id == "owner/dataset"
             assert repo_type == "dataset"
             assert revision == "main"

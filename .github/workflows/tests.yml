@@ -28,6 +28,10 @@ jobs:
         run: |
           set -euo pipefail
           uv run pytest -q
+      - name: Check version and release consistency
+        run: |
+          set -euo pipefail
+          uv run python scripts/check_version_consistency.py
       - name: Fixture smoke corpus
         env:
           NZLC_OUTPUT_DIR: data

@@ -38,5 +38,7 @@
   contract and local fallback commands.
 - `docs/historical_publication_policy.md` defines the fail-closed publication
   guardrails.
+- `docs/historical_completeness_plan.md` defines the pre-upload seed
+  reconciliation gate for historical completeness work.
 - `conductor/tracks.md` records this Track 23 documentation/evidence slice.
 - `.github/workflows/historical_hf_upload.yml` implements the manual workflow.

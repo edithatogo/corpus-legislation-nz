@@ -63,6 +63,20 @@ Review `seeds/batches/manifest.json` before running uploads. Record the
 evidence. A batch manifest proves deterministic slicing; it does not prove full
 coverage unless the source seed inventory has also been reconciled.
 
+Before splitting a new historical candidate seed, reconcile it with the current
+reviewed baseline:
+
+```bash
+uv run nzlc reconcile-work-ids \
+  --baseline-work-ids seeds/work_ids.txt \
+  --candidate-work-ids generated/historical-work-ids.candidate.txt \
+  --report-path generated/historical-work-id-reconciliation.json \
+  --merged-output-path generated/historical-work-ids.merged.txt
+```
+
+The reconciliation report is a review artifact, not a completeness proof by
+itself. See `docs/historical_completeness_plan.md`.
+
 Example staged run:
 
 ```bash

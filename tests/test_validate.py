@@ -68,11 +68,16 @@ def test_validate_missing_text_blocks_upload(tmp_path: Path):
     assert "missing_xml_url" in report["informational_warning_types"]
 
 
-
 def test_ephemeral_identifier_flagged():
     from nz_legislation_corpus.normalize import normalize_version_record
 
-    record = normalize_version_record({"version_id": "secondary-legislation_pco-drafted_~2026_1_en_~2026-01-01", "work_id": "secondary-legislation_pco-drafted_~2026_1", "title": "T"})
+    record = normalize_version_record(
+        {
+            "version_id": "secondary-legislation_pco-drafted_~2026_1_en_~2026-01-01",
+            "work_id": "secondary-legislation_pco-drafted_~2026_1",
+            "title": "T",
+        }
+    )
     assert record["id_is_ephemeral"] is True
     assert "~" in record["id_ephemeral_reason"]
 
@@ -132,8 +137,12 @@ def test_hf_upload_stops_before_remote_calls_on_validation_failure(tmp_path: Pat
     monkeypatch.setenv("HF_REPO_ID", "owner/dataset")
     monkeypatch.setenv("HF_TOKEN", "token")
     calls: list[str] = []
-    monkeypatch.setattr(hf_sync, "create_dataset_repo_if_needed", lambda *args, **kwargs: calls.append("create"))
-    monkeypatch.setattr(hf_sync, "upload_large_folder", lambda *args, **kwargs: calls.append("upload"))
+    monkeypatch.setattr(
+        hf_sync, "create_dataset_repo_if_needed", lambda *args, **kwargs: calls.append("create")
+    )
+    monkeypatch.setattr(
+        hf_sync, "upload_large_folder", lambda *args, **kwargs: calls.append("upload")
+    )
 
     try:
         cli.hf_upload_cmd()

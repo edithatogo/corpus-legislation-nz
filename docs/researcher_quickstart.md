@@ -60,6 +60,17 @@ table = dataset.to_table(columns=["stable_id", "title", "legislation_type", "yea
 print(table.to_pandas().head(20))
 ```
 
+## Optional interoperability artifacts
+
+The roadmap for optional derived artifacts is recorded in
+`docs/cross_corpus_interoperability_hansard.md`. Planned artifact families
+include search/RAG indexes, Croissant, RO-Crate, Frictionless, DCAT/PROV-O, and
+Akoma Ntoso exports. These are optional generated endpoints and must be
+versioned, validated, checksummed, and tied back to source manifests before they
+are published.
+
+Metadata package generation is documented in `docs/sota_metadata_packages.md`.
+
 ## Minimal local smoke corpus
 
 For tooling checks without network access:

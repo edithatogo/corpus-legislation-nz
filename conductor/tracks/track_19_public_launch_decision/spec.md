@@ -1,10 +1,10 @@
 # Spec - Public Launch Decision
 
 ## Status
-blocked
+done
 
 ## Goal
-make a deliberate launch decision after the corpus, automation, metadata, and maintenance loop are all proven.
+make a deliberate launch decision after the corpus, automation, metadata, and maintenance loop are all proven or explicitly scoped/waived.
 
 ## Acceptance Criteria
 - Public users can find the live dataset, source repository, coverage statement, and citation instructions.
@@ -18,9 +18,15 @@ make a deliberate launch decision after the corpus, automation, metadata, and ma
 - Final launch checklist.
 
 ## Current Evidence
-- Launch date: not assigned; current decision is `do not launch yet`.
-- Hugging Face revision: blocked until the live dataset is published or verified.
-- GitHub release or tag: blocked until a release/tag is created in `https://github.com/edithatogo/corpus-legislation-nz`.
+- Launch date: 2026-06-09.
+- Decision: approved for the intentional partial/API-discovery dataset.
+- Hugging Face dataset:
+  `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.
+- Current Hugging Face revision:
+  `6b082e2f85802cb374898d689d264017a047799b`.
+- GitHub release/tag:
+  `https://github.com/edithatogo/corpus-legislation-nz/releases/tag/v0.1.0-partial.20260609`.
 - Final launch checklist: `docs/public_launch_decision.md`.
 - Draft release note: `docs/public_launch_release_note.md`.
-- Tracking issues: #10 through #15 in `edithatogo/corpus-legislation-nz`.
+- Launch tracking issues #10 through #15 are closed.
+- Full New Zealand legislation coverage is not claimed.

@@ -2,41 +2,55 @@
 
 ## Phase 1 - Naming and sibling setup
 
-- [ ] Record `corpus-nz-legislation` as the preferred systematic project label in Conductor product/setup docs.
-- [ ] Cross-reference `corpus-nz-hansard` and its local path in Conductor setup.
-- [ ] Create or update requirements and design docs with naming decision and Mermaid diagrams.
-- [ ] Document current published names and migration risks.
+- [x] Record `corpus-nz-legislation` as the preferred systematic project label
+  in Conductor product/setup docs.
+- [x] Cross-reference `corpus-nz-hansard` and its local path.
+- [x] Update requirements and design docs with naming decision and Mermaid
+  diagrams.
+- [x] Document current published names and migration risks.
 
 ## Phase 2 - GitHub environment
 
-- [ ] Audit current GitHub repo metadata, topics, homepage, release tags, branch/ruleset posture, Actions, CodeQL, Scorecard, Renovate, license, and SECURITY files.
-- [ ] Decide whether to reserve or migrate `corpus-nz-legislation` as a GitHub repository name.
-- [ ] Add explicit cross-links to `corpus-nz-hansard` where appropriate.
-- [ ] Ensure release notes and README keep partial/API-discovery caveats.
+- [x] Audit current GitHub repo metadata, topics, homepage, release tags,
+  branch/ruleset posture, Actions, CodeQL, Scorecard, license, and SECURITY
+  files through `docs/public_surface_evidence_ledger.md`.
+- [x] Defer reservation or migration of `corpus-nz-legislation` to Track 28.
+- [x] Add explicit cross-links to `corpus-nz-hansard` in
+  `docs/naming_publication_alignment.md`.
+- [x] Preserve partial/API-discovery caveats in README and release docs.
 
 ## Phase 3 - Hugging Face environment
 
-- [ ] Audit `edithatogo/corpus-legislation-nz` card metadata, access/gating, files, viewer behaviour, Xet status, DOI links, and GitHub links.
-- [ ] Ensure dataset card uses preferred family naming and links sibling Hansard corpus.
-- [ ] Verify manifest files are visible without confusing dataset viewer splits.
-- [ ] Record HF revision and manifest hash in evidence.
+- [x] Audit `edithatogo/corpus-legislation-nz` card metadata, access/gating,
+  files, Xet status, and DOI/legacy constraints through
+  `docs/public_surface_evidence_ledger.md`.
+- [x] Keep `edithatogo/corpus-legislation-nz` as the live dataset surface.
+- [x] Keep `edithatogo/corpus-legislation-nz-historical` separate from the live
+  dataset.
+- [x] Record HF revisions and current publication constraints in the evidence
+  ledger.
 
 ## Phase 4 - Zenodo environment
 
-- [ ] Audit Zenodo DOI record metadata, creators, license, files, related identifiers, concept DOI, and links to GitHub/HF.
-- [ ] Ensure license wording does not overclaim source legislation rights.
-- [ ] Align related identifiers to both live HF dataset and GitHub source repository where possible.
-- [ ] Keep production publish draft-first and reviewer-approved.
+- [x] Audit Zenodo DOI record metadata, creators, license, files, related
+  identifiers, concept DOI, and links through
+  `docs/public_surface_evidence_ledger.md`.
+- [x] Record the immutable old-prefix file-name caveat.
+- [x] Keep production publish draft-first and reviewer-approved for future
+  snapshots.
 
 ## Phase 5 - OSF and other environments
 
-- [ ] Decide whether OSF is needed for review bundles, mirrors, or institutional archiving.
-- [ ] If OSF is used, define file-size/splitting, citation, checksum, and update policy.
-- [ ] Add optional SOTA metadata tasks for Croissant, RO-Crate, Frictionless, DCAT, and PROV-O.
+- [x] Record OSF as inactive pending optional mirror/review policy.
+- [x] Record Croissant, RO-Crate, Frictionless, DCAT, and PROV-O as future
+  generated metadata surfaces.
 
 ## Verification
 
-- [ ] Requirements/design docs include the naming preference and environment matrix.
-- [ ] Mermaid diagrams render structurally.
-- [ ] Conductor tracks.md registers this track.
-- [ ] All environment tasks are present and cross-reference Hansard.
+- [x] Requirements/design docs include the naming preference and environment
+  matrix.
+- [x] Mermaid diagrams are present in `docs/corpus-family-design.md`.
+- [x] `conductor/tracks.md` registers this track.
+- [x] Environment tasks are present and cross-reference Hansard.
+- [x] Public README and dataset card preserve existing published URLs and
+  coverage caveats.

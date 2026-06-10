@@ -22,3 +22,9 @@ Renovate PRs are intentionally conservative:
 - optional embedding dependencies are grouped separately because they can pull
   large ML stacks;
 - dependency updates must not upload to Hugging Face or publish to Zenodo.
+
+The release/versioning gate is separate from dependency updates. Renovate PRs
+may run tests, lint, and `uv run python scripts/check_version_consistency.py`,
+but they must not create GitHub releases, upload Hugging Face datasets, publish
+Zenodo records, or update manifest evidence except through an explicitly
+reviewed release or corpus-maintenance track.

@@ -1,7 +1,7 @@
 # Spec - Conservative Live Smoke Sync
 
 ## Status
-blocked
+done
 
 ## Goal
 prove the live sync path against external services without risking rate limits or large uploads.

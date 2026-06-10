@@ -63,7 +63,9 @@ def test_sync_preserves_state_between_batches(tmp_path: Path, monkeypatch):
         replace=False,
         embeddings=False,
     )
-    first_state = json.loads((output_dir / "_state" / "sync_state.json").read_text(encoding="utf-8"))
+    first_state = json.loads(
+        (output_dir / "_state" / "sync_state.json").read_text(encoding="utf-8")
+    )
 
     cli.sync(
         seed_work_ids=seed_path,
@@ -73,7 +75,9 @@ def test_sync_preserves_state_between_batches(tmp_path: Path, monkeypatch):
         replace=False,
         embeddings=False,
     )
-    second_state = json.loads((output_dir / "_state" / "sync_state.json").read_text(encoding="utf-8"))
+    second_state = json.loads(
+        (output_dir / "_state" / "sync_state.json").read_text(encoding="utf-8")
+    )
 
     assert FakeNZLegislationClient.calls == 2
     assert set(first_state["versions"]) == {"resume-test-act-2026/latest"}

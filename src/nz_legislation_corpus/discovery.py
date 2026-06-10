@@ -104,9 +104,7 @@ def build_work_id_inventory(
 def normalize_work_ids(lines: list[str]) -> list[str]:
     """Return stable, de-duplicated work IDs from a line-oriented seed file."""
     work_ids = {
-        line.strip()
-        for line in lines
-        if line.strip() and not line.lstrip().startswith("#")
+        line.strip() for line in lines if line.strip() and not line.lstrip().startswith("#")
     }
     return sorted(work_ids)
 
@@ -153,5 +151,45 @@ def build_work_id_batch_manifest(
         "coverage_warning": (
             "Seed batches are only as complete as the reviewed source inventory. "
             "Do not claim full historical coverage until the source inventory is reconciled."
+        ),
+    }
+
+
+def build_work_id_reconciliation_report(
+    *,
+    baseline_lines: list[str],
+    candidate_lines: list[str],
+    baseline_label: str = "baseline",
+    candidate_label: str = "candidate",
+) -> dict[str, Any]:
+    """Compare two work-ID inventories without making completeness claims."""
+    baseline = normalize_work_ids(baseline_lines)
+    candidate = normalize_work_ids(candidate_lines)
+    baseline_set = set(baseline)
+    candidate_set = set(candidate)
+    added = sorted(candidate_set - baseline_set)
+    removed = sorted(baseline_set - candidate_set)
+    unchanged = sorted(baseline_set & candidate_set)
+    merged = sorted(baseline_set | candidate_set)
+    return {
+        "schema_version": "1.0",
+        "generated_at_utc": datetime.now(UTC).replace(microsecond=0).isoformat(),
+        "baseline_label": baseline_label,
+        "candidate_label": candidate_label,
+        "baseline_unique_count": len(baseline),
+        "candidate_unique_count": len(candidate),
+        "unchanged_count": len(unchanged),
+        "added_count": len(added),
+        "removed_count": len(removed),
+        "merged_unique_count": len(merged),
+        "baseline_sha256": sha256_lines(baseline),
+        "candidate_sha256": sha256_lines(candidate),
+        "merged_sha256": sha256_lines(merged),
+        "added_work_ids": added,
+        "removed_work_ids": removed,
+        "coverage_warning": (
+            "This reconciliation compares two work-ID inventories only. "
+            "It is not proof of complete corpus coverage unless one input is an "
+            "authoritative complete inventory or has been externally reconciled."
         ),
     }

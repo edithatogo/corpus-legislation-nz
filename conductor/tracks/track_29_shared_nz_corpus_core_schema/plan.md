@@ -2,15 +2,24 @@
 
 ## Tasks
 
-- [ ] Confirm current public-surface state and existing local implementation.
-- [ ] Define the intended target state and migration constraints.
-- [ ] Update docs and tests or validation scripts needed for this area.
-- [ ] Record GitHub/Hugging Face/Zenodo/OSF/future-metadata implications.
-- [ ] For Zenodo-related work, validate the zenodraft CLI path, token mapping, sandbox mode, metadata validation, file upload/update, prereserved DOI readback, and protected publish gate.
-- [ ] Record evidence and command outputs.
+- [x] Confirm current public-surface state and existing local implementation.
+- [x] Define the intended target state and migration constraints.
+- [x] Update docs and validation scripts needed for this area.
+- [x] Record GitHub/Hugging Face/Zenodo/OSF/future-metadata implications.
+- [x] Confirm no Zenodo draft/archive workflow change is required for this schema-only track.
+- [x] Record evidence and command outputs.
 
 ## Verification
 
-- [ ] Metadata JSON parses.
-- [ ] Track is registered in conductor/tracks.md.
-- [ ] Acceptance criteria are linked to release or maintenance docs.
+- [x] Metadata JSON parses.
+- [x] Track is registered in `conductor/tracks.md`.
+- [x] Acceptance criteria are linked to release or maintenance docs.
+- [x] Shared core schema check passes.
+- [x] Shared core schema tests pass.
+
+## Evidence
+
+- Documentation: `docs/shared_nz_corpus_core_schema.md`.
+- Schema: `schemas/shared_nz_corpus_core.schema.json`.
+- Checker: `scripts/check_shared_core_schema.py`.
+- Tests: `tests/test_shared_core_schema.py`.

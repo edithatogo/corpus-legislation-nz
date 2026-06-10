@@ -2,15 +2,24 @@
 
 ## Tasks
 
-- [ ] Confirm current public-surface state and existing local implementation.
-- [ ] Define the intended target state and migration constraints.
-- [ ] Update docs and tests or validation scripts needed for this area.
-- [ ] Record GitHub/Hugging Face/Zenodo/OSF/future-metadata implications.
-- [ ] For Zenodo-related work, validate the zenodraft CLI path, token mapping, sandbox mode, metadata validation, file upload/update, prereserved DOI readback, and protected publish gate.
-- [ ] Record evidence and command outputs.
+- [x] Confirm current public-surface state and existing local implementation.
+- [x] Define the intended target state and migration constraints.
+- [x] Update docs and validation scripts needed for this area.
+- [x] Record GitHub/Hugging Face/Zenodo/OSF/future-metadata implications.
+- [x] Confirm no Zenodo draft/archive workflow change is required for this generator-only track.
+- [x] Record evidence and command outputs.
 
 ## Verification
 
-- [ ] Metadata JSON parses.
-- [ ] Track is registered in conductor/tracks.md.
-- [ ] Acceptance criteria are linked to release or maintenance docs.
+- [x] Metadata JSON parses.
+- [x] Track is registered in `conductor/tracks.md`.
+- [x] Acceptance criteria are linked to release or maintenance docs.
+- [x] Metadata package generator tests pass.
+- [x] Metadata package CLI generation and validation pass.
+
+## Evidence
+
+- Documentation: `docs/sota_metadata_packages.md`.
+- Generator: `src/nz_legislation_corpus/metadata_packages.py`.
+- Tests: `tests/test_metadata_packages.py`.
+- Generated output location: `generated/metadata-packages` (ignored by Git).

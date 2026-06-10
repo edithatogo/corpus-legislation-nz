@@ -1,7 +1,7 @@
 # Spec - First Hugging Face Smoke Upload
 
 ## Status
-blocked
+done
 
 ## Goal
 prove upload, restore, and no-change behavior on Hugging Face with the small smoke corpus.

@@ -128,7 +128,10 @@ class NZLegislationClient:
             if response.status_code == 403 and attempt < self.settings.max_retries:
                 # The docs describe an IP burst limit that returns 403. Be conservative.
                 sleep_seconds = min(300, 30 * attempt + random.random())
-                log.warning("NZ API returned 403; treating as possible burst limit and sleeping %.1fs", sleep_seconds)
+                log.warning(
+                    "NZ API returned 403; treating as possible burst limit and sleeping %.1fs",
+                    sleep_seconds,
+                )
                 time.sleep(sleep_seconds)
                 continue
 
@@ -142,7 +145,9 @@ class NZLegislationClient:
             self._sleep_for_low_quota(response.headers)
             return NZAPIResponse(data=response.json(), headers=dict(response.headers))
 
-        raise RuntimeError(f"NZ API request failed after {self.settings.max_retries} attempts: {method} {url}")
+        raise RuntimeError(
+            f"NZ API request failed after {self.settings.max_retries} attempts: {method} {url}"
+        )
 
     def download_url(self, url: str, *, accept: str | None = None) -> bytes:
         headers = {"X-Api-Key": self.api_key}
@@ -151,15 +156,21 @@ class NZLegislationClient:
         for attempt in range(1, self.settings.max_retries + 1):
             self._sleep_for_pacing()
             self.last_request_at = time.monotonic()
-            response = self.session.get(url, headers=headers, timeout=self.settings.request_timeout_seconds)
+            response = self.session.get(
+                url, headers=headers, timeout=self.settings.request_timeout_seconds
+            )
             if response.status_code == 429 and attempt < self.settings.max_retries:
                 sleep_seconds = self._retry_after_seconds(response, fallback_attempt=attempt)
-                log.warning("Download throttled (%s); sleeping %.1fs", response.status_code, sleep_seconds)
+                log.warning(
+                    "Download throttled (%s); sleeping %.1fs", response.status_code, sleep_seconds
+                )
                 time.sleep(sleep_seconds)
                 continue
             if response.status_code == 403 and attempt < self.settings.max_retries:
                 sleep_seconds = min(300, 30 * attempt + random.random())
-                log.warning("Download throttled (%s); sleeping %.1fs", response.status_code, sleep_seconds)
+                log.warning(
+                    "Download throttled (%s); sleeping %.1fs", response.status_code, sleep_seconds
+                )
                 time.sleep(sleep_seconds)
                 continue
             if response.status_code >= 500 and attempt < self.settings.max_retries:
@@ -230,7 +241,10 @@ class NZLegislationClient:
                     seen.add(work_id)
                     yield work
             total = int(payload.get("total", 0) or 0) if isinstance(payload, dict) else 0
-            returned = page * int(payload.get("per_page", per_page or self.settings.per_page) or self.settings.per_page)
+            returned = page * int(
+                payload.get("per_page", per_page or self.settings.per_page)
+                or self.settings.per_page
+            )
             if not results or (total and returned >= total):
                 break
             page += 1

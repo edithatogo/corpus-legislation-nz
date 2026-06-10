@@ -61,7 +61,9 @@ class Settings:
 
         return cls(
             nz_api_key=os.getenv("NZ_LEGISLATION_API_KEY"),
-            nz_api_base_url=os.getenv("NZ_LEGISLATION_API_BASE_URL", "https://api.legislation.govt.nz/v0"),
+            nz_api_base_url=os.getenv(
+                "NZ_LEGISLATION_API_BASE_URL", "https://api.legislation.govt.nz/v0"
+            ),
             output_dir=Path(os.getenv("NZLC_OUTPUT_DIR", os.getenv("DATA_DIR", "data"))),
             search_terms=_split_csv(os.getenv("NZLC_SEARCH_TERMS"), default=[]),
             search_field=os.getenv("NZLC_SEARCH_FIELD", "title"),
@@ -71,7 +73,9 @@ class Settings:
             publisher=os.getenv("NZLC_PUBLISHER") or None,
             per_page=int(os.getenv("NZLC_PER_PAGE", "100")),
             request_timeout_seconds=float(os.getenv("NZLC_REQUEST_TIMEOUT_SECONDS", "30")),
-            min_seconds_between_requests=float(os.getenv("NZLC_MIN_SECONDS_BETWEEN_REQUESTS", "0.20")),
+            min_seconds_between_requests=float(
+                os.getenv("NZLC_MIN_SECONDS_BETWEEN_REQUESTS", "0.20")
+            ),
             max_retries=int(os.getenv("NZLC_MAX_RETRIES", "5")),
             rate_limit_low_watermark=int(os.getenv("NZLC_RATE_LIMIT_LOW_WATERMARK", "10")),
             rate_limit_reset_padding_seconds=float(

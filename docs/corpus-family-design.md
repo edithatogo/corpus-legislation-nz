@@ -72,6 +72,19 @@ flowchart TD
   I --> J["Record evidence in Conductor track"]
 ```
 
+Current legislation public-surface evidence is recorded in
+`docs/public_surface_evidence_ledger.md`.
+
+Track 24's naming/publication decision is recorded in
+`docs/naming_publication_alignment.md`.
+
+Track 25's Hansard interoperability mapping is recorded in
+`docs/cross_corpus_interoperability_hansard.md`. It adopts reusable Hansard
+patterns for DuckDB/search/RAG, endpoint contracts, linked data, generated
+metadata packages, validation manifests, and optional publication surfaces while
+keeping Hansard-specific parliamentary proceedings fields out of the legislation
+core schema.
+
 ## Design Notes
 
 - GitHub is the automation and documentation controller, not the large-data host.
@@ -79,6 +92,10 @@ flowchart TD
 - Zenodo records should be immutable citation snapshots and should link both GitHub and Hugging Face where possible.
 - OSF is useful only if it adds review, institutional, or redundancy value without creating another unsynchronised source of truth.
 - Every public surface should expose the same preferred naming family and sibling-corpus links.
+- Derived interoperability artifacts should be generated, versioned, validated,
+  checksummed, and optional. They must not expand the base runtime dependency
+  set or replace dataset-specific core schemas without a separate implementation
+  track.
 
 ## Recommended Additional Tracks
 
@@ -109,3 +126,18 @@ Future Zenodo automation should prefer `zenodraft` (`https://github.com/zenodraf
 6. Keep `zenodraft deposition publish` in a separate protected approval step.
 
 CI must map repository secrets to `ZENODO_ACCESS_TOKEN` or `ZENODO_SANDBOX_ACCESS_TOKEN` only for the step that needs them.
+
+Track 27's rights and zenodraft evaluation decision is recorded in
+`docs/zenodo_rights_metadata_zenodraft.md`.
+
+Track 28's GitHub repository-name migration assessment is recorded in
+`docs/github_repository_name_migration_assessment.md`. It recommends reserving
+`edithatogo/corpus-nz-legislation` as a pointer repository before any full live
+rename of `edithatogo/corpus-legislation-nz`.
+
+Track 29's shared core schema is recorded in
+`docs/shared_nz_corpus_core_schema.md` and
+`schemas/shared_nz_corpus_core.schema.json`.
+
+Track 30's generated metadata package contract is recorded in
+`docs/sota_metadata_packages.md`.

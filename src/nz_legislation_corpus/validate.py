@@ -75,14 +75,27 @@ def validate_records(
             errors.append({"type": "empty_text", "row": idx, "stable_id": record.get("stable_id")})
         expected_hash = sha256_text(str(record.get("text", "")))
         if record.get("text_sha256") and record.get("text_sha256") != expected_hash:
-            errors.append({"type": "text_hash_mismatch", "row": idx, "stable_id": record.get("stable_id")})
+            errors.append(
+                {"type": "text_hash_mismatch", "row": idx, "stable_id": record.get("stable_id")}
+            )
         if not record.get("xml_url"):
-            warnings.append({"type": "missing_xml_url", "row": idx, "stable_id": record.get("stable_id")})
+            warnings.append(
+                {"type": "missing_xml_url", "row": idx, "stable_id": record.get("stable_id")}
+            )
         if record.get("id_is_ephemeral"):
-            warnings.append({"type": "ephemeral_identifier", "row": idx, "stable_id": record.get("stable_id")})
+            warnings.append(
+                {"type": "ephemeral_identifier", "row": idx, "stable_id": record.get("stable_id")}
+            )
         if validator:
             for err in validator.iter_errors(record):
-                errors.append({"type": "schema_error", "row": idx, "path": list(err.path), "message": err.message})
+                errors.append(
+                    {
+                        "type": "schema_error",
+                        "row": idx,
+                        "path": list(err.path),
+                        "message": err.message,
+                    }
+                )
 
     report = {
         "schema_version": "1.0",

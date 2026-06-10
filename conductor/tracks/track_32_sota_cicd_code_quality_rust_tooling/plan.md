@@ -2,30 +2,43 @@
 
 ## Tasks
 
-- [ ] Define current state and target state.
-- [ ] Record the existing strict `ty` baseline and the exact local validation commands that must stay green.
-- [ ] Add/update CI checks with least-privilege permissions.
-- [ ] Add/update local commands or Makefile targets.
-- [ ] Add documentation consistency and release evidence checks.
-- [ ] Add Renovate/package update policy where applicable.
-- [ ] Decide and document pre-commit adoption scope.
-- [ ] Ensure dependency-update PRs cannot publish datasets or Zenodo records.
-- [ ] Record validation evidence.
+- [x] Define current state and target state in `docs/ci_code_quality_security_tooling.md`.
+- [x] Record the existing strict `ty` baseline and the exact local validation commands that must stay green.
+- [x] Add/update CI checks with least-privilege permissions in `.github/workflows/code_quality.yml`.
+- [x] Add/update local commands in `docs/ci_code_quality_security_tooling.md` and `.github/pull_request_template.md`.
+- [x] Add documentation consistency and release evidence checks via `scripts/check_version_consistency.py`.
+- [x] Add Renovate/package update policy where applicable through Track 31 and this tooling policy.
+- [x] Decide and document pre-commit adoption scope.
+- [x] Ensure dependency-update PRs cannot publish datasets or Zenodo records.
+- [x] Record validation evidence below.
 
 ## Tooling Checklist
 
-- [ ] `uv` frozen install/lock checks.
-- [ ] `ruff check` and `ruff format --check`.
-- [ ] `ty check` with strict rules for packaged modules.
-- [ ] `typos` spelling/identifier check.
-- [ ] `zizmor` workflow security audit.
-- [ ] `taplo` TOML formatting/linting where TOML config exists.
-- [ ] `actionlint` workflow syntax check.
-- [ ] CodeQL and OpenSSF Scorecard.
-- [ ] Artifact attestations or SLSA-style provenance for release artifacts.
+- [x] `uv` frozen install/lock checks.
+- [x] `ruff check` and `ruff format --check`.
+- [x] `ty check` with strict rules for packaged modules.
+- [x] `typos` spelling/identifier check.
+- [x] `zizmor` workflow security audit adopted as advisory with backlog recorded.
+- [x] `taplo` TOML formatting/linting where TOML config exists.
+- [x] `actionlint` workflow syntax check.
+- [x] CodeQL and OpenSSF Scorecard adoption verified.
+- [ ] Artifact attestations or SLSA-style provenance for release artifacts remain Track 33 scope.
 
 ## Verification
 
-- [ ] Metadata JSON parses.
-- [ ] Track is registered in `conductor/tracks.md`.
-- [ ] All added checks are documented before enforcement.
+- [x] Metadata JSON parses.
+- [x] Track is registered in `conductor/tracks.md`.
+- [x] All added checks are documented before enforcement.
+
+## Validation Evidence
+
+- `uv run ruff check .` passed.
+- `uv run ruff format --check .` passed after applying repository formatting.
+- `uv run ty check src tests scripts` passed.
+- `uv run pytest -q tests\test_version_consistency.py tests\test_shared_core_schema.py` passed.
+- `uv run python scripts\check_version_consistency.py` passed.
+- `typos` passed.
+- `taplo fmt --check pyproject.toml` passed after formatting `pyproject.toml`.
+- `actionlint` passed after consolidating historical-upload workflow inputs.
+- Workflow YAML parse passed for `.github/workflows/*.yml`.
+- `zizmor --no-online-audits .github\workflows` ran and produced advisory backlog findings documented in `docs/ci_code_quality_security_tooling.md`.

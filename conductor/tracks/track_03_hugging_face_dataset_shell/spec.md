@@ -1,7 +1,7 @@
 # Spec - Hugging Face Dataset Shell
 
 ## Status
-blocked
+done
 
 ## Goal
 create and verify the Hugging Face dataset repository before uploading corpus data.

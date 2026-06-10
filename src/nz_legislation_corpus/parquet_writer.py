@@ -50,7 +50,9 @@ def write_partitioned_parquet(
 
     written: list[Path] = []
     for (leg_type, year), group in sorted(grouped.items()):
-        group = sorted(group, key=lambda r: (str(r.get("stable_id", "")), str(r.get("version_id", ""))))
+        group = sorted(
+            group, key=lambda r: (str(r.get("stable_id", "")), str(r.get("version_id", "")))
+        )
         partition_dir = output_dir / f"legislation_type={leg_type}" / f"year={year}"
         partition_dir.mkdir(parents=True, exist_ok=True)
         for i in range(0, len(group), records_per_file):

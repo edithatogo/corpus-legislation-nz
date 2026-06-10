@@ -1,0 +1,29 @@
+{
+  "title": "New Zealand Legislation Corpus: 2026 annual snapshot",
+  "upload_type": "dataset",
+  "description": "Annual, version-locked snapshot of the New Zealand legislation corpus. The live continuously updated corpus is maintained on Hugging Face Datasets. Coverage is not proven complete until reconciled against an authoritative inventory. The repository code is MIT licensed. The dataset archive includes project-created metadata, manifests, checksums, normalized records, and source-derived legislation text; this publication does not relicense upstream legislation text, incorporated-by-reference material, third-party material, logos, emblems, or non-legislative linked content.",
+  "creators": [
+    {
+      "name": "edithatogo"
+    }
+  ],
+  "publication_date": "2026-06-08",
+  "access_right": "open",
+  "license": "CC-BY-4.0",
+  "version": "2026",
+  "keywords": [
+    "New Zealand",
+    "legislation",
+    "corpus",
+    "law",
+    "open data"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://huggingface.co/datasets/edithatogo/corpus-legislation-nz",
+      "relation": "isSupplementTo",
+      "resource_type": "dataset",
+      "scheme": "url"
+    }
+  ]
+}

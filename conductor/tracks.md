@@ -12,6 +12,20 @@ This file tracks the major work items for `corpus-legislation-nz`.
 - `in_progress`: actively being worked.
 - `done`: acceptance criteria are met and evidence is recorded.
 
+## Reconciliation Note - 2026-06-10
+
+The approved partial/API-discovery launch is complete. GitHub repository
+publication, required secrets/variables, live Hugging Face publication, Zenodo
+production DOI publication, release/tag creation, and post-launch rename to
+`corpus-legislation-nz` have been verified.
+
+Remaining blockers are now scoped to full-corpus completeness, long-running
+historical coverage, scheduled maintenance evidence, and roadmap tracks. Older
+track text that refers to missing GitHub remotes, missing public Hugging Face
+shells, or absent launch secrets should be read as superseded by this
+reconciliation unless the individual track still preserves a full-completeness
+blocker.
+
 ## Track 01 - Repository Commit And Release Baseline
 
 Status: `done`
@@ -41,7 +55,7 @@ Evidence to record:
 
 ## Track 02 - Credential And Secret Inventory
 
-Status: `blocked`
+Status: `done`
 
 Goal: confirm all credentials and GitHub variables required for live corpus operations are present, scoped correctly, and stored in the right place.
 
@@ -62,15 +76,19 @@ Acceptance criteria:
 - GitHub Actions has the required secrets and variables.
 - Zenodo production publication remains approval-gated.
 
-Evidence to record:
+Evidence recorded:
 
-- Redacted `nzlc doctor` result.
-- GitHub repository variable names, not values.
-- GitHub environment names and protection status.
+- GitHub repository secrets exist by name: `NZ_LEGISLATION_API_KEY`,
+  `HF_TOKEN`, and `ZENODO_TOKEN`.
+- GitHub repository variables include `HF_REPO_ID=edithatogo/corpus-legislation-nz`
+  and `HF_HISTORICAL_REPO_ID=edithatogo/corpus-legislation-nz-historical`,
+  plus archive and NZLC search variables.
+- Branch protection on `main` requires strict `tests`, one approving review,
+  admin enforcement, linear history, no force pushes, and no deletions.
 
 ## Track 03 - Hugging Face Dataset Shell
 
-Status: `blocked`
+Status: `done`
 
 Goal: create and verify the Hugging Face dataset repository before uploading corpus data.
 
@@ -94,12 +112,16 @@ Evidence to record:
 - Root layout listing.
 - Dataset card revision or commit hash.
 
-Current blocker:
+Current evidence:
 
-- `HF_REPO_ID` is not configured in the local environment.
-- `HF_TOKEN` is not configured in the local environment.
-- Public search/open checks on 2026-06-07 did not confirm an existing public `edithatogo/corpus-legislation-nz` dataset shell.
-- The repository shell cannot be created, confirmed writable, or inspected for layout until the final Hugging Face dataset ID and a write-capable token are supplied.
+- Live Hugging Face dataset:
+  `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.
+- Current verified revision:
+  `6b082e2f85802cb374898d689d264017a047799b`.
+- Dataset is public and has root-level publication artifacts.
+- Legacy DOI-bound Hugging Face dataset
+  `edithatogo/nz-legislation-corpus` remains as a compatibility shell pointing
+  to the renamed dataset.
 
 ## Track 04 - Source Discovery Completeness
 
@@ -133,10 +155,15 @@ Current blocker:
 - Public NZ Legislation API and developer documentation checked on 2026-06-07 describe search-oriented endpoints but did not identify a complete work-ID export or bulk inventory endpoint.
 - No authoritative `seeds/work_ids.txt` exists in this repository.
 - Public docs now distinguish API-first pipeline readiness from proven corpus completeness.
+- `nzlc reconcile-work-ids` and `historical_seed_reconciliation.yml` now provide
+  a repeatable review step for comparing candidate inventories before seed
+  promotion.
+- Historical completeness process is documented in
+  `docs/historical_completeness_plan.md`.
 
 ## Track 05 - Conservative Live Smoke Sync
 
-Status: `blocked`
+Status: `done`
 
 Goal: prove the live sync path against external services without risking rate limits or large uploads.
 
@@ -162,15 +189,16 @@ Evidence to record:
 - Synced work count.
 - Any API warnings from sync state.
 
-Current blocker:
+Current evidence:
 
-- `NZ_LEGISLATION_API_KEY` is not configured in the local environment.
-- `seeds/work_ids.txt` does not exist; only example seed files are present.
-- No live smoke sync was run because it would fail before proving the intended external API path.
+- Live partial/API-discovery sync path was proven for the approved launch.
+- The full seed inventory remains absent, so this track is complete only for the
+  conservative launch smoke scope. Full coverage remains blocked under Tracks
+  04, 07, 08, and 11.
 
 ## Track 06 - First Hugging Face Smoke Upload
 
-Status: `blocked`
+Status: `done`
 
 Goal: prove upload, restore, and no-change behavior on Hugging Face with the small smoke corpus.
 
@@ -194,11 +222,14 @@ Evidence to record:
 - Manifest hash before and after no-change upload.
 - Sample Parquet read result.
 
-Current blocker:
+Current evidence:
 
-- `HF_TOKEN` and `HF_REPO_ID` are not configured in the local environment.
-- `data/` is absent, so there is no smoke corpus or manifest to upload.
-- Track 05 has not produced a conservative live smoke corpus yet.
+- The live Hugging Face upload, restore/no-change behavior, and sample dataset
+  verification passed for the approved partial/API-discovery launch.
+- Live dataset target:
+  `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.
+- Current verified revision:
+  `6b082e2f85802cb374898d689d264017a047799b`.
 
 ## Track 07 - Full Corpus Bootstrap Download
 
@@ -233,10 +264,14 @@ Evidence to record:
 
 Current blocker:
 
-- `NZ_LEGISLATION_API_KEY`, `HF_TOKEN`, and `HF_REPO_ID` are not configured in the local environment.
-- `seeds/work_ids.txt` does not exist, so there is no proven full-corpus seed inventory to attempt.
-- `data/` is absent, and Tracks 05 and 06 have not produced or uploaded a smoke corpus.
-- Local `C:` free space checked on 2026-06-07: 19,907,948,544 bytes free; final adequacy cannot be confirmed until expected corpus/archive size is known.
+- `seeds/work_ids.txt` does not exist, so there is no proven full-corpus seed
+  inventory to attempt.
+- The approved partial/API-discovery launch and historical bootstrap prove the
+  mechanics, but not full corpus completeness.
+- Final local or runner disk adequacy cannot be confirmed until the authoritative
+  full seed and archive size are known.
+- Candidate historical seeds must be reconciled with `nzlc reconcile-work-ids`
+  before promotion and batching.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
@@ -268,10 +303,10 @@ Evidence to record:
 
 Current blocker:
 
-- `HF_TOKEN`, `HF_REPO_ID`, and `HF_XET_HIGH_PERFORMANCE` are not configured in the local environment.
-- `data/`, `data/manifests/latest_manifest.json`, and `data/parquet/` are absent, so there is no full validated corpus to upload.
+- A live partial/API-discovery Hugging Face dataset exists, but the full
+  validated corpus has not been produced.
 - Track 07 has not produced the full bootstrap corpus yet.
-- The upload helper defaults `HF_XET_HIGH_PERFORMANCE=1` during upload, but no upload was attempted because required credentials and corpus data are absent.
+- The upload helper defaults `HF_XET_HIGH_PERFORMANCE=1` during upload.
 
 ## Track 09 - GitHub Scheduled Hugging Face Sync
 
@@ -301,16 +336,20 @@ Evidence to record:
 - Workflow inputs used.
 - Latest successful scheduled run URL.
 
-Current blocker:
+Current evidence and remaining blocker:
 
 - `.github/workflows/hf_sync.yml` exists locally and includes schedule, manual dispatch inputs, Hugging Face restore, sync, upload, and step-summary sections.
-- No Git remote is configured, so there is no target GitHub repository/default branch to inspect or dispatch.
-- `GITHUB_REPOSITORY`, `GH_TOKEN`, `NZ_LEGISLATION_API_KEY`, `HF_TOKEN`, and `HF_REPO_ID` are not configured in the local environment.
-- Tracks 02, 05, 07, and 08 remain blocked, so the workflow cannot yet prove smoke, full, scheduled, or no-change behavior.
+- The GitHub repository and required secrets/variables exist.
+- Manual live sync and no-change upload proof passed for the approved
+  partial/API-discovery launch.
+- The scheduled-run launch gate was explicitly waived by the repository owner on
+  2026-06-09 after the first post-fix scheduled event did not dispatch.
+- Full and recurring maintenance proof remains blocked until Tracks 04, 07, and
+  08 establish a full seed and full validated corpus.
 
 ## Track 10 - Maintenance Doctor And Alerting
 
-Status: `blocked`
+Status: `ready`
 
 Goal: surface token, API, and dependency failures before they affect the live corpus.
 
@@ -334,12 +373,16 @@ Evidence to record:
 - Notification destination.
 - Any follow-up alerting issue.
 
-Current blocker:
+Current evidence and remaining blocker:
 
-- `.github/workflows/doctor.yml` exists locally and is scheduled weekly, but no Git remote is configured, so it cannot be confirmed enabled on the default branch.
-- Local non-network `uv run --no-cache nzlc doctor` runs without creating `data/`, but live network doctor cannot pass until Track 02 secrets and variables are configured.
+- `.github/workflows/doctor.yml` exists and is scheduled weekly.
+- Local non-network `uv run --no-cache nzlc doctor` runs without creating
+  `data/`.
+- Live secret/variable configuration exists; continuing evidence should be
+  recorded through future weekly doctor runs.
 - Dependabot, CodeQL, and OpenSSF Scorecard configurations exist locally.
-- GitHub Actions notification delivery cannot be confirmed until the repository exists and a workflow run has completed.
+- GitHub Actions notification delivery still needs an operator-confirmed failure
+  path or routine.
 
 ## Track 11 - Monthly Full Reconciliation
 
@@ -373,10 +416,12 @@ Current blocker:
 - `seeds/work_ids.txt` is absent, so seed changes cannot be reviewed or applied.
 - `data/manifests/coverage_report.json` is absent, so coverage deltas cannot be compared.
 - Tracks 04, 07, 08, and 09 remain blocked, so no full corpus or scheduled maintenance loop exists yet to reconcile.
+- Candidate seed reconciliation is now available through `nzlc reconcile-work-ids`
+  and `.github/workflows/historical_seed_reconciliation.yml`.
 
 ## Track 12 - Zenodo Sandbox Archive
 
-Status: `blocked`
+Status: `done`
 
 Goal: prove annual immutable archiving without publishing to production.
 
@@ -400,16 +445,17 @@ Evidence to record:
 - Archive filename and checksum.
 - Workflow run URL if performed in GitHub Actions.
 
-Current blocker:
+Current evidence:
 
-- `ZENODO_TOKEN`, `ZENODO_API_URL`, `ARCHIVE_CREATORS_JSON`, and `HF_REPO_ID` are not configured in the local environment.
-- `data/` is absent, so there is no corpus available to archive.
-- `dist/archive` is absent, so there are no archive, manifest, or checksum files to upload.
-- The Zenodo client deletes duplicate-named draft files before upload, but duplicate replacement cannot be verified without a sandbox draft and token.
+- Production Zenodo path was proven and published for the approved partial
+  launch, superseding the original sandbox-only blocker.
+- Published record: `https://zenodo.org/records/20592540`.
+- DOI: `10.5281/zenodo.20592540`.
+- Concept DOI: `10.5281/zenodo.20592539`.
 
 ## Track 13 - Protected Production Zenodo Archive
 
-Status: `blocked`
+Status: `done`
 
 Goal: publish annual DOI snapshots only after explicit approval.
 
@@ -434,16 +480,21 @@ Evidence to record:
 - DOI.
 - Commit updating citation files.
 
-Current blocker:
+Current evidence:
 
-- No Git remote is configured, so the `zenodo-production` GitHub environment and required reviewers cannot be verified live.
-- `ZENODO_TOKEN`, `ZENODO_API_URL`, `ZENODO_DEPOSITION_ID`, `ARCHIVE_CREATORS_JSON`, `GITHUB_REPOSITORY`, `GH_TOKEN`, and `HF_REPO_ID` are not configured in the local environment.
-- Track 12 sandbox archive has not passed, so production archive work must not proceed.
-- `.github/workflows/annual_zenodo_archive.yml` routes production draft/publication runs through `zenodo-production` and keeps `publish=false` by default, but no production draft or DOI exists yet.
+- Production Zenodo archive published for the approved partial launch:
+  `https://zenodo.org/records/20592540`.
+- DOI: `10.5281/zenodo.20592540`.
+- Workflow evidence:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27132519663`.
+- The Zenodo related identifier now points to
+  `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.
+- Published archive filenames remain immutable and still include the old launch
+  prefix.
 
 ## Track 14 - Legal, Citation, And Dataset Wording
 
-Status: `blocked`
+Status: `done`
 
 Goal: keep public statements accurate about corpus coverage, licensing, and incorporated-by-reference material.
 
@@ -467,16 +518,18 @@ Evidence to record:
 - Reviewer notes.
 - Metadata commit SHA.
 
-Current blocker:
+Current evidence:
 
 - Reviewed `README.md`, `DATASET_CARD.md`, `CITATION.cff`, and Hugging Face dataset-card generation in `scripts/init_huggingface_dataset.py`.
 - Public wording now states coverage is not proven complete, separates code licensing from source-content reuse status, and distinguishes live Hugging Face citation from fixed Zenodo citation.
 - Official NZ Legislation copyright/disclosure pages checked on 2026-06-07 support Crown copyright / Creative Commons attribution wording, with separate caution retained for third-party or non-legislative material.
-- Track remains blocked for final metadata commit SHA because the broader Conductor changes are not committed yet and live Hugging Face/Zenodo metadata cannot be verified.
+- Live Hugging Face and Zenodo metadata were verified for the approved
+  partial/API-discovery launch and post-launch rename.
+- Full-coverage wording remains prohibited until Track 04 is closed.
 
 ## Track 15 - Downstream Researcher Usability
 
-Status: `blocked`
+Status: `ready`
 
 Goal: make the published corpus easy to inspect and query after the live hub is stable.
 
@@ -499,16 +552,18 @@ Evidence to record:
 - Sample dataset path or revision.
 - Documentation links.
 
-Current blocker:
+Current evidence and remaining work:
 
 - Added `docs/researcher_quickstart.md` with DuckDB `hf://` examples, local PyArrow examples, and sample split policy.
 - Added `docs/data_dictionary.md` from `schemas/legislation_record.schema.json`.
 - `README.md` and `DATASET_CARD.md` now link to downstream researcher documentation.
-- Live Hugging Face query output, sample dataset path/revision, and optional browser UI remain blocked until Tracks 03 and 08 publish the dataset.
+- Live partial dataset exists and can be used for examples. Broader researcher
+  usability work remains secondary until full/historical coverage is better
+  defined.
 
 ## Track 16 - GitHub Repository Hardening
 
-Status: `blocked`
+Status: `done`
 
 Goal: make the GitHub repository safe to operate as the automation controller for the live Hugging Face corpus.
 
@@ -539,19 +594,17 @@ Evidence to record:
 
 Current evidence:
 
-- No Git remote is configured, so the final GitHub repository URL, branch protection summary, enabled security settings, and CI run URL cannot be recorded yet.
 - GitHub repository URL: `https://github.com/edithatogo/corpus-legislation-nz`.
 - Branch protection summary: `main` requires strict `tests`, one approving review, admin enforcement, linear history, no force pushes, and no deletions.
 - Enabled security settings: Dependabot security updates, secret scanning, and push protection.
 - First passing CI run: baseline `Tests` run `27087158077` and `CodeQL` run `27087158073` passed on 2026-06-07.
-- Remaining blocker: Scorecard workflow fix must be merged through branch protection before the next Scorecard run can pass.
 - `.gitignore` excludes generated corpus/archive/cache paths including `data/`, `dist/`, `.hf_cache/`, and `.track15-smoke/`; no tracked files exist under generated corpus/archive paths.
 - `SECURITY.md`, `CONTRIBUTING.md`, `.github/CODEOWNERS`, pull request template, issue templates, Dependabot config, CodeQL, Scorecard, tests, doctor, Hugging Face sync, and annual Zenodo workflows are present.
 - Workflow permissions are minimum-scoped for local review: `contents: read` by default, with `security-events: write` only where `codeql.yml` and `scorecard.yml` upload SARIF.
 
 ## Track 17 - Runtime Capacity, Batching, And Resume
 
-Status: `blocked`
+Status: `ready`
 
 Goal: make the full corpus bootstrap and recurring sync practical under local disk, GitHub Actions runtime, API rate limits, and upload interruption constraints.
 
@@ -583,7 +636,10 @@ Current evidence:
 - Disk estimate documented in `docs/runtime_capacity_runbook.md`: reserve at least 25 GB free for the expected 6 GB class corpus, preferably 50 GB when archive staging or embeddings share the runner.
 - Chosen runner documented: controlled local or self-hosted first bootstrap, then GitHub Actions for daily/latest maintenance after first verified upload.
 - Batch defaults documented: 5-work smoke at 1.0 seconds pacing, 50-work pilot at 1.0 seconds, 250-work seed chunks at 0.5 seconds, and 500-1000 work chunks at 0.2 seconds only after throttle-free earlier batches.
-- Resume behavior tested locally in `tests/test_sync_resume.py`; live Hugging Face interrupted-upload proof remains blocked until `HF_TOKEN`, `HF_REPO_ID`, and a live dataset are available.
+- Resume behavior tested locally in `tests/test_sync_resume.py`.
+- Historical bootstrap publication proved the manual upload path at 500-work
+  scale. Full-corpus capacity remains to be measured once the authoritative seed
+  is available.
 
 ## Track 18 - Data Quality And Schema Governance
 
@@ -624,7 +680,7 @@ Current evidence:
 
 ## Track 19 - Public Launch Decision
 
-Status: `blocked`
+Status: `done`
 
 Goal: make a deliberate launch decision after the corpus, automation, metadata, and maintenance loop are all proven.
 
@@ -655,12 +711,14 @@ Current evidence:
 - Launch date: 2026-06-09; current decision is launch approved for the
   intentional partial/API-discovery dataset.
 - Hugging Face revision:
+  `6b082e2f85802cb374898d689d264017a047799b` after the post-launch rename and
+  card update. Launch upload revision:
   `8d48d807c5c8da73f8ad164734245d9ea73046f3`.
 - GitHub release or tag: `v0.1.0-partial.20260609`,
   `https://github.com/edithatogo/corpus-legislation-nz/releases/tag/v0.1.0-partial.20260609`.
 - Final launch checklist: `docs/public_launch_decision.md`.
 - Draft release note: `docs/public_launch_release_note.md`.
-- Tracking issues: #10 through #15 in `edithatogo/corpus-legislation-nz`.
+- Launch tracking issues #10 through #15 are closed.
 
 ## Track 20 - GitHub Release Tag For Partial Launch
 
@@ -817,10 +875,13 @@ Current evidence:
   records the workflow contract.
 - `conductor/tracks/track_23_manual_historical_upload_workflow/plan.md`
   records the implementation and local verification state.
+- Historical completeness planning now uses `nzlc reconcile-work-ids`,
+  `.github/workflows/historical_seed_reconciliation.yml`, and
+  `docs/historical_completeness_plan.md` before any full-seed promotion.
 
 ## Track 24 - Corpus Family Naming And Publication Alignment
 
-Status: `todo`
+Status: `done`
 
 Goal: adopt `corpus-nz-legislation` as the preferred systematic label and align GitHub, Hugging Face, Zenodo, OSF, and future metadata environments with sibling `corpus-nz-hansard`.
 
@@ -839,9 +900,24 @@ Acceptance criteria:
 
 Link: `conductor/tracks/track_24_corpus_family_naming_and_publication_alignment/`
 
+Evidence:
+
+- Naming/publication decision:
+  `docs/naming_publication_alignment.md`.
+- Requirements/design docs:
+  `docs/corpus-family-requirements-moscow.md` and
+  `docs/corpus-family-design.md`.
+- Public-surface evidence:
+  `docs/public_surface_evidence_ledger.md`.
+- README and dataset card now state the preferred `corpus-nz-legislation`
+  family label, current `corpus-legislation-nz` publication line, and sibling
+  `corpus-nz-hansard`.
+- Migration or reservation of `corpus-nz-legislation` remains deferred to Track
+  28.
+
 ## Track 25 - Cross Corpus Interoperability And Metadata
 
-Status: `todo`
+Status: `done`
 
 Goal: adopt applicable Hansard interoperability and SOTA metadata roadmap patterns for legislation researcher artifacts and metadata endpoints.
 
@@ -859,73 +935,199 @@ Acceptance criteria:
 
 Link: `conductor/tracks/track_25_cross_corpus_interoperability_and_metadata/`
 
+Evidence:
+
+- Hansard interoperability mapping:
+  `docs/cross_corpus_interoperability_hansard.md`.
+- Corpus-family design and researcher quickstart now reference the optional
+  interoperability artifact contract.
+- Hansard reference checkout:
+  `C:\Users\60217257\OneDrive - Flinders\repos\corpus-nz-hansard`.
+- Derived artifacts remain optional, generated, versioned, validated, and
+  dependency-neutral until future implementation tracks scope them.
+
 ## track 26 public surface audit evidence
 
-Status: `todo`
+Status: `done`
 
 Goal: Create an evidence ledger for GitHub, Hugging Face, Zenodo, OSF, and future metadata surfaces.
 
 Link: `conductor/tracks/track_26_public_surface_audit_evidence/`
 
+Evidence:
+
+- Ledger: `docs/public_surface_evidence_ledger.md`.
+- GitHub public repo, release/tag, branch protection, variables, secret names,
+  and recent workflow runs recorded.
+- Hugging Face live, historical, and legacy/redirect surfaces recorded.
+- Zenodo record, DOI, related identifier, file list, and immutable filename
+  caveat recorded.
+- OSF and future metadata surfaces recorded as inactive/pending policy.
+
 
 ## track 27 zenodo rights metadata and zenodraft workflow
 
-Status: `todo`
+Status: `done`
 
 Goal: Harmonise Zenodo rights metadata and migrate/evaluate draft operations through zenodraft.
 
 Link: `conductor/tracks/track_27_zenodo_rights_metadata_and_zenodraft_workflow/`
 
+Evidence:
+
+- Rights and workflow decision:
+  `docs/zenodo_rights_metadata_zenodraft.md`.
+- Zenodo metadata example:
+  `docs/zenodo/zenodo-2026-metadata.example.json`.
+- Notice file:
+  `NOTICE.md`.
+- `zenodraft` was evaluated locally with Node `v24.15.0`, npm `11.12.1`, and
+  `npx --yes zenodraft --help`.
+- Metadata validation passed with
+  `npx --yes zenodraft metadata validate docs/zenodo/zenodo-2026-metadata.example.json`.
+- The annual Zenodo workflow remains draft-first by default, with future
+  `zenodraft` token mapping documented and production publish still protected.
+
 
 ## track 28 github repository name migration assessment
 
-Status: `todo`
+Status: `done`
 
 Goal: Assess safe migration or reservation of the preferred corpus-nz-legislation GitHub name.
 
 Link: `conductor/tracks/track_28_github_repository_name_migration_assessment/`
 
+Evidence:
+
+- Assessment document:
+  `docs/github_repository_name_migration_assessment.md`.
+- Current live GitHub repository remains
+  `https://github.com/edithatogo/corpus-legislation-nz`.
+- Preferred target `edithatogo/corpus-nz-legislation` was not found or not
+  accessible through `gh repo view` at the Track 28 check point.
+- Decision: do not rename the live repository in this track; reserve the
+  preferred name as a pointer repository first, then treat any full rename as a
+  release operation with post-rename verification.
+
 
 ## track 29 shared nz corpus core schema
 
-Status: `todo`
+Status: `done`
 
 Goal: Define shared core fields and compatibility expectations across legislation and Hansard.
 
 Link: `conductor/tracks/track_29_shared_nz_corpus_core_schema/`
 
+Evidence:
+
+- Shared core schema documentation:
+  `docs/shared_nz_corpus_core_schema.md`.
+- Machine-readable schema:
+  `schemas/shared_nz_corpus_core.schema.json`.
+- Contract checker:
+  `scripts/check_shared_core_schema.py`.
+- Tests:
+  `tests/test_shared_core_schema.py`.
+- The shared schema accepts `corpus-nz-legislation` and `corpus-nz-hansard`
+  while keeping corpus-specific fields in their own schemas.
+
 
 ## track 30 sota metadata packages
 
-Status: `todo`
+Status: `done`
 
 Goal: Generate validated Croissant, RO-Crate, Frictionless, DCAT, and PROV-O metadata packages.
 
 Link: `conductor/tracks/track_30_sota_metadata_packages/`
 
+Evidence:
+
+- Metadata package contract:
+  `docs/sota_metadata_packages.md`.
+- Generator and validator:
+  `src/nz_legislation_corpus/metadata_packages.py`.
+- CLI commands:
+  `uv run nzlc metadata-packages --output-dir generated/metadata-packages`
+  and
+  `uv run nzlc validate-metadata-packages --metadata-dir generated/metadata-packages`.
+- Tests:
+  `tests/test_metadata_packages.py`.
+- Generated outputs remain ignored release artifacts under `generated/` until
+  an explicit release/upload/archive workflow publishes them.
+
 
 ## track 31 bleeding edge versioning release automation
 
-Status: `todo`
+Status: `done`
 
 Goal: Implement SemVer/dataset/schema version governance, Release Please-style changelog automation, and consistency checks.
 
 Link: `conductor/tracks/track_31_bleeding_edge_versioning_release_automation/`
 
+Evidence:
+
+- Versioning/release automation policy:
+  `docs/versioning_release_automation.md`.
+- Consistency checker:
+  `scripts/check_version_consistency.py`.
+- Tests:
+  `tests/test_version_consistency.py`.
+- CI enforcement:
+  `.github/workflows/tests.yml` runs the version/release consistency check with
+  read-only repository permissions.
+- Release Please decision: deferred until publication gates and protected
+  environments are proven; future automation must not publish Hugging Face or
+  Zenodo records.
+- Dependency-update policy keeps Renovate PRs from publishing datasets or
+  Zenodo records.
+
 
 ## track 32 sota cicd code quality rust tooling
 
-Status: `todo`
+Status: `done`
 
 Goal: Adopt SOTA CI/code-quality automation using Rust-backed tools where possible: uv, ruff, typos, zizmor, taplo, plus actionlint.
 
 Link: `conductor/tracks/track_32_sota_cicd_code_quality_rust_tooling/`
 
+Evidence:
+
+- CI workflow:
+  `.github/workflows/code_quality.yml`.
+- Tooling policy:
+  `docs/ci_code_quality_security_tooling.md`.
+- Blocking checks now cover `uv`, `ruff check`, `ruff format --check`,
+  strict `ty`, `typos`, `taplo`, and `actionlint`.
+- `actionlint` found and drove the fix for
+  `.github/workflows/historical_hf_upload.yml`, consolidating 12 manual inputs
+  down to GitHub's 10-input `workflow_dispatch` limit.
+- CodeQL, OpenSSF Scorecard, Renovate, and pre-commit adoption decisions are
+  documented.
+- `zizmor` is adopted as an advisory CI job until the existing unpinned-action
+  and template-expansion findings are resolved in a workflow-hardening pass.
+
 
 ## track 33 artifact provenance attestations
 
-Status: `todo`
+Status: `done`
 
 Goal: Add release evidence ledgers, GitHub artifact attestations or SLSA-style provenance, and signed/checksummed artifact policy.
 
 Link: `conductor/tracks/track_33_artifact_provenance_attestations/`
+
+Evidence:
+
+- Provenance and attestation policy:
+  `docs/artifact_provenance_attestations.md`.
+- Release evidence JSON Schema:
+  `schemas/release_evidence.schema.json`.
+- Archive release evidence generator:
+  `src/nz_legislation_corpus/artifact_provenance.py`.
+- `nzlc archive` now emits
+  `corpus-legislation-nz-YYYY.release-evidence.json` and includes it in
+  `SHA256SUMS`.
+- Annual Zenodo archive workflow uploads archive evidence artifacts and calls
+  GitHub artifact attestation before Zenodo draft upload.
+- Consistency checker and tests:
+  `scripts/check_artifact_provenance.py` and
+  `tests/test_artifact_provenance.py`.

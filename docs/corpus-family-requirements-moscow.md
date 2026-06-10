@@ -60,7 +60,8 @@ Agents working in either repository must treat these labels as the target naming
 
 1. Record naming preference and sibling-project cross-reference in both Conductor setups.
 2. Create publication-surface alignment tracks in both repositories.
-3. Audit GitHub/Hugging Face/Zenodo current state and document gaps.
+3. Audit GitHub/Hugging Face/Zenodo current state and document gaps. Current
+   legislation evidence is recorded in `docs/public_surface_evidence_ledger.md`.
 4. Decide whether to reserve or migrate `corpus-nz-legislation` public repository naming.
 5. Fix Hugging Face viewer/access/metadata issues where present.
 6. Align Zenodo related identifiers, licenses, archive files, and concept DOI references.
@@ -71,7 +72,11 @@ Agents working in either repository must treat these labels as the target naming
 
 The following recommendations are part of the corpus-family roadmap and should be converted into implementation evidence before release polish is considered complete:
 
-- Add a public-surface audit evidence ledger for GitHub, Hugging Face, Zenodo, OSF, and future metadata environments.
+- Preserve the Track 24 naming/publication decision in
+  `docs/naming_publication_alignment.md`.
+- Keep the public-surface audit evidence ledger current for GitHub, Hugging
+  Face, Zenodo, OSF, and future metadata environments:
+  `docs/public_surface_evidence_ledger.md`.
 - Add Zenodo rights/metadata harmonisation, including license-scope review for code, docs, manifests, source text, normalized Parquet, and archive bundles.
 - Add a GitHub repository-name migration assessment before moving from `corpus-legislation-nz` toward `corpus-nz-legislation`.
 - Add a shared NZ corpus core schema compatibility track covering `record_schema_version`, canonical `text`, timestamps, hashes, and provenance fields.

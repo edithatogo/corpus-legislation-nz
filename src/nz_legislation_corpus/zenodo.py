@@ -51,7 +51,9 @@ class ZenodoClient:
         return response.json()
 
     def get_deposition(self, deposition_id: str) -> dict[str, Any]:
-        response = self._request("GET", f"{self.api_url}/deposit/depositions/{deposition_id}", headers=self.headers)
+        response = self._request(
+            "GET", f"{self.api_url}/deposit/depositions/{deposition_id}", headers=self.headers
+        )
         response.raise_for_status()
         return response.json()
 
@@ -114,7 +116,9 @@ class ZenodoClient:
         return response.json()
 
     def list_files(self, deposition_id: str) -> list[dict[str, Any]]:
-        response = self._request("GET", f"{self.api_url}/deposit/depositions/{deposition_id}/files", headers=self.headers)
+        response = self._request(
+            "GET", f"{self.api_url}/deposit/depositions/{deposition_id}/files", headers=self.headers
+        )
         response.raise_for_status()
         return response.json()
 
@@ -136,7 +140,9 @@ class ZenodoClient:
     def upload_file_via_bucket(self, deposition: dict[str, Any], path: Path) -> dict[str, Any]:
         bucket_url = deposition.get("links", {}).get("bucket")
         if not bucket_url:
-            raise RuntimeError("Zenodo draft does not expose a bucket URL; cannot use large-file API")
+            raise RuntimeError(
+                "Zenodo draft does not expose a bucket URL; cannot use large-file API"
+            )
         url = f"{bucket_url.rstrip('/')}/{path.name}"
         with path.open("rb") as f:
             response = self._request("PUT", url, headers=self.headers, data=f)

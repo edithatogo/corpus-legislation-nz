@@ -1,7 +1,7 @@
 # Spec - Runtime Capacity, Batching, And Resume
 
 ## Status
-blocked
+ready
 
 ## Goal
 make the full corpus bootstrap and recurring sync practical under local disk, GitHub Actions runtime, API rate limits, and upload interruption constraints.

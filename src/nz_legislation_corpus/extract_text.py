@@ -37,7 +37,9 @@ def extract_text_from_html(html_bytes: bytes) -> str:
     return _flatten_text([unescape(raw)])
 
 
-def extract_text_best_effort(content: bytes, content_type: str | None = None, url: str | None = None) -> str:
+def extract_text_best_effort(
+    content: bytes, content_type: str | None = None, url: str | None = None
+) -> str:
     marker = " ".join(part for part in [content_type or "", url or ""]).lower()
     if "xml" in marker:
         try:

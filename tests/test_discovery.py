@@ -6,6 +6,7 @@ from nz_legislation_corpus.cli import _optional_filter
 from nz_legislation_corpus.discovery import (
     build_work_id_batch_manifest,
     build_work_id_inventory,
+    build_work_id_reconciliation_report,
     normalize_work_ids,
     sha256_lines,
 )
@@ -132,3 +133,22 @@ def test_build_work_id_batch_manifest_is_stable() -> None:
             "sha256": sha256_lines(["work-3"]),
         },
     ]
+
+
+def test_build_work_id_reconciliation_report_compares_seed_sets() -> None:
+    report = build_work_id_reconciliation_report(
+        baseline_lines=["work-1", "work-2", "work-2", "# comment"],
+        candidate_lines=["work-2", "work-3"],
+        baseline_label="existing",
+        candidate_label="candidate",
+    )
+
+    assert report["baseline_label"] == "existing"
+    assert report["candidate_label"] == "candidate"
+    assert report["baseline_unique_count"] == 2
+    assert report["candidate_unique_count"] == 2
+    assert report["unchanged_count"] == 1
+    assert report["added_work_ids"] == ["work-3"]
+    assert report["removed_work_ids"] == ["work-1"]
+    assert report["merged_unique_count"] == 3
+    assert report["merged_sha256"] == sha256_lines(["work-1", "work-2", "work-3"])
