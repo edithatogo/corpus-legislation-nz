@@ -43,7 +43,7 @@ confirm all credentials and GitHub variables required for live corpus operations
 - Base repository / GitHub cross-check on 2026-06-02:
   - Parent Git root resolves to `C:/Users/60217257/OneDrive - Flinders`.
   - Obvious local base env file found: `.env.example` only; the file is OneDrive offline and no usable local `.env` credential file was found in bounded scans.
-  - Documented default GitHub repo `edithatogo/nz-legislation-corpus-pipeline` is not resolvable by the authenticated GitHub account.
+  - Documented default GitHub repo `edithatogo/corpus-legislation-nz` is not resolvable by the authenticated GitHub account.
   - Likely base GitHub repo `edithatogo/nz-legislation` is accessible.
   - `edithatogo/nz-legislation` repo secrets contain only `CODECOV_TOKEN` and `NPM_TOKEN`; no `NZ_LEGISLATION_API_KEY`.
   - `edithatogo/nz-legislation` repo variables contain only `ENABLE_AUTOMATED_NPM_PUBLISH`; no NZ legislation corpus variables.
@@ -63,7 +63,7 @@ confirm all credentials and GitHub variables required for live corpus operations
 ## Blocked Items
 
 - `NZ_LEGISLATION_API_KEY` has been supplied and validated process-locally, but it is not stored in GitHub secrets yet.
-- GitHub repository created on 2026-06-07: `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- GitHub repository created on 2026-06-07: `https://github.com/edithatogo/corpus-legislation-nz`.
 - Git remote configured as `origin`.
 - GitHub variables configured: `HF_REPO_ID`, `DATA_DIR`, `NZLC_SEARCH_TERMS`, `NZLC_SEARCH_FIELD`, `NZLC_SEARCH_SORT_BY`, `NZLC_LEGISLATION_TYPES`, `ARCHIVE_CREATORS_JSON`, `ARCHIVE_TITLE`, `ARCHIVE_LICENSE`, `ARCHIVE_PUBLISH`, `ZENODO_API_URL`, and `ZENODO_SANDBOX_API_URL`.
 - GitHub secrets are still absent: `NZ_LEGISLATION_API_KEY`, `HF_TOKEN`, and `ZENODO_TOKEN`.

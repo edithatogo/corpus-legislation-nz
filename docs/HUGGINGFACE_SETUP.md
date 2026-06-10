@@ -7,7 +7,7 @@ This project uses Hugging Face Datasets as the live operational data hub. GitHub
 Recommended default:
 
 ```text
-edithatogo/nz-legislation-corpus
+edithatogo/corpus-legislation-nz
 ```
 
 This target is for the live partial/API-discovery corpus line. Historical corpus
@@ -16,7 +16,7 @@ pilots must not upload over it; see `docs/historical_publication_policy.md`.
 Historical corpus target:
 
 ```text
-edithatogo/nz-legislation-corpus-historical
+edithatogo/corpus-legislation-nz-historical
 ```
 
 The historical target is separate from the live dataset, following the same
@@ -30,7 +30,7 @@ The repository can be created and initialised through the Hugging Face API or CL
 
 ```bash
 export HF_TOKEN="hf_..."
-export HF_REPO_ID="edithatogo/nz-legislation-corpus"
+export HF_REPO_ID="edithatogo/corpus-legislation-nz"
 export HF_PRIVATE="false"
 ./scripts/create_huggingface_dataset_repo.sh "$HF_REPO_ID"
 ```
@@ -40,7 +40,7 @@ target:
 
 ```bash
 export HF_TOKEN="hf_..."
-export HF_HISTORICAL_REPO_ID="edithatogo/nz-legislation-corpus-historical"
+export HF_HISTORICAL_REPO_ID="edithatogo/corpus-legislation-nz-historical"
 export HF_PRIVATE="false"
 ./scripts/create_huggingface_dataset_repo.sh "$HF_HISTORICAL_REPO_ID"
 ```
@@ -124,17 +124,17 @@ The token needs write access to the dataset repo.
 ## Required GitHub variable
 
 ```text
-HF_REPO_ID=edithatogo/nz-legislation-corpus
+HF_REPO_ID=edithatogo/corpus-legislation-nz
 ```
 
 Required GitHub variable for future historical upload workflows:
 
 ```text
-HF_HISTORICAL_REPO_ID=edithatogo/nz-legislation-corpus-historical
+HF_HISTORICAL_REPO_ID=edithatogo/corpus-legislation-nz-historical
 ```
 
 `HF_REPO_ID` and `HF_HISTORICAL_REPO_ID` must remain distinct. Historical
-workflow code should reject `HF_HISTORICAL_REPO_ID=edithatogo/nz-legislation-corpus`
+workflow code should reject `HF_HISTORICAL_REPO_ID=edithatogo/corpus-legislation-nz`
 instead of uploading historical records over the live partial corpus.
 
 ## Recommended first checks
@@ -152,7 +152,7 @@ Then trigger the GitHub workflow manually once the GitHub repository exists and 
 
 ```bash
 export HF_TOKEN="hf_..."
-export HF_REPO_ID="edithatogo/nz-legislation-corpus"
+export HF_REPO_ID="edithatogo/corpus-legislation-nz"
 export HF_XET_HIGH_PERFORMANCE=1
 uv run nzlc hf-upload
 ```

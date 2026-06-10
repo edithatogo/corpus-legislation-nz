@@ -1,4 +1,4 @@
-﻿# Plan - Corpus Family Naming And Publication Alignment
+# Plan - Corpus Family Naming And Publication Alignment
 
 ## Phase 1 - Naming and sibling setup
 
@@ -16,7 +16,7 @@
 
 ## Phase 3 - Hugging Face environment
 
-- [ ] Audit `edithatogo/nz-legislation-corpus` card metadata, access/gating, files, viewer behaviour, Xet status, DOI links, and GitHub links.
+- [ ] Audit `edithatogo/corpus-legislation-nz` card metadata, access/gating, files, viewer behaviour, Xet status, DOI links, and GitHub links.
 - [ ] Ensure dataset card uses preferred family naming and links sibling Hansard corpus.
 - [ ] Verify manifest files are visible without confusing dataset viewer splits.
 - [ ] Record HF revision and manifest hash in evidence.

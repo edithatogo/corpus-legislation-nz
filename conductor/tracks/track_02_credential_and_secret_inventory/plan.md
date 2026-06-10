@@ -13,8 +13,8 @@
 ## Current blocker
 
 - `NZ_LEGISLATION_API_KEY` was supplied by the user and validated process-locally without writing the value to repo files.
-- GitHub repository created and remote configured: `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- GitHub repository created and remote configured: `https://github.com/edithatogo/corpus-legislation-nz`.
 - GitHub variables are configured, including corrected `ARCHIVE_CREATORS_JSON` without recording its value here.
 - `HF_TOKEN`, `ZENODO_TOKEN`, and `NZ_LEGISLATION_API_KEY` are present as GitHub repository secrets.
-- `HF_REPO_ID` is configured as a GitHub variable: `edithatogo/nz-legislation-corpus`.
+- `HF_REPO_ID` is configured as a GitHub variable: `edithatogo/corpus-legislation-nz`.
 - GitHub Actions doctor run `27125139848` passed on the PR branch after validating NZ API, Hugging Face dataset, and Zenodo production connectivity.

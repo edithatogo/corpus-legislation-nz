@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_FULL_NAME="${1:-${GITHUB_REPOSITORY:-edithatogo/nz-legislation-corpus-pipeline}}"
+REPO_FULL_NAME="${1:-${GITHUB_REPOSITORY:-edithatogo/corpus-legislation-nz}}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
 REQUIRED_TEST_CONTEXT="${REQUIRED_TEST_CONTEXT:-tests}"
 

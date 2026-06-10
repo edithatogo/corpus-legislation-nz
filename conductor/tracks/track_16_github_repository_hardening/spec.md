@@ -19,7 +19,7 @@ make the GitHub repository safe to operate as the automation controller for the 
 - First passing CI run URL.
 
 ## Current Evidence
-- GitHub repository URL: `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- GitHub repository URL: `https://github.com/edithatogo/corpus-legislation-nz`.
 - Branch protection summary: `main` requires strict `tests`, one approving review, admin enforcement, linear history, no force pushes, and no deletions.
 - Enabled security settings: Dependabot security updates, secret scanning, and push protection.
 - First passing CI run: baseline `Tests` run `27087158077` and `CodeQL` run `27087158073` passed on 2026-06-07.

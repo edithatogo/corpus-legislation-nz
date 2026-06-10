@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_FULL_NAME="${1:-${GITHUB_REPOSITORY:-edithatogo/nz-legislation-corpus-pipeline}}"
+REPO_FULL_NAME="${1:-${GITHUB_REPOSITORY:-edithatogo/corpus-legislation-nz}}"
 
 if ! command -v gh >/dev/null 2>&1; then
   echo "GitHub CLI (gh) is required." >&2
@@ -32,7 +32,7 @@ if [[ -n "${OSF_TOKEN:-}" ]]; then
   gh secret set OSF_TOKEN --repo "$REPO_FULL_NAME" --body "$OSF_TOKEN"
 fi
 
-gh variable set HF_REPO_ID --repo "$REPO_FULL_NAME" --body "${HF_REPO_ID:-${REPO_FULL_NAME%/*}/nz-legislation-corpus}"
+gh variable set HF_REPO_ID --repo "$REPO_FULL_NAME" --body "${HF_REPO_ID:-${REPO_FULL_NAME%/*}/corpus-legislation-nz}"
 gh variable set NZLC_SEARCH_TERMS --repo "$REPO_FULL_NAME" --body "${NZLC_SEARCH_TERMS:-act,bill,regulation,order,notice}"
 gh variable set NZLC_SEARCH_SORT_BY --repo "$REPO_FULL_NAME" --body "${NZLC_SEARCH_SORT_BY:-most_recently_updated}"
 gh variable set NZLC_SEARCH_FIELD --repo "$REPO_FULL_NAME" --body "${NZLC_SEARCH_FIELD:-title}"

@@ -1,6 +1,6 @@
 # Project Tracks
 
-This file tracks the major work items for `nz-legislation-corpus`.
+This file tracks the major work items for `corpus-legislation-nz`.
 
 ---
 
@@ -98,7 +98,7 @@ Current blocker:
 
 - `HF_REPO_ID` is not configured in the local environment.
 - `HF_TOKEN` is not configured in the local environment.
-- Public search/open checks on 2026-06-07 did not confirm an existing public `edithatogo/nz-legislation-corpus` dataset shell.
+- Public search/open checks on 2026-06-07 did not confirm an existing public `edithatogo/corpus-legislation-nz` dataset shell.
 - The repository shell cannot be created, confirmed writable, or inspected for layout until the final Hugging Face dataset ID and a write-capable token are supplied.
 
 ## Track 04 - Source Discovery Completeness
@@ -540,7 +540,7 @@ Evidence to record:
 Current evidence:
 
 - No Git remote is configured, so the final GitHub repository URL, branch protection summary, enabled security settings, and CI run URL cannot be recorded yet.
-- GitHub repository URL: `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- GitHub repository URL: `https://github.com/edithatogo/corpus-legislation-nz`.
 - Branch protection summary: `main` requires strict `tests`, one approving review, admin enforcement, linear history, no force pushes, and no deletions.
 - Enabled security settings: Dependabot security updates, secret scanning, and push protection.
 - First passing CI run: baseline `Tests` run `27087158077` and `CodeQL` run `27087158073` passed on 2026-06-07.
@@ -657,10 +657,10 @@ Current evidence:
 - Hugging Face revision:
   `8d48d807c5c8da73f8ad164734245d9ea73046f3`.
 - GitHub release or tag: `v0.1.0-partial.20260609`,
-  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/releases/tag/v0.1.0-partial.20260609`.
+  `https://github.com/edithatogo/corpus-legislation-nz/releases/tag/v0.1.0-partial.20260609`.
 - Final launch checklist: `docs/public_launch_decision.md`.
 - Draft release note: `docs/public_launch_release_note.md`.
-- Tracking issues: #10 through #15 in `edithatogo/nz-legislation-corpus-pipeline`.
+- Tracking issues: #10 through #15 in `edithatogo/corpus-legislation-nz`.
 
 ## Track 20 - GitHub Release Tag For Partial Launch
 
@@ -685,7 +685,7 @@ Acceptance criteria:
 Evidence to record:
 
 - GitHub release URL:
-  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/releases/tag/v0.1.0-partial.20260609`.
+  `https://github.com/edithatogo/corpus-legislation-nz/releases/tag/v0.1.0-partial.20260609`.
 - Tag name and commit SHA: `v0.1.0-partial.20260609` at
   `3196fb415276e1d1e8edd3c394ddeac30d4485a9`.
 - Commit updating launch docs: this implementation branch records the release
@@ -699,8 +699,8 @@ Goal: prepare historical corpus publication as a separate Hugging Face dataset, 
 
 Actions:
 
-- Use the separate Hugging Face dataset target `edithatogo/nz-legislation-corpus-historical`.
-- Document that `edithatogo/nz-legislation-corpus` remains the live partial/API-discovery dataset.
+- Use the separate Hugging Face dataset target `edithatogo/corpus-legislation-nz-historical`.
+- Document that `edithatogo/corpus-legislation-nz` remains the live partial/API-discovery dataset.
 - Confirm or create the historical Hugging Face dataset shell with root-level layout.
 - Configure a separate repository variable such as `HF_HISTORICAL_REPO_ID`.
 - Ensure historical pilots and uploads cannot write to `HF_REPO_ID` unless explicitly intended.
@@ -719,9 +719,9 @@ Evidence to record:
 
 Completion evidence:
 
-- Historical target documented as `edithatogo/nz-legislation-corpus-historical`.
-- Live target `edithatogo/nz-legislation-corpus` remains the partial/API-discovery corpus and must not be overwritten.
-- GitHub variable contract documented as `HF_HISTORICAL_REPO_ID=edithatogo/nz-legislation-corpus-historical`.
+- Historical target documented as `edithatogo/corpus-legislation-nz-historical`.
+- Live target `edithatogo/corpus-legislation-nz` remains the partial/API-discovery corpus and must not be overwritten.
+- GitHub variable contract documented as `HF_HISTORICAL_REPO_ID=edithatogo/corpus-legislation-nz-historical`.
 
 ## Track 22 - Historical Bootstrap Review Plan
 
@@ -749,7 +749,7 @@ Acceptance criteria:
 Evidence to record:
 
 - Pilot workflow run URL and artifact name:
-  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27138352849`,
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27138352849`,
   artifact `historical-sync-pilot`.
 - Work ID count, record count, manifest hash, and coverage summary: reviewed in
   `docs/historical_bootstrap_review.md`; 10 work IDs, 52 validated records,
@@ -759,7 +759,7 @@ Evidence to record:
   entries available for resume.
 - Batch plan and historical Hugging Face target: documented in
   `docs/historical_bootstrap_review.md`; target
-  `edithatogo/nz-legislation-corpus-historical`.
+  `edithatogo/corpus-legislation-nz-historical`.
 
 ## Track 23 - Manual Historical Upload Workflow
 
@@ -810,7 +810,7 @@ Current evidence:
   checks, dry-run artifacts, and an upload step gated by
   `upload_confirmed=true`.
 - Dry-run/no-upload proof passed:
-  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27194196559`.
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27194196559`.
   The upload step was skipped because `upload_confirmed=false`, and dry-run
   artifacts were uploaded.
 - `conductor/tracks/track_23_manual_historical_upload_workflow/spec.md`

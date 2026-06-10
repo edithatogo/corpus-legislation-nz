@@ -12,7 +12,7 @@
 
 ## Implementation Notes
 - Added branch protection, required status check, Dependabot vulnerability alert, secret scanning, push protection, and Dependabot security update API calls to `scripts/configure_github_hardening.sh`.
-- GitHub repository created and baseline pushed: `https://github.com/edithatogo/nz-legislation-corpus-pipeline`.
+- GitHub repository created and baseline pushed: `https://github.com/edithatogo/corpus-legislation-nz`.
 - Branch protection on `main` requires strict `tests`, one approving review, admin enforcement, linear history, no force pushes, and no deletions.
 - Repository security settings show Dependabot security updates, secret scanning, and push protection enabled.
 - Baseline `Tests` and `CodeQL` runs on `main` passed on 2026-06-07.

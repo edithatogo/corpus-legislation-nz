@@ -3,8 +3,8 @@
 The live Hugging Face dataset currently contains an intentionally partial API-discovery corpus. It is not the old or full historical corpus.
 
 Historical publication uses a separate Hugging Face dataset:
-`edithatogo/nz-legislation-corpus-historical`. Do not upload historical records
-to `edithatogo/nz-legislation-corpus`.
+`edithatogo/corpus-legislation-nz-historical`. Do not upload historical records
+to `edithatogo/corpus-legislation-nz`.
 
 Historical bootstrap starts with a deterministic work-ID inventory. Do not run a full historical sync from broad search terms directly, because broad search discovery is not proof of full coverage and is hard to resume or audit.
 
@@ -70,8 +70,8 @@ target is explicitly reviewed.
 Track 22 review is recorded in `docs/historical_bootstrap_review.md`.
 
 The reviewed historical publication target is
-`edithatogo/nz-legislation-corpus-historical`. Do not upload historical records
-to `edithatogo/nz-legislation-corpus`.
+`edithatogo/corpus-legislation-nz-historical`. Do not upload historical records
+to `edithatogo/corpus-legislation-nz`.
 
 The successful pilot artifact from GitHub Actions run `27138352849` produced 52
 validated records from 10 search-derived work IDs. It proves the pilot path and
@@ -80,7 +80,7 @@ resume state, but not full historical coverage.
 The first confirmed historical Hugging Face bootstrap upload completed on
 2026-06-09 in GitHub Actions run `27229110053`:
 
-- target: `edithatogo/nz-legislation-corpus-historical`
+- target: `edithatogo/corpus-legislation-nz-historical`
 - upload mode: manual, confirmed
 - seed mode: search-derived bootstrap seed, bounded to 500 works
 - validation: `ok: true`
@@ -137,7 +137,7 @@ an isolated batch from pruning the existing published historical corpus.
 Historical upload configuration must use:
 
 ```text
-HF_HISTORICAL_REPO_ID=edithatogo/nz-legislation-corpus-historical
+HF_HISTORICAL_REPO_ID=edithatogo/corpus-legislation-nz-historical
 ```
 
 Do not reuse `HF_REPO_ID` for historical publication. The future historical

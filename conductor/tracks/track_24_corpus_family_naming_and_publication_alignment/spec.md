@@ -1,4 +1,4 @@
-﻿# Spec - Corpus Family Naming And Publication Alignment
+# Spec - Corpus Family Naming And Publication Alignment
 
 ## Status
 todo
@@ -24,8 +24,8 @@ Use this repository as the engineering baseline, but cross-reference Hansard for
 
 ## Environment Requirements
 
-- GitHub: assess whether to reserve or migrate to `corpus-nz-legislation`; keep current `nz-legislation-corpus-pipeline` stable until redirects and release links are safe.
-- Hugging Face: keep `edithatogo/nz-legislation-corpus`; verify dataset access, card metadata, files, Xet status, and viewer behaviour.
+- GitHub: assess whether to reserve or migrate to `corpus-nz-legislation`; keep current `corpus-legislation-nz` stable until redirects and release links are safe.
+- Hugging Face: keep `edithatogo/corpus-legislation-nz`; verify dataset access, card metadata, files, Xet status, and viewer behaviour.
 - Zenodo: keep DOI snapshots immutable; align related identifiers and license wording with HF/GitHub.
 - OSF: optional only; define review-bundle/mirror policy before use.
 - Other: prepare Croissant, RO-Crate, Frictionless, DCAT/PROV-O as generated metadata endpoints, not hand-edited releases.

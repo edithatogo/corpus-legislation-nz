@@ -25,7 +25,7 @@ make the published corpus easy to inspect and query after the live hub is stable
   - `README.md` links to researcher quickstart and data dictionary.
   - `DATASET_CARD.md` points core field definitions to the data dictionary.
 - Researcher examples:
-  - DuckDB examples show `hf://datasets/REPLACE-ME/nz-legislation-corpus/parquet/**/*.parquet` queries.
+  - DuckDB examples show `hf://datasets/REPLACE-ME/corpus-legislation-nz/parquet/**/*.parquet` queries.
   - PyArrow example shows local `data/parquet` reads with Hive partitioning.
   - Local smoke fixture commands show how to generate a tiny non-network Parquet corpus for tooling checks.
 - Sample split decision:

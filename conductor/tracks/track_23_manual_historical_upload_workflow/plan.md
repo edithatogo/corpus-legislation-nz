@@ -23,7 +23,7 @@
 ## Dry-run proof
 
 - Run URL:
-  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27194196559`.
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27194196559`.
 - Event: `workflow_dispatch`.
 - Result: success.
 - Inputs: `upload_confirmed=false`, `search_terms=act`,

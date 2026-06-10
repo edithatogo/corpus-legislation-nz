@@ -2,7 +2,7 @@
 set -euo pipefail
 
 version="${1:-v0.5}"
-out="${2:-/tmp/nz-legislation-corpus-pipeline-${version}.zip}"
+out="${2:-/tmp/corpus-legislation-nz-${version}.zip}"
 
 rm -rf data dist .pytest_cache .ruff_cache .mypy_cache .venv .hf_cache
 find . -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true

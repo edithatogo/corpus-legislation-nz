@@ -4,7 +4,7 @@ This guide is for downstream users who want to inspect the published corpus with
 
 ## Current publication status
 
-The live Hugging Face dataset is available at `edithatogo/nz-legislation-corpus`. Cite live results with the Hugging Face dataset URL, access date, and manifest hash.
+The live Hugging Face dataset is available at `edithatogo/corpus-legislation-nz`. Cite live results with the Hugging Face dataset URL, access date, and manifest hash.
 
 Coverage is not proven complete until the dataset has been reconciled against an authoritative inventory.
 
@@ -21,7 +21,7 @@ SELECT
   legislation_type,
   legislation_status,
   year
-FROM read_parquet('hf://datasets/edithatogo/nz-legislation-corpus/parquet/**/*.parquet')
+FROM read_parquet('hf://datasets/edithatogo/corpus-legislation-nz/parquet/**/*.parquet')
 LIMIT 20;
 ```
 
@@ -35,7 +35,7 @@ SELECT
   legislation_type,
   year,
   count(*) AS records
-FROM read_parquet('hf://datasets/edithatogo/nz-legislation-corpus/parquet/**/*.parquet')
+FROM read_parquet('hf://datasets/edithatogo/corpus-legislation-nz/parquet/**/*.parquet')
 GROUP BY legislation_type, year
 ORDER BY year DESC, legislation_type;
 ```

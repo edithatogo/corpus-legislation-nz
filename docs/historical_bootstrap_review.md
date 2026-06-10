@@ -2,7 +2,7 @@
 
 Review date: 2026-06-09
 
-Historical Hugging Face target: `edithatogo/nz-legislation-corpus-historical`
+Historical Hugging Face target: `edithatogo/corpus-legislation-nz-historical`
 
 This review covers Track 22 only: historical pilot artifact review and bootstrap
 planning. It does not add or approve upload workflow code.
@@ -10,7 +10,7 @@ planning. It does not add or approve upload workflow code.
 ## Artifact evidence
 
 Latest GitHub Actions pilot run checked:
-`https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27138352849`
+`https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27138352849`
 
 - Workflow: `historical_sync_pilot.yml`
 - Event: `workflow_dispatch`
@@ -120,8 +120,8 @@ detected.
 
 ## Bootstrap plan
 
-Use `edithatogo/nz-legislation-corpus-historical` as the historical publication
-target. Do not upload historical records to `edithatogo/nz-legislation-corpus`.
+Use `edithatogo/corpus-legislation-nz-historical` as the historical publication
+target. Do not upload historical records to `edithatogo/corpus-legislation-nz`.
 
 Recommended batch progression:
 
@@ -163,4 +163,4 @@ Publication gate:
 - Track 23 must remain manual-only and disabled until the seed boundary,
   reviewed batch outputs, and upload target are explicit.
 - The first historical Hugging Face upload must be a reviewed manual run to
-  `edithatogo/nz-legislation-corpus-historical`, not a scheduled workflow.
+  `edithatogo/corpus-legislation-nz-historical`, not a scheduled workflow.

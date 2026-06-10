@@ -5,7 +5,7 @@ set -euo pipefail
 # Run from the repository root after installing and authenticating the GitHub CLI:
 #   gh auth login
 
-REPO_NAME="${REPO_NAME:-nz-legislation-corpus-pipeline}"
+REPO_NAME="${REPO_NAME:-corpus-legislation-nz}"
 REPO_VISIBILITY="${REPO_VISIBILITY:-${VISIBILITY:-private}}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
 DESCRIPTION="${REPO_DESCRIPTION:-API-first NZ legislation corpus pipeline: NZ API -> optimized Parquet -> Hugging Face/Xet -> annual Zenodo DOI snapshots.}"
@@ -134,7 +134,7 @@ set_secret() {
   fi
 }
 
-set_var HF_REPO_ID "${HF_REPO_ID:-$OWNER/nz-legislation-corpus}"
+set_var HF_REPO_ID "${HF_REPO_ID:-$OWNER/corpus-legislation-nz}"
 set_var DATA_DIR "${DATA_DIR:-data}"
 set_var NZLC_SEARCH_TERMS "${NZLC_SEARCH_TERMS:-act,bill,regulation,order,notice}"
 set_var NZLC_SEARCH_SORT_BY "${NZLC_SEARCH_SORT_BY:-most_recently_updated}"
@@ -182,6 +182,6 @@ Next manual hardening steps:
 2. Add a required reviewer before allowing production Zenodo publication.
 3. Open Settings -> Branches / Rulesets and require the 'Tests' workflow before merging.
 4. Create the Hugging Face dataset repo if it does not exist:
-   HF_TOKEN=... HF_REPO_ID=${HF_REPO_ID:-$OWNER/nz-legislation-corpus} ./scripts/create_huggingface_dataset_repo.sh
+   HF_TOKEN=... HF_REPO_ID=${HF_REPO_ID:-$OWNER/corpus-legislation-nz} ./scripts/create_huggingface_dataset_repo.sh
 5. Test the workflow manually: Actions -> Hugging Face live sync -> Run workflow with max_works=5 and min_seconds_between_requests=1.0.
 SUMMARY

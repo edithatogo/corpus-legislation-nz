@@ -32,9 +32,9 @@ This project should be pushed to a new repository. After installing and authenti
 gh auth login
 
 export REPO_OWNER=edithatogo
-export REPO_NAME=nz-legislation-corpus-pipeline
+export REPO_NAME=corpus-legislation-nz
 export REPO_VISIBILITY=public
-export HF_REPO_ID=edithatogo/nz-legislation-corpus
+export HF_REPO_ID=edithatogo/corpus-legislation-nz
 export ARCHIVE_CREATORS_JSON='[{"name":"Your Name","affiliation":"Your Institution"}]'
 
 # Optional but recommended before first push; skipped if unset.
@@ -48,8 +48,8 @@ export ZENODO_TOKEN='...'
 Aliases are provided for older docs:
 
 ```bash
-./scripts/bootstrap_github_repo.sh --owner edithatogo --repo nz-legislation-corpus-pipeline --public
-./scripts/setup_github_repo.sh --owner edithatogo --repo nz-legislation-corpus-pipeline --public
+./scripts/bootstrap_github_repo.sh --owner edithatogo --repo corpus-legislation-nz --public
+./scripts/setup_github_repo.sh --owner edithatogo --repo corpus-legislation-nz --public
 ```
 
 The bootstrap script creates or updates the fresh repository, pushes this code, sets GitHub Actions variables, sets secrets from environment variables, and creates `zenodo-sandbox` and `zenodo-production` environments.
@@ -61,7 +61,7 @@ See `docs/GITHUB_SETUP.md` and `docs/github_setup.md`.
 Create or confirm the live dataset repository:
 
 ```bash
-HF_TOKEN='...' ./scripts/create_huggingface_dataset_repo.sh edithatogo/nz-legislation-corpus
+HF_TOKEN='...' ./scripts/create_huggingface_dataset_repo.sh edithatogo/corpus-legislation-nz
 ```
 
 ## Required GitHub Actions secrets
@@ -119,7 +119,7 @@ NZLC_OUTPUT_DIR=data uv run nzlc coverage-report
 export NZ_LEGISLATION_API_KEY='...'
 export NZLC_SEARCH_TERMS='act,bill,regulation,order,notice'
 export HF_TOKEN='...'
-export HF_REPO_ID='edithatogo/nz-legislation-corpus'
+export HF_REPO_ID='edithatogo/corpus-legislation-nz'
 
 uv run nzlc sync --latest-only
 uv run nzlc validate
@@ -206,7 +206,7 @@ Create and initialise the live dataset repository:
 
 ```bash
 export HF_TOKEN="hf_..."
-export HF_REPO_ID="edithatogo/nz-legislation-corpus"
+export HF_REPO_ID="edithatogo/corpus-legislation-nz"
 ./scripts/create_huggingface_dataset_repo.sh "$HF_REPO_ID"
 ```
 
