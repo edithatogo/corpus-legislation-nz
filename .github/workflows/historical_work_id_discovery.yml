@@ -16,11 +16,11 @@ on:
         type: string
         default: "act,bill,secondary_legislation,amendment_paper"
       max_pages:
-        description: "Optional page limit per search/type query for pilots"
+        description: "Optional page limit per search/type query for pilots; use none for no limit"
         type: string
         default: "2"
       max_works:
-        description: "Optional total discovered-work limit for pilots"
+        description: "Optional total discovered-work limit for pilots; use none for no limit"
         type: string
         default: "50"
 
@@ -54,6 +54,15 @@ jobs:
           NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
         run: |
           set -euo pipefail
+          add_optional_limit() {
+            local flag="$1"
+            local value="$2"
+            case "${value,,}" in
+              ""|"none"|"null"|"-") return 0 ;;
+              *) args+=("$flag" "$value") ;;
+            esac
+          }
+
           args=(
             --search-terms "${{ inputs.search_terms }}"
             --legislation-status "${{ inputs.legislation_status }}"
@@ -61,8 +70,8 @@ jobs:
             --output-path generated/historical-work-ids.txt
             --provenance-path generated/historical-work-ids.provenance.json
           )
-          if [ -n "${{ inputs.max_pages }}" ]; then args+=(--max-pages "${{ inputs.max_pages }}"); fi
-          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          add_optional_limit --max-pages "${{ inputs.max_pages }}"
+          add_optional_limit --max-works "${{ inputs.max_works }}"
           uv run nzlc discover-work-ids "${args[@]}"
 
       - name: Upload discovery artifact

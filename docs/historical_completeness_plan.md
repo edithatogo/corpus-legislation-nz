@@ -52,6 +52,11 @@ For pilots, keep `--max-pages` and `--max-works`. For a completeness candidate,
 remove those limits only on a controlled runner and preserve the provenance
 artifact.
 
+The manual GitHub Actions workflow `historical_work_id_discovery.yml` keeps
+pilot-safe defaults of `max_pages=2` and `max_works=50`. For a no-limit
+candidate discovery run, dispatch that workflow with `max_pages=none` and
+`max_works=none`; blank inputs may be replaced by GitHub's workflow defaults.
+
 ## Stage 2 - Reconcile before promotion
 
 Compare the candidate against the current reviewed baseline before promoting or
