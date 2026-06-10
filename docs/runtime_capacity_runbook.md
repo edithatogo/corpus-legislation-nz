@@ -48,6 +48,21 @@ Start with small manual batches, then increase only after validation and upload 
 
 Prefer deterministic seed-file chunks over broad search terms for the first full bootstrap. Keep each chunk file under `seeds/batches/` or another ignored/operator-only location unless it becomes part of the public discovery contract.
 
+Generate deterministic chunks from a reviewed seed inventory:
+
+```bash
+uv run nzlc split-work-id-batches \
+  --seed-work-ids seeds/work_ids.txt \
+  --output-dir seeds/batches \
+  --batch-size 250 \
+  --filename-prefix historical-work-ids
+```
+
+Review `seeds/batches/manifest.json` before running uploads. Record the
+`seed_sha256`, batch filename, batch SHA-256, and batch index in the run
+evidence. A batch manifest proves deterministic slicing; it does not prove full
+coverage unless the source seed inventory has also been reconciled.
+
 Example staged run:
 
 ```bash
@@ -61,6 +76,22 @@ uv run nzlc coverage-report
 
 Repeat with the next batch file only after validation passes.
 
+For GitHub Actions historical uploads, prefer a reviewed batch file with remote
+state restore:
+
+```text
+seed_work_ids_path=seeds/batches/historical-work-ids-0002.txt
+restore_existing_historical=true
+replace_existing=false
+upload_confirmed=false
+```
+
+After reviewing the no-upload artifact, rerun the same inputs with
+`upload_confirmed=true`. Do not set `restore_existing_historical=false` for an
+incremental confirmed upload. A fresh GitHub runner without restore has no
+existing `records.jsonl`, `raw_xml/`, `parquet/`, or `_state/`; uploading that
+partial folder would risk pruning previously published historical files.
+
 ## Resume behavior
 
 The sync command preserves known version hashes in `data/_state/sync_state.json`. Do not delete `_state` during a multi-batch bootstrap. If a run stops mid-bootstrap, rerun the same batch first, then continue with the next batch after validation passes.
@@ -71,6 +102,11 @@ Expected behavior:
 - `records.jsonl` is merged by stable ID unless `--replace` is explicitly passed;
 - Parquet is rewritten only when records change or Parquet files are missing;
 - generated manifests exclude `_state`, so local resume metadata does not change the public content hash by itself.
+
+On GitHub-hosted runners, resume means restoring the historical Hugging Face
+dataset into `NZLC_OUTPUT_DIR` before syncing the next reviewed seed batch.
+The manual `historical_hf_upload.yml` workflow defaults to this behavior with
+`restore_existing_historical=true` and `replace_existing=false`.
 
 ## Hugging Face upload resume
 

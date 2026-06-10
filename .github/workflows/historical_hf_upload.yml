@@ -27,6 +27,18 @@ on:
         description: "Total discovered-work and sync limit"
         type: string
         default: "50"
+      seed_work_ids_path:
+        description: "Optional checked-in reviewed seed/batch file. If set, discovery is skipped."
+        type: string
+        default: ""
+      replace_existing:
+        description: "Replace restored/local records instead of merging; only use for a reviewed full replacement"
+        type: boolean
+        default: false
+      restore_existing_historical:
+        description: "Restore existing HF historical dataset before merging a seed batch"
+        type: boolean
+        default: true
       min_seconds_between_requests:
         description: "Optional request spacing override in seconds"
         type: string
@@ -79,7 +91,16 @@ jobs:
           {
             echo "Historical dataset target: $HF_HISTORICAL_REPO_ID"
             echo "Upload confirmed: ${{ inputs.upload_confirmed }}"
+            echo "Seed work IDs path: ${{ inputs.seed_work_ids_path }}"
+            echo "Restore existing historical dataset: ${{ inputs.restore_existing_historical }}"
+            echo "Replace existing records: ${{ inputs.replace_existing }}"
           } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ inputs.upload_confirmed }}" = "true" ] && \
+             [ "${{ inputs.replace_existing }}" != "true" ] && \
+             [ "${{ inputs.restore_existing_historical }}" != "true" ]; then
+            echo "Confirmed incremental upload requires restore_existing_historical=true unless replace_existing=true." >&2
+            exit 1
+          fi
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -95,6 +116,7 @@ jobs:
           uv sync --frozen
 
       - name: Discover historical seed
+        if: ${{ inputs.seed_work_ids_path == '' }}
         env:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
           NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
@@ -115,6 +137,107 @@ jobs:
           if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
           uv run nzlc discover-work-ids "${args[@]}"
 
+      - name: Prepare reviewed historical seed
+        if: ${{ inputs.seed_work_ids_path != '' }}
+        run: |
+          set -euo pipefail
+          seed_path="${{ inputs.seed_work_ids_path }}"
+          if [ ! -f "$seed_path" ]; then
+            echo "Reviewed seed file does not exist: $seed_path" >&2
+            exit 1
+          fi
+          mkdir -p generated
+          cp "$seed_path" generated/historical-work-ids.txt
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          seed_path = Path(os.environ["SEED_PATH"])
+          work_ids = [
+              line.strip()
+              for line in seed_path.read_text(encoding="utf-8").splitlines()
+              if line.strip() and not line.lstrip().startswith("#")
+          ]
+          unique = sorted(set(work_ids))
+          payload = "".join(f"{work_id}\n" for work_id in unique).encode("utf-8")
+          provenance = {
+              "schema_version": "1.0",
+              "source": "reviewed_seed_file",
+              "seed_work_ids_path": seed_path.as_posix(),
+              "source_record_count": len(work_ids),
+              "unique_record_count": len(unique),
+              "seed_sha256": hashlib.sha256(payload).hexdigest(),
+              "coverage_warning": (
+                  "This seed is only as complete as the reviewed source inventory. "
+                  "Do not claim full historical coverage until reconciliation is complete."
+              ),
+          }
+          Path("generated/historical-work-ids.provenance.json").write_text(
+              json.dumps(provenance, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+        env:
+          SEED_PATH: ${{ inputs.seed_work_ids_path }}
+
+      - name: Restore existing historical dataset
+        if: ${{ inputs.restore_existing_historical && !inputs.replace_existing }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_HISTORICAL_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          from huggingface_hub import snapshot_download
+          from huggingface_hub.utils import RepositoryNotFoundError
+
+          repo_id = os.environ["HF_HISTORICAL_REPO_ID"]
+          token = os.environ.get("HF_TOKEN") or None
+          output_dir = Path(os.environ["HISTORICAL_OUTPUT_DIR"])
+          output_dir.mkdir(parents=True, exist_ok=True)
+          try:
+              snapshot = Path(
+                  snapshot_download(
+                      repo_id=repo_id,
+                      repo_type="dataset",
+                      token=token,
+                      allow_patterns=[
+                          "README.md",
+                          "records.jsonl",
+                          "_state/**",
+                          "manifests/**",
+                          "parquet/**",
+                          "raw_xml/**",
+                      ],
+                  )
+              )
+          except RepositoryNotFoundError:
+              print(f"No existing historical dataset to restore: {repo_id}")
+              raise SystemExit(0)
+
+          restored = []
+          for rel in ["README.md", "records.jsonl", "_state", "manifests", "parquet", "raw_xml"]:
+              src = snapshot / rel
+              dst = output_dir / rel
+              if not src.exists():
+                  continue
+              if src.is_dir():
+                  if dst.exists():
+                      shutil.rmtree(dst)
+                  shutil.copytree(src, dst)
+              else:
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(src, dst)
+              restored.append(rel)
+          print(f"Restored {len(restored)} historical dataset path(s): {', '.join(restored)}")
+          PY
+
       - name: Sync historical corpus
         env:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
@@ -127,8 +250,8 @@ jobs:
           args=(
             --seed-work-ids generated/historical-work-ids.txt
             --allow-no-search-terms
-            --replace
           )
+          if [ "${{ inputs.replace_existing }}" = "true" ]; then args+=(--replace); fi
           if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
           uv run nzlc sync "${args[@]}"
 
@@ -213,11 +336,15 @@ jobs:
               "live_huggingface_dataset": os.environ.get("HF_REPO_ID"),
               "live_dataset_boundary": "verified partial/API-discovery corpus",
               "upload_confirmed": "${{ inputs.upload_confirmed }}",
+              "seed_work_ids_path": "${{ inputs.seed_work_ids_path }}",
+              "restore_existing_historical": "${{ inputs.restore_existing_historical }}",
+              "replace_existing": "${{ inputs.replace_existing }}",
               "guards": [
                   "HF_HISTORICAL_REPO_ID is required.",
                   "HF_HISTORICAL_REPO_ID must not equal HF_REPO_ID.",
                   "The live partial dataset is explicitly refused as a historical target.",
                   "The workflow has no schedule and defaults to no-upload dry run.",
+                  "Confirmed incremental uploads require restore_existing_historical=true unless replace_existing=true.",
               ],
           }
           Path(output_dir, "manifests", "publication_policy.json").write_text(
@@ -265,6 +392,9 @@ jobs:
           echo "## Historical Hugging Face upload" >> "$GITHUB_STEP_SUMMARY"
           echo "- Workflow: manual only" >> "$GITHUB_STEP_SUMMARY"
           echo "- Upload confirmed: ${{ inputs.upload_confirmed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Restore existing historical dataset: ${{ inputs.restore_existing_historical }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Replace existing records: ${{ inputs.replace_existing }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Seed work IDs path: ${{ inputs.seed_work_ids_path }}" >> "$GITHUB_STEP_SUMMARY"
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           import os

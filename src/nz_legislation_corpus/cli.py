@@ -11,7 +11,7 @@ from rich.console import Console
 
 from .archive import build_archive
 from .config import Settings, require
-from .discovery import build_work_id_inventory
+from .discovery import build_work_id_batch_manifest, build_work_id_inventory, normalize_work_ids
 from .manifest import build_change_report, build_manifest
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
@@ -344,6 +344,57 @@ def discover_work_ids_cmd(
             "output_path": str(output_path),
             "provenance_path": str(provenance_path),
             "coverage_warning": inventory["coverage_warning"],
+        }
+    )
+
+
+@app.command("split-work-id-batches")
+def split_work_id_batches_cmd(
+    seed_work_ids: Annotated[
+        Path, typer.Option(help="Reviewed work-ID seed file, one work ID per line.")
+    ],
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory for generated batch seed files.")
+    ] = Path("seeds/batches"),
+    batch_size: Annotated[
+        int, typer.Option(help="Number of unique work IDs per batch.")
+    ] = 250,
+    filename_prefix: Annotated[
+        str, typer.Option(help="Batch filename prefix.")
+    ] = "historical-work-ids",
+    manifest_path: Annotated[
+        Path | None, typer.Option(help="Batch manifest path. Defaults under output-dir.")
+    ] = None,
+) -> None:
+    """Split a reviewed work-ID seed into deterministic upload batches."""
+    lines = seed_work_ids.read_text(encoding="utf-8").splitlines()
+    work_ids = normalize_work_ids(lines)
+    manifest = build_work_id_batch_manifest(
+        work_ids,
+        batch_size=batch_size,
+        filename_prefix=filename_prefix,
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for batch in manifest["batches"]:
+        start = (int(batch["index"]) - 1) * batch_size
+        stop = start + batch_size
+        batch_work_ids = work_ids[start:stop]
+        (output_dir / str(batch["filename"])).write_text(
+            "\n".join(batch_work_ids) + ("\n" if batch_work_ids else ""),
+            encoding="utf-8",
+        )
+    final_manifest_path = manifest_path or (output_dir / "manifest.json")
+    final_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(final_manifest_path, manifest)
+    console.print_json(
+        data={
+            "unique_work_id_count": manifest["unique_record_count"],
+            "batch_count": manifest["batch_count"],
+            "batch_size": manifest["batch_size"],
+            "seed_sha256": manifest["seed_sha256"],
+            "output_dir": str(output_dir),
+            "manifest_path": str(final_manifest_path),
+            "coverage_warning": manifest["coverage_warning"],
         }
     )
 

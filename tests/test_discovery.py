@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from nz_legislation_corpus.cli import _optional_filter
-from nz_legislation_corpus.discovery import build_work_id_inventory
+from nz_legislation_corpus.discovery import (
+    build_work_id_batch_manifest,
+    build_work_id_inventory,
+    normalize_work_ids,
+    sha256_lines,
+)
 
 
 class FakeDiscoveryClient:
@@ -84,3 +89,46 @@ def test_optional_filter_omits_blank_and_none_sentinels() -> None:
     assert _optional_filter("none", "current") is None
     assert _optional_filter("NULL", "current") is None
     assert _optional_filter("-", "current") is None
+
+
+def test_normalize_work_ids_sorts_deduplicates_and_ignores_comments() -> None:
+    assert normalize_work_ids(
+        [
+            "work-2",
+            "",
+            "# comment",
+            " work-1 ",
+            "work-2",
+            "   # indented comment",
+        ]
+    ) == ["work-1", "work-2"]
+
+
+def test_build_work_id_batch_manifest_is_stable() -> None:
+    manifest = build_work_id_batch_manifest(
+        ["work-3", "work-1", "work-2", "work-2"],
+        batch_size=2,
+        filename_prefix="batch",
+    )
+
+    assert manifest["unique_record_count"] == 3
+    assert manifest["batch_count"] == 2
+    assert manifest["seed_sha256"] == sha256_lines(["work-1", "work-2", "work-3"])
+    assert manifest["batches"] == [
+        {
+            "index": 1,
+            "filename": "batch-0001.txt",
+            "record_count": 2,
+            "first_work_id": "work-1",
+            "last_work_id": "work-2",
+            "sha256": sha256_lines(["work-1", "work-2"]),
+        },
+        {
+            "index": 2,
+            "filename": "batch-0002.txt",
+            "record_count": 1,
+            "first_work_id": "work-3",
+            "last_work_id": "work-3",
+            "sha256": sha256_lines(["work-3"]),
+        },
+    ]

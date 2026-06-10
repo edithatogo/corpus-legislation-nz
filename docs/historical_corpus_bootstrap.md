@@ -77,11 +77,62 @@ The successful pilot artifact from GitHub Actions run `27138352849` produced 52
 validated records from 10 search-derived work IDs. It proves the pilot path and
 resume state, but not full historical coverage.
 
-After seed review, split the seed file into batches and follow
-`docs/runtime_capacity_runbook.md`. Preserve `records.jsonl`, `raw_xml/`,
-`parquet/`, `data/_state/sync_state.json`, manifests, and coverage outputs
-between batches. Upload to Hugging Face only after validation, manifest,
-coverage, failed-version state, and the separate historical target are reviewed.
+The first confirmed historical Hugging Face bootstrap upload completed on
+2026-06-09 in GitHub Actions run `27229110053`:
+
+- target: `edithatogo/nz-legislation-corpus-historical`
+- upload mode: manual, confirmed
+- seed mode: search-derived bootstrap seed, bounded to 500 works
+- validation: `ok: true`
+- records: 4,550
+- raw XML files: 4,550
+- Parquet partitions: 83
+- years covered: 1908-2026
+- source type represented: `act`
+- failed versions: 104 reviewed 404 download failures recorded in
+  `_state/sync_state.json`
+- Hugging Face revision:
+  `776ef2737b1e7d629034ef8460d4918e7d979c68`
+
+This upload proves the historical publication path. It is still a bootstrap,
+not a complete historical corpus. The remaining project problem is coverage:
+identify or generate a stable full work-ID inventory, reconcile it where
+possible, then publish in resumable chunks.
+
+After seed review, split the seed file into deterministic batches and follow
+`docs/runtime_capacity_runbook.md`. Preserve or restore `records.jsonl`,
+`raw_xml/`, `parquet/`, `_state/sync_state.json`, manifests, and coverage
+outputs between batches. Upload to Hugging Face only after validation,
+manifest, coverage, failed-version state, and the separate historical target
+are reviewed.
+
+Use the batch splitter on a reviewed seed file:
+
+```bash
+uv run nzlc split-work-id-batches \
+  --seed-work-ids seeds/work_ids.txt \
+  --output-dir seeds/batches \
+  --batch-size 250 \
+  --filename-prefix historical-work-ids
+```
+
+`seeds/batches/` is ignored by Git by default because operational chunks can be
+large and may be regenerated from the reviewed seed. If the full seed becomes a
+public coverage contract, commit the reviewed source seed and provenance
+explicitly rather than committing ad hoc generated chunks.
+
+For the next historical batch, run `historical_hf_upload.yml` manually with:
+
+- `seed_work_ids_path` set to the reviewed batch file path;
+- `restore_existing_historical=true`;
+- `replace_existing=false`;
+- `upload_confirmed=false` for the review run;
+- `upload_confirmed=true` only after reviewing validation, manifest, coverage,
+  and failed-version state.
+
+The workflow refuses a confirmed incremental upload when
+`restore_existing_historical=false` and `replace_existing=false`. This prevents
+an isolated batch from pruning the existing published historical corpus.
 
 Historical upload configuration must use:
 

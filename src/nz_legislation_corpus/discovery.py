@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -96,5 +97,61 @@ def build_work_id_inventory(
         "coverage_warning": (
             "This is a search-derived inventory, not proof of full corpus coverage. "
             "Reconcile against an authoritative inventory before claiming completeness."
+        ),
+    }
+
+
+def normalize_work_ids(lines: list[str]) -> list[str]:
+    """Return stable, de-duplicated work IDs from a line-oriented seed file."""
+    work_ids = {
+        line.strip()
+        for line in lines
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    return sorted(work_ids)
+
+
+def sha256_lines(lines: list[str]) -> str:
+    payload = "".join(f"{line}\n" for line in lines)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def build_work_id_batch_manifest(
+    work_ids: list[str],
+    *,
+    batch_size: int,
+    filename_prefix: str = "historical-work-ids",
+) -> dict[str, Any]:
+    """Describe deterministic seed batches without making coverage claims."""
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1")
+    normalized = normalize_work_ids(work_ids)
+    batches: list[dict[str, Any]] = []
+    for offset in range(0, len(normalized), batch_size):
+        batch = normalized[offset : offset + batch_size]
+        index = len(batches) + 1
+        filename = f"{filename_prefix}-{index:04d}.txt"
+        batches.append(
+            {
+                "index": index,
+                "filename": filename,
+                "record_count": len(batch),
+                "first_work_id": batch[0] if batch else None,
+                "last_work_id": batch[-1] if batch else None,
+                "sha256": sha256_lines(batch),
+            }
+        )
+    return {
+        "schema_version": "1.0",
+        "generated_at_utc": datetime.now(UTC).replace(microsecond=0).isoformat(),
+        "source_record_count": len([line for line in work_ids if line.strip()]),
+        "unique_record_count": len(normalized),
+        "batch_size": batch_size,
+        "batch_count": len(batches),
+        "seed_sha256": sha256_lines(normalized),
+        "batches": batches,
+        "coverage_warning": (
+            "Seed batches are only as complete as the reviewed source inventory. "
+            "Do not claim full historical coverage until the source inventory is reconciled."
         ),
     }

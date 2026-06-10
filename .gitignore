@@ -15,6 +15,7 @@ data/
 dist/
 archive/
 generated/
+seeds/batches/
 .tmp/
 .hf_cache/
 .pytest-tmp/
