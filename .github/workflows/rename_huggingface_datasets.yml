@@ -15,6 +15,8 @@ jobs:
   rename:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+
       - name: Validate confirmation
         run: |
           set -euo pipefail
@@ -29,7 +31,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install Hugging Face client
-        run: python -m pip install -U huggingface_hub
+        run: python -m pip install -U huggingface_hub requests
 
       - name: Rename datasets
         env:
@@ -122,4 +124,136 @@ jobs:
                       raise
                   print(f"Move blocked by Hugging Face DOI/409 policy for {old_id}; copying instead.")
                   copy_dataset(old_id, new_id)
+          PY
+
+      - name: Update Hugging Face dataset cards
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import os
+          import tempfile
+          import textwrap
+          from pathlib import Path
+
+          from huggingface_hub import HfApi
+
+          token = os.environ["HF_TOKEN"]
+          api = HfApi(token=token)
+
+          live_card = Path("DATASET_CARD.md").read_text(encoding="utf-8")
+          historical_card = textwrap.dedent(
+              """\
+              ---
+              license: other
+              language:
+              - en
+              tags:
+              - new-zealand
+              - legislation
+              - law
+              - legal-corpus
+              - historical
+              - parquet
+              pretty_name: New Zealand Legislation Historical Corpus
+              ---
+
+              # New Zealand Legislation Historical Corpus
+
+              This dataset is the separate historical publication target for New Zealand legislation records collected through the official New Zealand Legislation API.
+
+              It is distinct from the live partial/API-discovery dataset at `edithatogo/corpus-legislation-nz`. Historical uploads must target `edithatogo/corpus-legislation-nz-historical` and must not overwrite the live dataset.
+
+              Coverage is not yet proven complete until the historical bootstrap plan, failed-version state, manifest, and coverage report are reviewed.
+              """
+          )
+          legacy_live_card = textwrap.dedent(
+              """\
+              ---
+              license: other
+              language:
+              - en
+              tags:
+              - new-zealand
+              - legislation
+              - law
+              - legal-corpus
+              - parquet
+              - xet
+              pretty_name: New Zealand Legislation Corpus
+              ---
+
+              # New Zealand Legislation Corpus
+
+              This DOI-bearing Hugging Face dataset could not be renamed because Hugging Face blocks repository moves after a dataset DOI has been generated.
+
+              Use the current dataset at `edithatogo/corpus-legislation-nz` for ongoing live corpus access.
+              """
+          )
+
+          cards = {
+              "edithatogo/corpus-legislation-nz": live_card,
+              "edithatogo/corpus-legislation-nz-historical": historical_card,
+              "edithatogo/nz-legislation-corpus": legacy_live_card,
+          }
+
+          with tempfile.TemporaryDirectory() as tmp:
+              tmp_path = Path(tmp)
+              for repo_id, card in cards.items():
+                  card_path = tmp_path / f"{repo_id.replace('/', '__')}.md"
+                  card_path.write_text(card, encoding="utf-8")
+                  api.upload_file(
+                      path_or_fileobj=str(card_path),
+                      path_in_repo="README.md",
+                      repo_id=repo_id,
+                      repo_type="dataset",
+                      commit_message="Update dataset card after repository rename",
+                  )
+                  print(f"Updated dataset card: {repo_id}")
+          PY
+
+      - name: Update Zenodo related identifier
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+
+          import os
+
+          import requests
+
+          token = os.environ["ZENODO_TOKEN"]
+          base_url = "https://zenodo.org/api/deposit/depositions/20592540"
+          headers = {"Authorization": f"Bearer {token}"}
+          old_url = "https://huggingface.co/datasets/edithatogo/nz-legislation-corpus"
+          new_url = "https://huggingface.co/datasets/edithatogo/corpus-legislation-nz"
+
+          def request(method: str, url: str, **kwargs):
+              response = requests.request(method, url, headers=headers, timeout=60, **kwargs)
+              if response.status_code >= 400:
+                  raise RuntimeError(f"{method} {url} failed: HTTP {response.status_code} {response.text[:500]}")
+              return response
+
+          try:
+              request("POST", f"{base_url}/actions/edit")
+          except RuntimeError as exc:
+              # Zenodo may already have an editable draft or may disallow edits for this record.
+              print(f"Zenodo edit action warning: {exc}")
+
+          deposition = request("GET", base_url).json()
+          metadata = deposition.get("metadata", {})
+          related = metadata.get("related_identifiers") or []
+          for item in related:
+              if item.get("identifier") == old_url:
+                  item["identifier"] = new_url
+          metadata["related_identifiers"] = related
+
+          request("PUT", base_url, json={"metadata": metadata})
+          request("POST", f"{base_url}/actions/publish")
+          print("Updated Zenodo related identifier.")
           PY
