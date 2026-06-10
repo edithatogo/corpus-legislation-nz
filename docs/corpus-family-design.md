@@ -1,4 +1,4 @@
-﻿# Corpus Family Alignment Design
+# Corpus Family Alignment Design
 
 ## Design Principle
 
@@ -8,7 +8,7 @@
 
 | Corpus | Preferred project label | Current/local or published names observed | Naming action |
 | --- | --- | --- | --- |
-| Legislation | `corpus-nz-legislation` | local `corpus-law-nz`; GitHub `nz-legislation-corpus-pipeline`; package `nz-legislation-corpus` | Track migration/reservation without breaking citations. |
+| Legislation | `corpus-nz-legislation` | local `corpus-law-nz`; GitHub `corpus-legislation-nz`; package `corpus-legislation-nz` | Track migration/reservation without breaking citations. |
 | Hansard | `corpus-nz-hansard` | local/GitHub `corpus-nz-hansard`; HF `nz-hansard-corpus` | Keep, and align metadata references. |
 
 ## Publication Surface Model
@@ -24,7 +24,7 @@ flowchart LR
     HGH["hansard repo / workflows / releases"]
   end
   subgraph HF["Hugging Face: operational datasets"]
-    LHF["edithatogo/nz-legislation-corpus"]
+    LHF["edithatogo/corpus-legislation-nz"]
     HHF["edithatogo/nz-hansard-corpus"]
   end
   subgraph Zenodo["Zenodo: fixed DOI archives"]
@@ -51,7 +51,7 @@ flowchart LR
 | Environment | Shared role | Legislation requirement | Hansard requirement |
 | --- | --- | --- | --- |
 | GitHub | Code, tests, CI, releases, docs, lightweight packages | Prefer future label `corpus-nz-legislation`; keep current published repo stable until migration plan. | Continue `corpus-nz-hansard`; add engineering alignment with legislation baseline. |
-| Hugging Face | Dataset hosting, Parquet, cards, Xet storage | Keep `edithatogo/nz-legislation-corpus`; verify access/gating and viewer layout. | Keep `edithatogo/nz-hansard-corpus`; fix viewer split/layout issue and verify ungated access. |
+| Hugging Face | Dataset hosting, Parquet, cards, Xet storage | Keep `edithatogo/corpus-legislation-nz`; verify access/gating and viewer layout. | Keep `edithatogo/nz-hansard-corpus`; fix viewer split/layout issue and verify ungated access. |
 | Zenodo | Fixed DOI archives | Keep published DOI; align related identifiers to GitHub and HF; license must not overclaim source rights. | Keep latest DOI; mark older review DOI as superseded; align license/source-rights wording. |
 | OSF | Optional review or mirror | Do not require until file-size/splitting and citation policy are documented. | Same; use only for review bundles or mirrors if explicitly approved. |
 | Future metadata registries | SOTA discovery and interoperability | Add Croissant/RO-Crate/Frictionless/DCAT/PROV-O as generated metadata artifacts. | Same; can use Hansard interoperability tracks as baseline. |

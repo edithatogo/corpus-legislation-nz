@@ -505,10 +505,10 @@ def zenodo_upload_cmd(
     if not creators:
         raise RuntimeError("ARCHIVE_CREATORS_JSON is required for Zenodo metadata")
     files = [
-        archive_dir / f"nz-legislation-corpus-{year}.tar.zst",
-        archive_dir / f"nz-legislation-corpus-{year}.tar.gz",
-        archive_dir / f"nz-legislation-corpus-{year}.manifest.json",
-        archive_dir / f"nz-legislation-corpus-{year}.SHA256SUMS.txt",
+        archive_dir / f"corpus-legislation-nz-{year}.tar.zst",
+        archive_dir / f"corpus-legislation-nz-{year}.tar.gz",
+        archive_dir / f"corpus-legislation-nz-{year}.manifest.json",
+        archive_dir / f"corpus-legislation-nz-{year}.SHA256SUMS.txt",
     ]
     files = [path for path in files if path.exists()]
     if not files:

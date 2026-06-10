@@ -12,4 +12,4 @@
 - `HF_REPO_ID` is not configured in the local environment.
 - `HF_TOKEN` is not configured in the local environment.
 - The existing setup script is ready and idempotent, but it cannot run to completion without the final dataset ID and a write-capable Hugging Face token.
-- Public search/open checks on 2026-06-07 did not confirm an existing public `edithatogo/nz-legislation-corpus` dataset shell.
+- Public search/open checks on 2026-06-07 did not confirm an existing public `edithatogo/corpus-legislation-nz` dataset shell.

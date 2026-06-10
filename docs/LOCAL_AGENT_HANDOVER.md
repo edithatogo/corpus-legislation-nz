@@ -23,17 +23,17 @@ This repo is ready for local-agent bootstrap once account-specific secrets and v
 3. Create the Hugging Face dataset shell:
 
    ```bash
-   HF_TOKEN='hf_...' HF_REPO_ID='edithatogo/nz-legislation-corpus' \
-     ./scripts/create_huggingface_dataset_repo.sh edithatogo/nz-legislation-corpus
+   HF_TOKEN='hf_...' HF_REPO_ID='edithatogo/corpus-legislation-nz' \
+     ./scripts/create_huggingface_dataset_repo.sh edithatogo/corpus-legislation-nz
    ```
 
 4. Bootstrap the GitHub source repo:
 
    ```bash
    export REPO_OWNER=edithatogo
-   export REPO_NAME=nz-legislation-corpus-pipeline
+   export REPO_NAME=corpus-legislation-nz
    export REPO_VISIBILITY=public
-   export HF_REPO_ID=edithatogo/nz-legislation-corpus
+   export HF_REPO_ID=edithatogo/corpus-legislation-nz
    export ARCHIVE_CREATORS_JSON='[{"name":"Your Name","affiliation":"Your Institution"}]'
    export NZ_LEGISLATION_API_KEY='...'
    export HF_TOKEN='...'

@@ -32,7 +32,7 @@ create and verify the Hugging Face dataset repository before uploading corpus da
   - `scripts/create_huggingface_dataset_repo.sh` requires `HF_TOKEN` and `HF_REPO_ID`.
   - `scripts/init_huggingface_dataset.py` creates or updates the dataset repo idempotently, writes root-level placeholders for `parquet/`, `raw_xml/`, and `manifests/`, writes `.gitattributes`, writes dataset metadata, and attempts to remove legacy `data/...` placeholders.
 - Public web check on 2026-06-07:
-  - Search/open checks did not confirm an existing public `edithatogo/nz-legislation-corpus` dataset shell.
+  - Search/open checks did not confirm an existing public `edithatogo/corpus-legislation-nz` dataset shell.
 
 ## Blocked Items
 

@@ -21,7 +21,7 @@ def _tar_filter(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
 
 def build_archive(input_dir: Path, output_dir: Path, *, year: str, prefer_zstd: bool = True) -> dict[str, str]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    base = f"nz-legislation-corpus-{year}.tar"
+    base = f"corpus-legislation-nz-{year}.tar"
     archive_path = output_dir / (base + ".zst")
     compression = "zstd"
 
@@ -35,26 +35,26 @@ def build_archive(input_dir: Path, output_dir: Path, *, year: str, prefer_zstd: 
                 cctx.stream_writer(raw_out) as compressor,
                 tarfile.open(fileobj=compressor, mode="w|") as tar,
             ):
-                tar.add(input_dir, arcname="nz-legislation-corpus", filter=_tar_filter)
+                tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
         except Exception:  # noqa: BLE001
             archive_path = output_dir / (base + ".gz")
             compression = "gzip"
             with tarfile.open(archive_path, mode="w:gz") as tar:
-                tar.add(input_dir, arcname="nz-legislation-corpus", filter=_tar_filter)
+                tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
     else:
         archive_path = output_dir / (base + ".gz")
         compression = "gzip"
         with tarfile.open(archive_path, mode="w:gz") as tar:
-            tar.add(input_dir, arcname="nz-legislation-corpus", filter=_tar_filter)
+            tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
 
-    manifest_path = output_dir / f"nz-legislation-corpus-{year}.manifest.json"
+    manifest_path = output_dir / f"corpus-legislation-nz-{year}.manifest.json"
     manifest = build_manifest(input_dir)
     manifest["archive_file"] = archive_path.name
     manifest["archive_sha256"] = sha256_file(archive_path)
     manifest["archive_compression"] = compression
     write_json(manifest_path, manifest)
 
-    checksums_path = output_dir / f"nz-legislation-corpus-{year}.SHA256SUMS.txt"
+    checksums_path = output_dir / f"corpus-legislation-nz-{year}.SHA256SUMS.txt"
     lines = []
     for path in [archive_path, manifest_path]:
         lines.append(f"{sha256_file(path)}  {path.name}")

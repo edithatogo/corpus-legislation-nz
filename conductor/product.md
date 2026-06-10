@@ -2,7 +2,7 @@
 
 ## Product summary
 
-`nz-legislation-corpus` is an API-first pipeline for building and maintaining a
+`corpus-legislation-nz` is an API-first pipeline for building and maintaining a
 New Zealand legislation corpus. It ingests data from the official NZ
 Legislation API, normalizes records, preserves provenance, writes optimized
 Parquet shards, and publishes the live corpus to Hugging Face Datasets with

@@ -58,9 +58,9 @@ Annual archive layout:
 
 ```text
 dist/archive/
-  nz-legislation-corpus-YYYY.tar.zst
-  nz-legislation-corpus-YYYY.manifest.json
-  nz-legislation-corpus-YYYY.SHA256SUMS.txt
+  corpus-legislation-nz-YYYY.tar.zst
+  corpus-legislation-nz-YYYY.manifest.json
+  corpus-legislation-nz-YYYY.SHA256SUMS.txt
 ```
 
 ## Safety contract

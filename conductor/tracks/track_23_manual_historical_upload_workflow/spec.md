@@ -65,7 +65,7 @@ uv run nzlc hf-upload
 ## Dry-run Evidence
 
 - Dry-run/no-upload Actions run:
-  `https://github.com/edithatogo/nz-legislation-corpus-pipeline/actions/runs/27194196559`.
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27194196559`.
 - Result: success.
 - Upload behavior: upload step skipped because `upload_confirmed=false`; dry-run
   artifacts uploaded.

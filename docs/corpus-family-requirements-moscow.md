@@ -1,4 +1,4 @@
-﻿# Corpus Family Alignment Requirements
+# Corpus Family Alignment Requirements
 
 ## Purpose
 
@@ -73,7 +73,7 @@ The following recommendations are part of the corpus-family roadmap and should b
 
 - Add a public-surface audit evidence ledger for GitHub, Hugging Face, Zenodo, OSF, and future metadata environments.
 - Add Zenodo rights/metadata harmonisation, including license-scope review for code, docs, manifests, source text, normalized Parquet, and archive bundles.
-- Add a GitHub repository-name migration assessment before moving from `nz-legislation-corpus-pipeline` toward `corpus-nz-legislation`.
+- Add a GitHub repository-name migration assessment before moving from `corpus-legislation-nz` toward `corpus-nz-legislation`.
 - Add a shared NZ corpus core schema compatibility track covering `record_schema_version`, canonical `text`, timestamps, hashes, and provenance fields.
 - Add generated SOTA metadata packages only through validated exporters: Croissant, RO-Crate, Frictionless Data Package, DCAT, and PROV-O.
 - Add dataset-viewer and machine-consumability gates: dataset card parses, files are public if intended, Hugging Face viewer works or is intentionally disabled, DuckDB/PyArrow examples work, and manifest hashes are cited.

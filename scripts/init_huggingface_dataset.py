@@ -38,7 +38,7 @@ def main() -> int:
     token = required_env("HF_TOKEN")
     private = env_bool("HF_PRIVATE", default=False)
     pretty_name = os.getenv("HF_DATASET_PRETTY_NAME", "New Zealand Legislation Corpus")
-    source_repo = os.getenv("GITHUB_REPO_URL", "https://github.com/edithatogo/nz-legislation-corpus-pipeline")
+    source_repo = os.getenv("GITHUB_REPO_URL", "https://github.com/edithatogo/corpus-legislation-nz")
     zenodo_placeholder = os.getenv("ZENODO_CONCEPT_DOI", "TBD after first annual snapshot")
     created_at = datetime.now(UTC).isoformat()
 
@@ -68,7 +68,7 @@ def main() -> int:
 
     This dataset repository is the live operational home for an evolving New Zealand legislation corpus pipeline. Coverage is not proven complete until reconciled against an authoritative inventory.
 
-    It is intended to be populated by the `nz-legislation-corpus-pipeline` GitHub Actions workflow, which uses the official New Zealand Legislation API, validates and normalizes records, writes stable partitioned Parquet, and publishes annual DOI-backed archival snapshots to Zenodo.
+    It is intended to be populated by the `corpus-legislation-nz` GitHub Actions workflow, which uses the official New Zealand Legislation API, validates and normalizes records, writes stable partitioned Parquet, and publishes annual DOI-backed archival snapshots to Zenodo.
 
     ## Current status
 

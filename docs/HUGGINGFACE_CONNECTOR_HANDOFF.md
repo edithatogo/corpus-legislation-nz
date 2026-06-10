@@ -3,7 +3,7 @@
 The intended live dataset repo is:
 
 ```text
-edithatogo/nz-legislation-corpus
+edithatogo/corpus-legislation-nz
 ```
 
 If an authenticated Hugging Face connector/session is available, initialise the dataset repo with equivalent behaviour to:
@@ -11,7 +11,7 @@ If an authenticated Hugging Face connector/session is available, initialise the 
 ```python
 from huggingface_hub import HfApi
 api = HfApi(token=HF_TOKEN)
-api.create_repo("edithatogo/nz-legislation-corpus", repo_type="dataset", private=False, exist_ok=True)
+api.create_repo("edithatogo/corpus-legislation-nz", repo_type="dataset", private=False, exist_ok=True)
 ```
 
 Then upload:
@@ -28,7 +28,7 @@ Do **not** create `data/...` placeholders in the Hugging Face repo. The workflow
 The canonical local script is:
 
 ```bash
-HF_TOKEN=... HF_REPO_ID=edithatogo/nz-legislation-corpus ./scripts/create_huggingface_dataset_repo.sh
+HF_TOKEN=... HF_REPO_ID=edithatogo/corpus-legislation-nz ./scripts/create_huggingface_dataset_repo.sh
 ```
 
 Connector-created repos still require the GitHub source repository to be configured with:
