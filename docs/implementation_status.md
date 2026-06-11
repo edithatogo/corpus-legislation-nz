@@ -102,6 +102,13 @@ Last reconciled: 2026-06-11.
   `act_local_1889_23` through `act_local_1908_30` and has canonical
   line-normalized SHA-256
   `3aad9f7192ab65bb0d93cbee8c4c0bfba8fcafc1718d0a59f6f8faa35d104972`.
+- Second reviewed 500-work historical batch confirmed upload passed in GitHub
+  Actions run `27347686841` with `upload_confirmed=true`; validation reported
+  5,779 restored/merged records, 0 failed records, 482 XML-to-HTML fallback
+  warnings, and manifest SHA-256
+  `de95e13938d2db797a24c49400afccdc933140eb090444d26a26930edc1b430e`.
+- Current verified historical Hugging Face revision after batch 0002 upload:
+  `bb425cb308410fac43095a30f88c9d92848a0eb8`.
 - Naming/publication alignment is documented for the preferred
   `corpus-nz-legislation` family label while preserving the current
   `corpus-legislation-nz` public surfaces.
@@ -127,9 +134,10 @@ Last reconciled: 2026-06-11.
 - The live Hugging Face dataset is intentionally partial/API-discovery based.
 - The historical Hugging Face dataset is a successful bootstrap, not a complete
   historical corpus.
-- Historical batch 0001 still has 436 XML-to-HTML fallback warnings for early
-  local/imperial Acts. These are no longer failed versions, but they should
-  remain visible as provenance warnings.
+- Historical batch 0001 has 436 XML-to-HTML fallback warnings and batch 0002
+  has 482 XML-to-HTML fallback warnings for local/imperial Acts. These are no
+  longer failed versions, but they should remain visible as provenance
+  warnings.
 - The first scheduled-run gate for public launch was explicitly waived by the
   repository owner on 2026-06-09; manual live sync and publication evidence
   exist, but scheduled maintenance still needs continuing evidence.
@@ -140,9 +148,8 @@ Last reconciled: 2026-06-11.
 
 1. Review the 33,693-work search-derived candidate inventory and decide whether
    to seek an official work-ID export before promotion.
-2. Run reviewed batch 0002 as a no-upload historical workflow with restore
-   enabled, then review validation, manifest, coverage, and failed-version
-   state before confirmed upload.
+2. Prepare reviewed batch 0003 from the deterministic candidate inventory, then
+   run no-upload validation before any confirmed upload.
 3. Promote or revise the candidate seed only after external/authoritative
    reconciliation resolves the remaining completeness gap.
 4. Continue roadmap implementation for data-quality dashboarding, structural XML

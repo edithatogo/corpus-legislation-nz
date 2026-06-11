@@ -94,11 +94,15 @@ For GitHub Actions historical uploads, prefer a reviewed batch file with remote
 state restore:
 
 ```text
-seed_work_ids_path=seeds/reviewed/historical-work-ids-0002.txt
+seed_work_ids_path=seeds/reviewed/historical-work-ids-0003.txt
 merge_policy=restore_merge
 max_works=none
 upload_confirmed=false
 ```
+
+Promote `seeds/reviewed/historical-work-ids-0003.txt` from the deterministic
+batch artifact before using this input. Its generated source is
+`generated/historical-discovery-27313765016/batches/historical-work-ids-0003.txt`.
 
 After reviewing the no-upload artifact, rerun the same inputs with
 `upload_confirmed=true`. Do not use `merge_policy=no_restore_incremental` for

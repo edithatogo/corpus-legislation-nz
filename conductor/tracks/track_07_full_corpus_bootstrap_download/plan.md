@@ -40,3 +40,16 @@
   records failed, 436 XML-to-HTML fallback warnings.
 - Historical Hugging Face revision after upload:
   `dcc92964ef832c7e0bd2f904f88de523998304f2`.
+
+## Batch 0002 evidence
+
+- Reviewed batch path: `seeds/reviewed/historical-work-ids-0002.txt`.
+- No-upload GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27344560156`.
+- Confirmed batch 0002 upload passed in
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27347686841`.
+- Confirmed batch 0002 sync state: 606 versions checked, 606 records added, 0
+  records failed, 482 XML-to-HTML fallback warnings.
+- Validation/manifest/coverage completed for 5,779 restored/merged records.
+- Historical Hugging Face revision after upload:
+  `bb425cb308410fac43095a30f88c9d92848a0eb8`.

@@ -79,3 +79,24 @@
   `1c970def5f65971bb6f5e7403a0bc731a52d422c8d47773b9fa5df6f220569a5`.
 - Sync state: 623 versions checked, 623 records added, 0 records failed.
 - Warnings: 436 XML-to-HTML fallback warnings remain as provenance evidence.
+
+## Confirmed batch 0002 upload evidence
+
+- No-upload run URL:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27344560156`.
+- Confirmed run URL:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27347686841`.
+- Event: `workflow_dispatch`.
+- Result: success.
+- Inputs: `upload_confirmed=true`,
+  `seed_work_ids_path=seeds/reviewed/historical-work-ids-0002.txt`,
+  `merge_policy=restore_merge`, `max_pages=none`, `max_works=none`,
+  `min_seconds_between_requests=0.5`.
+- Upload behavior: `Upload to historical Hugging Face dataset` completed.
+- Historical Hugging Face revision after upload:
+  `bb425cb308410fac43095a30f88c9d92848a0eb8`.
+- Validation: 5,779 restored/merged records, `ok=true`.
+- Manifest SHA-256:
+  `de95e13938d2db797a24c49400afccdc933140eb090444d26a26930edc1b430e`.
+- Sync state: 606 versions checked, 606 records added, 0 records failed.
+- Warnings: 482 XML-to-HTML fallback warnings remain as provenance evidence.

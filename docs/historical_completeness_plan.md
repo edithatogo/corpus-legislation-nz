@@ -249,9 +249,39 @@ Confirmed batch 0001 evidence:
   404s. These are not failed versions because equivalent HTML content was
   fetched and preserved.
 
+Confirmed batch 0002 evidence:
+
+- No-upload GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27344560156`.
+- Confirmed GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27347686841`.
+- Result: success.
+- Upload behavior: `upload_confirmed=true`; historical Hugging Face upload step
+  completed.
+- Historical Hugging Face dataset:
+  `edithatogo/corpus-legislation-nz-historical`.
+- Verified Hugging Face revision after upload:
+  `bb425cb308410fac43095a30f88c9d92848a0eb8`.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0002.txt`.
+- Reviewed seed work IDs: 500.
+- Reviewed seed SHA-256:
+  `3aad9f7192ab65bb0d93cbee8c4c0bfba8fcafc1718d0a59f6f8faa35d104972`.
+- Restored/merged output record count: 5,779.
+- Validation report: `ok=true`; record count 5,779.
+- Coverage report: 5,779 `act` records; 4,740 `in_force`, 1,039
+  `not_in_force`.
+- Latest manifest SHA-256:
+  `de95e13938d2db797a24c49400afccdc933140eb090444d26a26930edc1b430e`.
+- Sync state: 606 versions checked, 606 records added, 0 records failed, and
+  144 Parquet files written.
+- Warnings: 482 XML-to-HTML fallback warnings for local Act XML 404s. These
+  are not failed versions because equivalent HTML content was fetched and
+  preserved.
+
 Next batch input:
 
-- Reviewed seed path: `seeds/reviewed/historical-work-ids-0002.txt`.
+- Reviewed seed path: `generated/historical-discovery-27313765016/batches/historical-work-ids-0003.txt`
+  or a reviewed copy promoted under `seeds/reviewed/`.
 - Required first run: `upload_confirmed=false` with `merge_policy=restore_merge`
   and historical dataset restore enabled.
 - Confirmed upload may follow only after reviewing validation, manifest,
