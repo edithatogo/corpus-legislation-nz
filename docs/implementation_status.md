@@ -88,6 +88,15 @@ Last reconciled: 2026-06-11.
   GitHub Actions run `27316467370` with `upload_confirmed=false`; validation
   reported 4,737 restored/merged records and manifest SHA-256
   `19e5f5c8eb25307d170105659d20d459a42fea8668eb424223abc40b844bea51`.
+- Historical XML 404s for early local/imperial Acts are remediated by
+  XML-to-HTML fallback when both formats are advertised by the source API.
+- First reviewed 500-work historical batch confirmed upload passed in GitHub
+  Actions run `27331999831` with `upload_confirmed=true`; validation reported
+  5,173 restored/merged records, 0 failed records, 436 XML-to-HTML fallback
+  warnings, and manifest SHA-256
+  `1c970def5f65971bb6f5e7403a0bc731a52d422c8d47773b9fa5df6f220569a5`.
+- Current verified historical Hugging Face revision after batch 0001 upload:
+  `dcc92964ef832c7e0bd2f904f88de523998304f2`.
 - Naming/publication alignment is documented for the preferred
   `corpus-nz-legislation` family label while preserving the current
   `corpus-legislation-nz` public surfaces.
@@ -113,10 +122,9 @@ Last reconciled: 2026-06-11.
 - The live Hugging Face dataset is intentionally partial/API-discovery based.
 - The historical Hugging Face dataset is a successful bootstrap, not a complete
   historical corpus.
-- The first reviewed 500-work historical no-upload batch found 436 failed
-  versions, mostly 404 XML responses for early local/imperial Acts. Confirmed
-  upload of that batch should wait until those failures are triaged or
-  documented as accepted exclusions.
+- Historical batch 0001 still has 436 XML-to-HTML fallback warnings for early
+  local/imperial Acts. These are no longer failed versions, but they should
+  remain visible as provenance warnings.
 - The first scheduled-run gate for public launch was explicitly waived by the
   repository owner on 2026-06-09; manual live sync and publication evidence
   exist, but scheduled maintenance still needs continuing evidence.
@@ -125,10 +133,9 @@ Last reconciled: 2026-06-11.
 
 ## Next maintainer actions
 
-1. Triage the 436 failed versions from no-upload historical run `27316467370`
-   before confirming upload of reviewed batch 0001.
-2. Review the 33,693-work search-derived candidate inventory and decide whether
+1. Review the 33,693-work search-derived candidate inventory and decide whether
    to seek an official work-ID export before promotion.
+2. Prepare reviewed batch 0002 only after batch 0001 evidence is accepted.
 3. Promote or revise the candidate seed only after external/authoritative
    reconciliation resolves the remaining completeness gap.
 4. Continue roadmap implementation for data-quality dashboarding, structural XML

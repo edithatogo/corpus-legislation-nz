@@ -57,5 +57,25 @@
 - Validation: 4,737 restored/merged records, `ok=true`.
 - Manifest SHA-256:
   `19e5f5c8eb25307d170105659d20d459a42fea8668eb424223abc40b844bea51`.
-- Stop condition: 436 failed versions were recorded in `_state/sync_state.json`,
-  so confirmed upload of this batch remains pending failed-version triage.
+- Initial stop condition: 436 failed versions were recorded in
+  `_state/sync_state.json`. This was remediated by XML-to-HTML fallback before
+  confirmed upload.
+
+## Confirmed batch 0001 upload evidence
+
+- Run URL:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27331999831`.
+- Event: `workflow_dispatch`.
+- Result: success.
+- Inputs: `upload_confirmed=true`,
+  `seed_work_ids_path=seeds/reviewed/historical-work-ids-0001.txt`,
+  `merge_policy=restore_merge`, `max_pages=none`, `max_works=none`,
+  `min_seconds_between_requests=0.5`.
+- Upload behavior: `Upload to historical Hugging Face dataset` completed.
+- Historical Hugging Face revision after upload:
+  `dcc92964ef832c7e0bd2f904f88de523998304f2`.
+- Validation: 5,173 restored/merged records, `ok=true`.
+- Manifest SHA-256:
+  `1c970def5f65971bb6f5e7403a0bc731a52d422c8d47773b9fa5df6f220569a5`.
+- Sync state: 623 versions checked, 623 records added, 0 records failed.
+- Warnings: 436 XML-to-HTML fallback warnings remain as provenance evidence.

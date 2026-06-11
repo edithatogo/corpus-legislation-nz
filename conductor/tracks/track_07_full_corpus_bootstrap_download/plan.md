@@ -30,6 +30,13 @@
   `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27316467370`.
 - Result: success with `upload_confirmed=false`; no Hugging Face write.
 - Validation/manifest/coverage completed for 4,737 restored/merged records.
-- Sync state recorded 436 failed versions, mostly early local/imperial Act XML
-  404 responses.
-- Confirmed upload remains blocked until failed-version triage is complete.
+- Initial sync state recorded 436 failed versions, mostly early local/imperial
+  Act XML 404 responses.
+- XML-to-HTML fallback remediated the failures in rerun
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27330484544`.
+- Confirmed batch 0001 upload passed in
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27331999831`.
+- Confirmed batch 0001 sync state: 623 versions checked, 623 records added, 0
+  records failed, 436 XML-to-HTML fallback warnings.
+- Historical Hugging Face revision after upload:
+  `dcc92964ef832c7e0bd2f904f88de523998304f2`.

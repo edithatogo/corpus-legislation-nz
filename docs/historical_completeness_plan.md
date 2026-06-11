@@ -194,9 +194,10 @@ Current no-upload batch evidence:
   including `act_local_1841_1` through `act_local_1889_22` examples in the
   first reviewed batch.
 
-Decision: do not use this dry-run result as approval for a confirmed upload.
-The publishing path is working, but the failed-version state needs a triage
-pass before batch 0001 is written to Hugging Face.
+Decision after triage: XML 404s for early local/imperial Acts are remediated by
+falling back to the equivalent HTML format when the API advertises both formats.
+No-upload rerun `27330484544` passed with 5,173 records, 0 failed records, and
+436 XML-to-HTML fallback warnings.
 
 ## Stage 5 - Confirmed incremental upload
 
@@ -210,9 +211,37 @@ Do not use `merge_policy=no_restore_incremental` for a confirmed incremental
 upload. A fresh runner without restore has no previous records and could prune
 published historical files.
 
-For batch 0001, confirmed upload remains blocked until the 436 failed versions
-from no-upload run `27316467370` are reviewed and either remediated or accepted
-with documented exclusion semantics.
+Batch 0001 is no longer blocked by failed-version state. The 436 XML failures
+from no-upload run `27316467370` were remediated by XML-to-HTML fallback in
+rerun `27330484544` and confirmed upload run `27331999831`.
+
+Confirmed batch 0001 evidence:
+
+- GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27331999831`.
+- Result: success.
+- Upload behavior: `upload_confirmed=true`; historical Hugging Face upload step
+  completed.
+- Historical Hugging Face dataset:
+  `edithatogo/corpus-legislation-nz-historical`.
+- Verified Hugging Face revision after upload:
+  `dcc92964ef832c7e0bd2f904f88de523998304f2`.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0001.txt`.
+- Reviewed seed work IDs: 500.
+- Reviewed seed SHA-256:
+  `59923176fa34796d7673a20b880af9abe5520fe484595edb220f2bbc0e3b33e7`.
+- Restored/merged output record count: 5,173.
+- Validation report: `ok=true`; record count 5,173.
+- Coverage report: 5,173 `act` records; 4,550 `in_force`, 623
+  `not_in_force`; 0 ephemeral identifiers, 0 missing text records, and 0
+  missing XML URL records.
+- Latest manifest SHA-256:
+  `1c970def5f65971bb6f5e7403a0bc731a52d422c8d47773b9fa5df6f220569a5`.
+- Sync state: 623 versions checked, 623 records added, 0 records failed, and
+  128 Parquet files written.
+- Warnings: 436 XML-to-HTML fallback warnings for early local/imperial Act XML
+  404s. These are not failed versions because equivalent HTML content was
+  fetched and preserved.
 
 ## Stage 6 - Completeness declaration
 
