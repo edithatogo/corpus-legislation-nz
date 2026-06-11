@@ -95,14 +95,14 @@ state restore:
 
 ```text
 seed_work_ids_path=seeds/batches/historical-work-ids-0002.txt
-restore_existing_historical=true
-replace_existing=false
+merge_policy=restore_merge
+max_works=none
 upload_confirmed=false
 ```
 
 After reviewing the no-upload artifact, rerun the same inputs with
-`upload_confirmed=true`. Do not set `restore_existing_historical=false` for an
-incremental confirmed upload. A fresh GitHub runner without restore has no
+`upload_confirmed=true`. Do not use `merge_policy=no_restore_incremental` for
+an incremental confirmed upload. A fresh GitHub runner without restore has no
 existing `records.jsonl`, `raw_xml/`, `parquet/`, or `_state/`; uploading that
 partial folder would risk pruning previously published historical files.
 
@@ -120,7 +120,7 @@ Expected behavior:
 On GitHub-hosted runners, resume means restoring the historical Hugging Face
 dataset into `NZLC_OUTPUT_DIR` before syncing the next reviewed seed batch.
 The manual `historical_hf_upload.yml` workflow defaults to this behavior with
-`restore_existing_historical=true` and `replace_existing=false`.
+`merge_policy=restore_merge`.
 
 ## Hugging Face upload resume
 

@@ -170,6 +170,34 @@ Review the artifact:
 - failed-version warnings;
 - record counts by type, status, and year.
 
+Current no-upload batch evidence:
+
+- GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27316467370`.
+- Result: success.
+- Upload behavior: `upload_confirmed=false`; the Hugging Face upload step was
+  skipped.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0001.txt`.
+- Reviewed seed work IDs: 500.
+- Reviewed seed SHA-256:
+  `59923176fa34796d7673a20b880af9abe5520fe484595edb220f2bbc0e3b33e7`.
+- Restored/merged output record count: 4,737.
+- Validation report: `ok=true`; record count 4,737.
+- Coverage report: 4,737 `act` records; 4,466 `in_force`, 271
+  `not_in_force`; 0 ephemeral identifiers, 0 missing text records, and 0
+  missing XML URL records.
+- Latest manifest SHA-256:
+  `19e5f5c8eb25307d170105659d20d459a42fea8668eb424223abc40b844bea51`.
+- Sync state: 623 versions checked, 187 records added, 436 records failed, and
+  118 Parquet files written.
+- Failed-version pattern: 404 responses for early local/imperial Act XML URLs,
+  including `act_local_1841_1` through `act_local_1889_22` examples in the
+  first reviewed batch.
+
+Decision: do not use this dry-run result as approval for a confirmed upload.
+The publishing path is working, but the failed-version state needs a triage
+pass before batch 0001 is written to Hugging Face.
+
 ## Stage 5 - Confirmed incremental upload
 
 Only after no-upload review, rerun the same batch with:
@@ -181,6 +209,10 @@ Only after no-upload review, rerun the same batch with:
 Do not use `merge_policy=no_restore_incremental` for a confirmed incremental
 upload. A fresh runner without restore has no previous records and could prune
 published historical files.
+
+For batch 0001, confirmed upload remains blocked until the 436 failed versions
+from no-upload run `27316467370` are reviewed and either remediated or accepted
+with documented exclusion semantics.
 
 ## Stage 6 - Completeness declaration
 

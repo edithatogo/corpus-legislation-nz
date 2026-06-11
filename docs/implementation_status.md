@@ -84,6 +84,10 @@ Last reconciled: 2026-06-11.
 - The broad candidate was reconciled against the reviewed 10-work historical
   pilot seed with 33,683 additions and 0 removals, then split locally into 68
   deterministic 500-work batches for no-upload validation planning.
+- First reviewed 500-work historical batch no-upload validation passed in
+  GitHub Actions run `27316467370` with `upload_confirmed=false`; validation
+  reported 4,737 restored/merged records and manifest SHA-256
+  `19e5f5c8eb25307d170105659d20d459a42fea8668eb424223abc40b844bea51`.
 - Naming/publication alignment is documented for the preferred
   `corpus-nz-legislation` family label while preserving the current
   `corpus-legislation-nz` public surfaces.
@@ -109,6 +113,10 @@ Last reconciled: 2026-06-11.
 - The live Hugging Face dataset is intentionally partial/API-discovery based.
 - The historical Hugging Face dataset is a successful bootstrap, not a complete
   historical corpus.
+- The first reviewed 500-work historical no-upload batch found 436 failed
+  versions, mostly 404 XML responses for early local/imperial Acts. Confirmed
+  upload of that batch should wait until those failures are triaged or
+  documented as accepted exclusions.
 - The first scheduled-run gate for public launch was explicitly waived by the
   repository owner on 2026-06-09; manual live sync and publication evidence
   exist, but scheduled maintenance still needs continuing evidence.
@@ -117,10 +125,10 @@ Last reconciled: 2026-06-11.
 
 ## Next maintainer actions
 
-1. Review the 33,693-work search-derived candidate inventory and decide whether
+1. Triage the 436 failed versions from no-upload historical run `27316467370`
+   before confirming upload of reviewed batch 0001.
+2. Review the 33,693-work search-derived candidate inventory and decide whether
    to seek an official work-ID export before promotion.
-2. Run no-upload validation for the first reviewed 500-work batch, preserving
-   validation, manifest, coverage, failed-version, and state artifacts.
 3. Promote or revise the candidate seed only after external/authoritative
    reconciliation resolves the remaining completeness gap.
 4. Continue roadmap implementation for data-quality dashboarding, structural XML

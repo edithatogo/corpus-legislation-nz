@@ -42,3 +42,20 @@
   reconciliation gate for historical completeness work.
 - `conductor/tracks.md` records this Track 23 documentation/evidence slice.
 - `.github/workflows/historical_hf_upload.yml` implements the manual workflow.
+
+## Reviewed batch dry-run evidence
+
+- Run URL:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27316467370`.
+- Event: `workflow_dispatch`.
+- Result: success.
+- Inputs: `upload_confirmed=false`,
+  `seed_work_ids_path=seeds/reviewed/historical-work-ids-0001.txt`,
+  `merge_policy=restore_merge`, `max_pages=none`, `max_works=none`,
+  `min_seconds_between_requests=0.5`.
+- Upload behavior: `Upload to historical Hugging Face dataset` was skipped.
+- Validation: 4,737 restored/merged records, `ok=true`.
+- Manifest SHA-256:
+  `19e5f5c8eb25307d170105659d20d459a42fea8668eb424223abc40b844bea51`.
+- Stop condition: 436 failed versions were recorded in `_state/sync_state.json`,
+  so confirmed upload of this batch remains pending failed-version triage.

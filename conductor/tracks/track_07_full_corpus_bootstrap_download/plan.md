@@ -8,7 +8,7 @@
 - [ ] Use staged batches if the seed inventory is large or API limits are
   uncertain.
 - [ ] Preserve sync state after each batch.
-- [ ] Run `uv run nzlc validate`, `uv run nzlc manifest`, and
+- [x] Run `uv run nzlc validate`, `uv run nzlc manifest`, and
   `uv run nzlc coverage-report`.
 - [ ] Review missing text, missing XML URLs, failed versions, and ephemeral
   identifiers.
@@ -22,3 +22,14 @@
   seed and expected archive size are known.
 - Candidate historical seeds must be reconciled with `nzlc reconcile-work-ids`
   before they are promoted to `seeds/work_ids.txt` or split into upload batches.
+
+## Batch 0001 no-upload evidence
+
+- Reviewed batch path: `seeds/reviewed/historical-work-ids-0001.txt`.
+- GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27316467370`.
+- Result: success with `upload_confirmed=false`; no Hugging Face write.
+- Validation/manifest/coverage completed for 4,737 restored/merged records.
+- Sync state recorded 436 failed versions, mostly early local/imperial Act XML
+  404 responses.
+- Confirmed upload remains blocked until failed-version triage is complete.
