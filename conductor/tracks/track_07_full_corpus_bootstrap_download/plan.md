@@ -53,3 +53,16 @@
 - Validation/manifest/coverage completed for 5,779 restored/merged records.
 - Historical Hugging Face revision after upload:
   `bb425cb308410fac43095a30f88c9d92848a0eb8`.
+
+## Batch 0003 evidence
+
+- Reviewed batch path: `seeds/reviewed/historical-work-ids-0003.txt`.
+- No-upload GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27351234418`.
+- Confirmed batch 0003 upload passed in
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27354924156`.
+- Confirmed batch 0003 sync state: 612 versions checked, 605 records added, 7
+  records unchanged, 0 records failed, 487 XML-to-HTML fallback warnings.
+- Validation/manifest/coverage completed for 6,384 restored/merged records.
+- Historical Hugging Face revision after upload:
+  `0cc4021cae106c0b9ae3722488faed21df3e578c`.

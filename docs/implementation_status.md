@@ -109,6 +109,13 @@ Last reconciled: 2026-06-11.
   `de95e13938d2db797a24c49400afccdc933140eb090444d26a26930edc1b430e`.
 - Current verified historical Hugging Face revision after batch 0002 upload:
   `bb425cb308410fac43095a30f88c9d92848a0eb8`.
+- Third reviewed 500-work historical batch confirmed upload passed in GitHub
+  Actions run `27354924156` with `upload_confirmed=true`; validation reported
+  6,384 restored/merged records, 0 failed records, 487 XML-to-HTML fallback
+  warnings, and manifest SHA-256
+  `126be06f40189ed2133a79f93c6699d99239632fe34e7f2cf0f27e9e05bc2e63`.
+- Current verified historical Hugging Face revision after batch 0003 upload:
+  `0cc4021cae106c0b9ae3722488faed21df3e578c`.
 - Naming/publication alignment is documented for the preferred
   `corpus-nz-legislation` family label while preserving the current
   `corpus-legislation-nz` public surfaces.
@@ -137,7 +144,7 @@ Last reconciled: 2026-06-11.
 - Historical batch 0001 has 436 XML-to-HTML fallback warnings and batch 0002
   has 482 XML-to-HTML fallback warnings for local/imperial Acts. These are no
   longer failed versions, but they should remain visible as provenance
-  warnings.
+  warnings. Batch 0003 has 487 similar warnings.
 - The first scheduled-run gate for public launch was explicitly waived by the
   repository owner on 2026-06-09; manual live sync and publication evidence
   exist, but scheduled maintenance still needs continuing evidence.
@@ -148,7 +155,7 @@ Last reconciled: 2026-06-11.
 
 1. Review the 33,693-work search-derived candidate inventory and decide whether
    to seek an official work-ID export before promotion.
-2. Prepare reviewed batch 0003 from the deterministic candidate inventory, then
+2. Prepare reviewed batch 0004 from the deterministic candidate inventory, then
    run no-upload validation before any confirmed upload.
 3. Promote or revise the candidate seed only after external/authoritative
    reconciliation resolves the remaining completeness gap.

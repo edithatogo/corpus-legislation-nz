@@ -302,3 +302,40 @@ Historical completeness can be declared only after:
 Until then, the correct public statement is: historical publication is a
 bootstrap with reviewed publication mechanics, not a proven complete historical
 corpus.
+
+## Confirmed batch 0003 evidence
+
+- No-upload GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27351234418`.
+- Confirmed GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27354924156`.
+- Result: success.
+- Upload behavior: `upload_confirmed=true`; historical Hugging Face upload step
+  completed.
+- Historical Hugging Face dataset:
+  `edithatogo/corpus-legislation-nz-historical`.
+- Verified Hugging Face revision after upload:
+  `0cc4021cae106c0b9ae3722488faed21df3e578c`.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0003.txt`.
+- Reviewed seed work IDs: 500.
+- Reviewed seed SHA-256:
+  `80c93ff564b390b04cb35b16a337e4a097611181ded45f543835e85a3d630eb8`.
+- Restored/merged output record count: 6,384.
+- Validation report: `ok=true`; record count 6,384.
+- Coverage report: 6,384 `act` records; 4,922 `in_force`, 1,462
+  `not_in_force`.
+- Latest manifest SHA-256:
+  `126be06f40189ed2133a79f93c6699d99239632fe34e7f2cf0f27e9e05bc2e63`.
+- Sync state: 612 versions checked, 605 records added, 7 records unchanged, 0
+  records failed, and 155 Parquet files written.
+- Warnings: 487 XML-to-HTML fallback warnings for local Act XML 404s. These
+  are not failed versions because equivalent HTML content was fetched and
+  preserved.
+
+## Next batch input
+
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0004.txt`.
+- Required first run: `upload_confirmed=false` with `merge_policy=restore_merge`
+  and historical dataset restore enabled.
+- Confirmed upload may follow only after reviewing validation, manifest,
+  coverage, and failed-version state from the no-upload artifact.
