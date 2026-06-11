@@ -74,6 +74,37 @@ def _safe_write_raw(raw_dir: Path, stable_id: str, content: bytes, suffix: str =
     return path
 
 
+def _raw_content_type_for_url(url: str) -> str:
+    return (
+        "application/xml" if url.lower().endswith(".xml/") or ".xml" in url.lower() else "text/html"
+    )
+
+
+def _raw_suffix_for_content_type(content_type: str | None) -> str:
+    return ".xml" if content_type == "application/xml" else ".html"
+
+
+def _download_first_available_format(
+    client: NZLegislationClient,
+    version: dict[str, Any],
+) -> tuple[bytes, str | None, str | None, list[str]]:
+    """Download XML when available, falling back to HTML for older works without XML."""
+    warnings: list[str] = []
+    candidates = [(fmt, url) for fmt in ("xml", "html") if (url := client.format_url(version, fmt))]
+    for fmt, url in candidates:
+        try:
+            raw_content = client.download_url(url)
+            return raw_content, url, _raw_content_type_for_url(url), warnings
+        except Exception as exc:  # noqa: BLE001
+            if fmt == "xml" and any(candidate_fmt == "html" for candidate_fmt, _ in candidates):
+                warnings.append(
+                    f"XML download failed for {version.get('version_id')}: {exc}; used HTML"
+                )
+                continue
+            raise
+    return b"", None, None, warnings
+
+
 @app.command()
 def doctor(
     network: Annotated[
@@ -197,16 +228,11 @@ def sync(
                 if version_id and "administering_agencies" not in version_stub
                 else version_stub
             )
-            raw_url = client.format_url(version, "xml") or client.format_url(version, "html")
-            raw_content = b""
-            raw_type = None
-            if raw_url:
-                raw_content = client.download_url(raw_url)
-                raw_type = (
-                    "application/xml"
-                    if raw_url.lower().endswith(".xml/") or ".xml" in raw_url.lower()
-                    else "text/html"
-                )
+            raw_content, raw_url, raw_type, download_warnings = _download_first_available_format(
+                client,
+                version,
+            )
+            stats.warnings.extend(download_warnings)
             record = normalize_version_record(
                 version,
                 raw_content=raw_content,
@@ -215,7 +241,7 @@ def sync(
                 pipeline_version=settings.pipeline_version,
             )
             if raw_content:
-                suffix = ".xml" if raw_type == "application/xml" else ".html"
+                suffix = _raw_suffix_for_content_type(raw_type)
                 raw_path = _safe_write_raw(
                     settings.raw_xml_dir, record["stable_id"], raw_content, suffix=suffix
                 )

@@ -44,6 +44,44 @@ class FakeNZLegislationClient:
         return None
 
 
+class FakeFallbackNZLegislationClient:
+    def __init__(self, settings):
+        self.settings = settings
+
+    def discover_versions(self, **kwargs):
+        yield {
+            "title": "Old Local Act 1841",
+            "version_id": "act_local_1841_1_en_1841-12-22",
+            "work_id": "act_local_1841_1",
+            "legislation_status": "not_in_force",
+            "legislation_type": "act",
+            "administering_agencies": [],
+            "formats": [
+                {
+                    "type": "xml",
+                    "url": "https://www.legislation.govt.nz/act/local/1841/1/en/latest.xml",
+                },
+                {
+                    "type": "html",
+                    "url": "https://www.legislation.govt.nz/act/local/1841/1/en/latest.html",
+                },
+            ],
+            "is_latest_version": True,
+        }
+
+    @staticmethod
+    def format_url(version, fmt):
+        for item in version.get("formats", []):
+            if item["type"] == fmt:
+                return item["url"]
+        return None
+
+    def download_url(self, url):
+        if url.endswith(".xml"):
+            raise RuntimeError("404 Client Error: Not Found")
+        return b"<html><body><h1>Old Local Act 1841</h1><p>Fallback text.</p></body></html>"
+
+
 def test_sync_preserves_state_between_batches(tmp_path: Path, monkeypatch):
     output_dir = tmp_path / "data"
     seed_path = tmp_path / "seed.txt"
@@ -87,3 +125,40 @@ def test_sync_preserves_state_between_batches(tmp_path: Path, monkeypatch):
     }
     assert second_state["last_stats"]["records_unchanged"] == 1
     assert second_state["last_stats"]["records_added"] == 1
+
+
+def test_sync_falls_back_to_html_when_xml_404s(tmp_path: Path, monkeypatch):
+    output_dir = tmp_path / "data"
+    seed_path = tmp_path / "seed.txt"
+    seed_path.write_text("act_local_1841_1\n", encoding="utf-8")
+    monkeypatch.setenv("NZ_LEGISLATION_API_KEY", "test-key")
+    monkeypatch.setenv("NZLC_OUTPUT_DIR", str(output_dir))
+    monkeypatch.setenv("NZLC_SEARCH_TERMS", "")
+    monkeypatch.setattr(cli, "NZLegislationClient", FakeFallbackNZLegislationClient)
+    monkeypatch.setattr(cli, "write_partitioned_parquet", lambda records, output_dir: [])
+
+    cli.sync(
+        seed_work_ids=seed_path,
+        latest_only=False,
+        max_works=None,
+        allow_no_search_terms=True,
+        replace=False,
+        embeddings=False,
+    )
+
+    rows = [
+        json.loads(line)
+        for line in (output_dir / "records.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    state = json.loads((output_dir / "_state" / "sync_state.json").read_text(encoding="utf-8"))
+
+    assert len(rows) == 1
+    assert rows[0]["stable_id"] == "act_local_1841_1_en_1841-12-22"
+    assert rows[0]["xml_url"].endswith("latest.xml")
+    assert rows[0]["html_url"].endswith("latest.html")
+    assert rows[0]["raw_content_path"].endswith(".html")
+    assert rows[0]["raw_xml_sha256"] == ""
+    assert rows[0]["raw_content_sha256"]
+    assert state["last_stats"]["records_added"] == 1
+    assert state["last_stats"]["records_failed"] == 0
+    assert "used HTML" in state["last_stats"]["warnings"][0]
