@@ -135,6 +135,12 @@ For the next historical batch, run `historical_hf_upload.yml` manually with:
 - `upload_confirmed=true` only after reviewing validation, manifest, coverage,
   and failed-version state.
 
+The next reviewed batch file is
+`seeds/reviewed/historical-work-ids-0002.txt`. It contains 500 work IDs from
+`act_local_1889_23` through `act_local_1908_30` and has canonical
+line-normalized SHA-256
+`3aad9f7192ab65bb0d93cbee8c4c0bfba8fcafc1718d0a59f6f8faa35d104972`.
+
 The workflow refuses a confirmed incremental upload when
 `restore_existing_historical=false` and `replace_existing=false`. This prevents
 an isolated batch from pruning the existing published historical corpus.

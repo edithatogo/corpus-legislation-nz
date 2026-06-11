@@ -145,12 +145,18 @@ Current batch plan:
 - Batch count: 68.
 - First reviewed workflow seed:
   `seeds/reviewed/historical-work-ids-0001.txt`.
+- Second reviewed workflow seed:
+  `seeds/reviewed/historical-work-ids-0002.txt`.
 - Batch manifest:
   `generated/historical-discovery-27313765016/historical-work-id-batches.manifest.json`.
 - Batch directory:
   `generated/historical-discovery-27313765016/batches/`.
 - Seed SHA-256:
   `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`.
+- Batch 0002 boundary: 500 work IDs from `act_local_1889_23` through
+  `act_local_1908_30`.
+- Batch 0002 canonical line-normalized SHA-256:
+  `3aad9f7192ab65bb0d93cbee8c4c0bfba8fcafc1718d0a59f6f8faa35d104972`.
 
 ## Stage 4 - No-upload validation
 
@@ -242,6 +248,14 @@ Confirmed batch 0001 evidence:
 - Warnings: 436 XML-to-HTML fallback warnings for early local/imperial Act XML
   404s. These are not failed versions because equivalent HTML content was
   fetched and preserved.
+
+Next batch input:
+
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0002.txt`.
+- Required first run: `upload_confirmed=false` with `merge_policy=restore_merge`
+  and historical dataset restore enabled.
+- Confirmed upload may follow only after reviewing validation, manifest,
+  coverage, and failed-version state from the no-upload artifact.
 
 ## Stage 6 - Completeness declaration
 

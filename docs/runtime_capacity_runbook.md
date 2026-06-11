@@ -94,7 +94,7 @@ For GitHub Actions historical uploads, prefer a reviewed batch file with remote
 state restore:
 
 ```text
-seed_work_ids_path=seeds/batches/historical-work-ids-0002.txt
+seed_work_ids_path=seeds/reviewed/historical-work-ids-0002.txt
 merge_policy=restore_merge
 max_works=none
 upload_confirmed=false

@@ -97,6 +97,11 @@ Last reconciled: 2026-06-11.
   `1c970def5f65971bb6f5e7403a0bc731a52d422c8d47773b9fa5df6f220569a5`.
 - Current verified historical Hugging Face revision after batch 0001 upload:
   `dcc92964ef832c7e0bd2f904f88de523998304f2`.
+- Second reviewed 500-work historical batch seed is staged at
+  `seeds/reviewed/historical-work-ids-0002.txt`; it covers
+  `act_local_1889_23` through `act_local_1908_30` and has canonical
+  line-normalized SHA-256
+  `3aad9f7192ab65bb0d93cbee8c4c0bfba8fcafc1718d0a59f6f8faa35d104972`.
 - Naming/publication alignment is documented for the preferred
   `corpus-nz-legislation` family label while preserving the current
   `corpus-legislation-nz` public surfaces.
@@ -135,7 +140,9 @@ Last reconciled: 2026-06-11.
 
 1. Review the 33,693-work search-derived candidate inventory and decide whether
    to seek an official work-ID export before promotion.
-2. Prepare reviewed batch 0002 only after batch 0001 evidence is accepted.
+2. Run reviewed batch 0002 as a no-upload historical workflow with restore
+   enabled, then review validation, manifest, coverage, and failed-version
+   state before confirmed upload.
 3. Promote or revise the candidate seed only after external/authoritative
    reconciliation resolves the remaining completeness gap.
 4. Continue roadmap implementation for data-quality dashboarding, structural XML
