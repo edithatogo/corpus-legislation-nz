@@ -20,11 +20,11 @@ on:
         type: string
         default: "act,bill,secondary_legislation,amendment_paper"
       max_pages:
-        description: "Optional page limit per search/type query"
+        description: "Optional page limit per search/type query; use none for no limit"
         type: string
         default: "2"
       max_works:
-        description: "Total discovered-work and sync limit"
+        description: "Total discovered-work and sync limit; use none for no limit"
         type: string
         default: "50"
       seed_work_ids_path:
@@ -118,6 +118,15 @@ jobs:
           NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
         run: |
           set -euo pipefail
+          add_optional_limit() {
+            local flag="$1"
+            local value="$2"
+            case "${value,,}" in
+              ""|"none"|"null"|"-") return 0 ;;
+              *) args+=("$flag" "$value") ;;
+            esac
+          }
+
           if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
             export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
           fi
@@ -128,8 +137,8 @@ jobs:
             --output-path generated/historical-work-ids.txt
             --provenance-path generated/historical-work-ids.provenance.json
           )
-          if [ -n "${{ inputs.max_pages }}" ]; then args+=(--max-pages "${{ inputs.max_pages }}"); fi
-          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          add_optional_limit --max-pages "${{ inputs.max_pages }}"
+          add_optional_limit --max-works "${{ inputs.max_works }}"
           uv run nzlc discover-work-ids "${args[@]}"
 
       - name: Prepare reviewed historical seed
@@ -240,6 +249,15 @@ jobs:
           MERGE_POLICY: ${{ inputs.merge_policy }}
         run: |
           set -euo pipefail
+          add_optional_limit() {
+            local flag="$1"
+            local value="$2"
+            case "${value,,}" in
+              ""|"none"|"null"|"-") return 0 ;;
+              *) args+=("$flag" "$value") ;;
+            esac
+          }
+
           if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
             export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
           fi
@@ -248,7 +266,7 @@ jobs:
             --allow-no-search-terms
           )
           if [ "$MERGE_POLICY" = "replace_existing" ]; then args+=(--replace); fi
-          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          add_optional_limit --max-works "${{ inputs.max_works }}"
           uv run nzlc sync "${args[@]}"
 
       - name: Stage historical dataset card

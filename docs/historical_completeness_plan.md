@@ -143,6 +143,8 @@ Current batch plan:
 
 - Batch size: 500 work IDs.
 - Batch count: 68.
+- First reviewed workflow seed:
+  `seeds/reviewed/historical-work-ids-0001.txt`.
 - Batch manifest:
   `generated/historical-discovery-27313765016/historical-work-id-batches.manifest.json`.
 - Batch directory:
@@ -155,8 +157,8 @@ Current batch plan:
 Run `historical_hf_upload.yml` manually with:
 
 - `seed_work_ids_path` set to the reviewed batch file path;
-- `restore_existing_historical=true`;
-- `replace_existing=false`;
+- `merge_policy=restore_merge`;
+- `max_works=none` so the workflow does not apply the pilot default limit;
 - `upload_confirmed=false`.
 
 Review the artifact:
@@ -172,13 +174,13 @@ Review the artifact:
 
 Only after no-upload review, rerun the same batch with:
 
-- `restore_existing_historical=true`;
-- `replace_existing=false`;
+- `merge_policy=restore_merge`;
+- `max_works=none`;
 - `upload_confirmed=true`.
 
-Do not set `restore_existing_historical=false` for an incremental upload. A
-fresh runner without restore has no previous records and could prune published
-historical files.
+Do not use `merge_policy=no_restore_incremental` for a confirmed incremental
+upload. A fresh runner without restore has no previous records and could prune
+published historical files.
 
 ## Stage 6 - Completeness declaration
 
