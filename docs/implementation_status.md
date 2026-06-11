@@ -1,6 +1,6 @@
 # Implementation status
 
-Last reconciled: 2026-06-10.
+Last reconciled: 2026-06-11.
 
 ## Implemented
 
@@ -79,6 +79,11 @@ Last reconciled: 2026-06-10.
   search-derived 500-work bootstrap.
 - Historical seed reconciliation is implemented locally and in a manual
   no-upload workflow.
+- Broad no-limit historical work-ID discovery passed in GitHub Actions run
+  `27313765016`, producing 33,693 unique search-derived candidate work IDs.
+- The broad candidate was reconciled against the reviewed 10-work historical
+  pilot seed with 33,683 additions and 0 removals, then split locally into 68
+  deterministic 500-work batches for no-upload validation planning.
 - Naming/publication alignment is documented for the preferred
   `corpus-nz-legislation` family label while preserving the current
   `corpus-legislation-nz` public surfaces.
@@ -99,6 +104,8 @@ Last reconciled: 2026-06-10.
 
 - No authoritative `seeds/work_ids.txt` exists, so full New Zealand legislation
   coverage is not proven.
+- The 33,693-work historical inventory is search-derived and still requires
+  external or authoritative reconciliation before any full-completeness claim.
 - The live Hugging Face dataset is intentionally partial/API-discovery based.
 - The historical Hugging Face dataset is a successful bootstrap, not a complete
   historical corpus.
@@ -110,11 +117,11 @@ Last reconciled: 2026-06-10.
 
 ## Next maintainer actions
 
-1. Reconcile Conductor tracks against the completed partial launch and remaining
-   full-completeness blockers.
-2. Generate or obtain the stable full work-ID inventory.
-3. Reconcile any candidate historical inventory with `nzlc reconcile-work-ids`,
-   then split the reviewed historical seed into deterministic batches and run
-   no-upload validation before confirmed incremental uploads.
-4. Continue the roadmap tracks for shared schema, metadata packages, versioning,
-   CI quality tooling, and provenance attestations.
+1. Review the 33,693-work search-derived candidate inventory and decide whether
+   to seek an official work-ID export before promotion.
+2. Run no-upload validation for the first reviewed 500-work batch, preserving
+   validation, manifest, coverage, failed-version, and state artifacts.
+3. Promote or revise the candidate seed only after external/authoritative
+   reconciliation resolves the remaining completeness gap.
+4. Continue roadmap implementation for data-quality dashboarding, structural XML
+   extraction, published metadata packages, and long-term maintenance evidence.

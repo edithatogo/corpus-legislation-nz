@@ -1,6 +1,6 @@
 # Historical corpus completeness plan
 
-Last updated: 2026-06-10.
+Last updated: 2026-06-11.
 
 This plan moves the historical dataset from a successful 500-work bootstrap to a
 reviewed completeness process. It does not claim that historical coverage is
@@ -12,6 +12,8 @@ complete today.
 - Historical dataset: `edithatogo/corpus-legislation-nz-historical`.
 - Historical bootstrap publication path works.
 - Current historical dataset is a bootstrap, not a complete historical corpus.
+- Broad no-limit API discovery completed in GitHub Actions run `27313765016`
+  and produced a search-derived candidate inventory with 33,693 unique work IDs.
 - No authoritative `seeds/work_ids.txt` is present.
 - Full coverage remains blocked until a complete work-ID inventory is obtained
   or a documented reconciliation proves that discovery covers the intended
@@ -57,6 +59,21 @@ pilot-safe defaults of `max_pages=2` and `max_works=50`. For a no-limit
 candidate discovery run, dispatch that workflow with `max_pages=none` and
 `max_works=none`; blank inputs may be replaced by GitHub's workflow defaults.
 
+Current candidate evidence:
+
+- GitHub Actions run: `27313765016`.
+- Artifact: `historical-work-id-discovery`.
+- Local artifact path after download:
+  `generated/historical-discovery-27313765016/`.
+- Search terms: `act,bill,regulation,order,notice`.
+- Legislation types: `act,bill,secondary_legislation,amendment_paper`.
+- Legislation status filter: omitted via `none`.
+- Candidate unique work IDs: 33,693.
+- Candidate SHA-256:
+  `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`.
+- Provenance warning: search-derived inventory only; not authoritative
+  completeness proof.
+
 ## Stage 2 - Reconcile before promotion
 
 Compare the candidate against the current reviewed baseline before promoting or
@@ -89,6 +106,22 @@ Only commit or promote a merged seed after this review. If the seed is still
 search-derived, public wording must continue to say coverage is not proven
 complete.
 
+Current reconciliation evidence:
+
+- Baseline:
+  `generated/historical-sync-pilot-27138352849/generated/historical-work-ids.txt`
+  from the reviewed historical sync pilot.
+- Baseline unique work IDs: 10.
+- Baseline SHA-256:
+  `828ee48a61c858c8aac5bb4bd0c0f37c05a307e11d81c5dcfe7f3c3a65b9fad1`.
+- Candidate unique work IDs: 33,693.
+- Added work IDs: 33,683.
+- Removed work IDs: 0.
+- Reconciliation report:
+  `generated/historical-discovery-27313765016/historical-work-id-reconciliation-vs-10-work-pilot.json`.
+- The candidate contains the pilot seed but remains search-derived and should
+  not be promoted as authoritative full coverage without external review.
+
 ## Stage 3 - Split reviewed batches
 
 After review, split the promoted seed into deterministic batches:
@@ -105,6 +138,17 @@ Keep the batch manifest with the review artifact. It records the seed hash,
 batch hashes, first/last work IDs, and batch counts. Operational batch files are
 ignored by Git by default unless a future track explicitly chooses to commit
 reviewed public seed chunks.
+
+Current batch plan:
+
+- Batch size: 500 work IDs.
+- Batch count: 68.
+- Batch manifest:
+  `generated/historical-discovery-27313765016/historical-work-id-batches.manifest.json`.
+- Batch directory:
+  `generated/historical-discovery-27313765016/batches/`.
+- Seed SHA-256:
+  `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`.
 
 ## Stage 4 - No-upload validation
 
