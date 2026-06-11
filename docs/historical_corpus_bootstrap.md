@@ -136,11 +136,11 @@ For the next historical batch, run `historical_hf_upload.yml` manually with:
   and failed-version state.
 
 The next deterministic batch after confirmed batch 0002 is
-`generated/historical-discovery-27313765016/batches/historical-work-ids-0003.txt`.
-Before running it, promote a reviewed copy under `seeds/reviewed/`. Batch 0003
-contains 500 work IDs from `act_local_1908_31` through `act_local_1934_10` and
+`generated/historical-discovery-27313765016/batches/historical-work-ids-0004.txt`.
+Before running it, promote a reviewed copy under `seeds/reviewed/`. Batch 0004
+contains 500 work IDs from `act_local_1934_11` through `act_local_1968_8` and
 has canonical line-normalized SHA-256
-`80c93ff564b390b04cb35b16a337e4a097611181ded45f543835e85a3d630eb8`.
+`1de0612f3822d575469a67baeb7d1d06d4cce6c635485ab85f5cbf3ad7d0f183`.
 
 The workflow refuses a confirmed incremental upload when
 `restore_existing_historical=false` and `replace_existing=false`. This prevents
