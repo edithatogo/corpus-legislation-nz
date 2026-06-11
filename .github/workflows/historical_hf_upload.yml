@@ -196,34 +196,51 @@ jobs:
           uv run python - <<'PY'
           import os
           import shutil
+          import time
           from pathlib import Path
 
           from huggingface_hub import snapshot_download
-          from huggingface_hub.utils import RepositoryNotFoundError
+          from huggingface_hub.utils import HfHubHTTPError, LocalEntryNotFoundError, RepositoryNotFoundError
 
           repo_id = os.environ["HF_HISTORICAL_REPO_ID"]
           token = os.environ.get("HF_TOKEN") or None
           output_dir = Path(os.environ["HISTORICAL_OUTPUT_DIR"])
           output_dir.mkdir(parents=True, exist_ok=True)
-          try:
-              snapshot = Path(
-                  snapshot_download(
-                      repo_id=repo_id,
-                      repo_type="dataset",
-                      token=token,
-                      allow_patterns=[
-                          "README.md",
-                          "records.jsonl",
-                          "_state/**",
-                          "manifests/**",
-                          "parquet/**",
-                          "raw_xml/**",
-                      ],
+
+          allow_patterns = [
+              "README.md",
+              "records.jsonl",
+              "_state/**",
+              "manifests/**",
+              "parquet/**",
+              "raw_xml/**",
+          ]
+          snapshot = None
+          for attempt in range(1, 6):
+              try:
+                  snapshot = Path(
+                      snapshot_download(
+                          repo_id=repo_id,
+                          repo_type="dataset",
+                          token=token,
+                          allow_patterns=allow_patterns,
+                      )
                   )
-              )
-          except RepositoryNotFoundError:
-              print(f"No existing historical dataset to restore: {repo_id}")
-              raise SystemExit(0)
+                  break
+              except RepositoryNotFoundError:
+                  print(f"No existing historical dataset to restore: {repo_id}")
+                  raise SystemExit(0)
+              except (HfHubHTTPError, LocalEntryNotFoundError) as exc:
+                  if attempt == 5:
+                      raise
+                  sleep_seconds = min(300, 30 * attempt)
+                  print(
+                      f"Historical dataset restore failed on attempt {attempt}: {exc}. "
+                      f"Retrying in {sleep_seconds}s."
+                  )
+                  time.sleep(sleep_seconds)
+          if snapshot is None:
+              raise SystemExit("Historical dataset restore did not produce a snapshot path.")
 
           restored = []
           for rel in ["README.md", "records.jsonl", "_state", "manifests", "parquet", "raw_xml"]:
