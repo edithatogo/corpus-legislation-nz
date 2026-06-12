@@ -222,6 +222,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: full-corpus-bootstrap-batches
+          path: generated/full-corpus-bootstrap/
 
       - name: Check disk budget
         shell: bash
@@ -381,6 +382,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: full-corpus-bootstrap-batches
+          path: generated/full-corpus-bootstrap/
 
       - name: Check disk budget
         shell: bash

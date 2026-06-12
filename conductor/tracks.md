@@ -260,8 +260,11 @@ Current state:
 - 68 pre-split batches available in `generated/historical-discovery-27313765016/batches/`.
 - Historical batches 0001-0003 confirmed-uploaded to `edithatogo/corpus-legislation-nz-historical`.
 - Batch 0004 no-upload triggered: run `27362894765`.
+- Batches 0005-0068 (64 batches) still require the no-upload -> review -> confirmed-upload cycle.
 - Full bootstrap workflow is now present in `.github/workflows/full_corpus_bootstrap.yml`.
 - Full corpus operations runbook is now documented in `docs/full_corpus_operations.md`.
+- Pilot run `27396415830` completed batch 0001 (500 work IDs) with full validate/manifest/coverage cycle in 5h14m at 1.0s pacing.
+- Sync is rate-limit constrained: ~37s per work ID due to NZ Legislation API quota exhaustion sleeps.
 - Full sync must run via GitHub Actions (no local API key; local disk ~7.5 GB free).
 - Runner disk budget: 25 GB min, 50 GB preferred (docs/runtime_capacity_runbook.md).
 
