@@ -18,6 +18,7 @@ from .discovery import (
     normalize_work_ids,
 )
 from .manifest import build_change_report, build_manifest
+from .rss_feed import FEED_FILENAME, build_feed
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
@@ -748,6 +749,30 @@ def coverage_report_cmd() -> None:
     with history_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(report, sort_keys=True, ensure_ascii=False) + "\n")
     console.print_json(data=report)
+
+
+@app.command("rss-feed")
+def rss_feed_cmd(
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output RSS feed XML path."),
+    ] = Path("data") / FEED_FILENAME,
+    max_items: Annotated[
+        int,
+        typer.Option(help="Maximum number of RSS items."),
+    ] = 50,
+) -> None:
+    """Generate an RSS 2.0 feed from the latest corpus changes."""
+    settings = Settings.from_env()
+    result = build_feed(
+        records_path=settings.records_jsonl_path,
+        changes_path=settings.manifests_dir / "latest_changes.json",
+        output_path=output_path,
+        max_items=max_items,
+    )
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
 
 
 if __name__ == "__main__":

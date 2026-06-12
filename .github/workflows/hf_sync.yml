@@ -126,6 +126,13 @@ jobs:
           uv run nzlc manifest
           uv run nzlc coverage-report
 
+      - name: Generate RSS feed
+        env:
+          NZLC_OUTPUT_DIR: data
+        run: |-
+          set -euo pipefail
+          uv run nzlc rss-feed
+
       - name: Upload to Hugging Face Dataset
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
