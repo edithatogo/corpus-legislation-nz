@@ -4,7 +4,7 @@ This runbook defines the operating defaults for the first full bootstrap and lat
 
 ## Current capacity decision
 
-Run the first full bootstrap on a controlled local or self-hosted runner, not on GitHub Actions. Use GitHub Actions for daily/latest maintenance after the first complete Hugging Face upload has been verified.
+Run the first full bootstrap on a controlled local or self-hosted runner, not on GitHub Actions. Use GitHub-hosted runners for parallel reviewed batch fan-out, no-upload validation, and later daily/latest maintenance after the first complete Hugging Face upload has been verified.
 
 Reasons:
 
@@ -77,6 +77,17 @@ uv run nzlc reconcile-work-ids \
 The reconciliation report is a review artifact, not a completeness proof by
 itself. See `docs/historical_completeness_plan.md`.
 
+For full-corpus bootstrap and maintenance on GitHub Actions, the checked-in
+workflows are:
+
+- `.github/workflows/full_corpus_bootstrap.yml` for batched bootstrap runs;
+- `.github/workflows/full_corpus_hf_upload.yml` for upload/review after sync;
+- `.github/workflows/monthly_full_reconciliation.yml` for recurring baseline
+  reconciliation and optional full sync/upload review.
+
+See `docs/full_corpus_operations.md` for the operator sequence, host
+boundaries, and recommended workflow inputs.
+
 Example staged run:
 
 ```bash
@@ -89,6 +100,11 @@ uv run nzlc coverage-report
 ```
 
 Repeat with the next batch file only after validation passes.
+
+For GitHub Actions reviewed batch fan-out, use
+`.github/workflows/historical_batch_review.yml` to parallelize reviewed batch
+validation across GitHub-hosted runners while keeping the confirmed publish
+path serial.
 
 For GitHub Actions historical uploads, prefer a reviewed batch file with remote
 state restore:

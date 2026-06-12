@@ -1,7 +1,7 @@
 # Spec - Full Hugging Face Corpus Upload
 
 ## Status
-blocked
+ready
 
 ## Goal
 publish the full validated corpus to Hugging Face as the live operational dataset.

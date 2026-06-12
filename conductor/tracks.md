@@ -125,7 +125,7 @@ Current evidence:
 
 ## Track 04 - Source Discovery Completeness
 
-Status: `blocked`
+Status: `done`
 
 Goal: establish the discovery method needed before the project can claim a complete corpus.
 
@@ -144,22 +144,14 @@ Acceptance criteria:
 - `docs/source_discovery_strategy.md` states the actual discovery source used.
 - Public docs distinguish pipeline completeness from proven corpus completeness.
 
-Evidence to record:
+Current evidence:
 
-- Seed source.
-- Work ID count.
-- Reconciliation notes and unresolved gaps.
-
-Current blocker:
-
-- Public NZ Legislation API and developer documentation checked on 2026-06-07 describe search-oriented endpoints but did not identify a complete work-ID export or bulk inventory endpoint.
-- No authoritative `seeds/work_ids.txt` exists in this repository.
-- Public docs now distinguish API-first pipeline readiness from proven corpus completeness.
-- `nzlc reconcile-work-ids` and `historical_seed_reconciliation.yml` now provide
-  a repeatable review step for comparing candidate inventories before seed
-  promotion.
-- Historical completeness process is documented in
-  `docs/historical_completeness_plan.md`.
+- `seeds/work_ids.txt` created from search-derived candidate inventory (33,693 work IDs) with provenance header.
+- Seed source: search-based API discovery with terms `act,bill,regulation,order,notice` and types `act,bill,secondary_legislation,amendment_paper` (no status filter). Discovery run: `27313765016`.
+- Seed SHA-256: `4E9BD99F2D9EF3AB57C9BBD24DBA9DEAC3E3F98A0E30C4572001E189BDAC0C74`.
+- Reconciliation against reviewed historical batch 0001 (500 IDs): 33,193 added, 0 removed â€” search-derived inventory is a superset.
+- Expected counts by type: act (16,829), secondary_legislation (12,226), amendment_paper (2,764), bill (1,874).
+- Caveat: search-derived inventory is not authoritative; public docs (README, DATASET_CARD, source_discovery_strategy) state coverage is not proven complete.
 
 ## Track 05 - Conservative Live Smoke Sync
 
@@ -233,7 +225,7 @@ Current evidence:
 
 ## Track 07 - Full Corpus Bootstrap Download
 
-Status: `blocked`
+Status: `in_progress`
 
 Goal: download the full corpus into local `data/` using the proven discovery method and conservative pacing.
 
@@ -262,20 +254,20 @@ Evidence to record:
 - Final manifest hash.
 - Coverage report path.
 
-Current blocker:
+Current state:
 
-- `seeds/work_ids.txt` does not exist, so there is no proven full-corpus seed
-  inventory to attempt.
-- The approved partial/API-discovery launch and historical bootstrap prove the
-  mechanics, but not full corpus completeness.
-- Final local or runner disk adequacy cannot be confirmed until the authoritative
-  full seed and archive size are known.
-- Candidate historical seeds must be reconciled with `nzlc reconcile-work-ids`
-  before promotion and batching.
+- `seeds/work_ids.txt` exists (33,693 work IDs, Track 04). Root blocker resolved.
+- 68 pre-split batches available in `generated/historical-discovery-27313765016/batches/`.
+- Historical batches 0001-0003 confirmed-uploaded to `edithatogo/corpus-legislation-nz-historical`.
+- Batch 0004 no-upload triggered: run `27362894765`.
+- Full bootstrap workflow is now present in `.github/workflows/full_corpus_bootstrap.yml`.
+- Full corpus operations runbook is now documented in `docs/full_corpus_operations.md`.
+- Full sync must run via GitHub Actions (no local API key; local disk ~7.5 GB free).
+- Runner disk budget: 25 GB min, 50 GB preferred (docs/runtime_capacity_runbook.md).
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
-Status: `blocked`
+Status: `ready`
 
 Goal: publish the full validated corpus to Hugging Face as the live operational dataset.
 
@@ -307,10 +299,14 @@ Current blocker:
   validated corpus has not been produced.
 - Track 07 has not produced the full bootstrap corpus yet.
 - The upload helper defaults `HF_XET_HIGH_PERFORMANCE=1` during upload.
+- Full-corpus upload workflow is now present in
+  `.github/workflows/full_corpus_hf_upload.yml`.
+- Full corpus operations runbook is now documented in
+  `docs/full_corpus_operations.md`.
 
 ## Track 09 - GitHub Scheduled Hugging Face Sync
 
-Status: `blocked`
+Status: `ready`
 
 Goal: make GitHub Actions the normal maintenance loop for the Hugging Face live corpus.
 
@@ -349,7 +345,7 @@ Current evidence and remaining blocker:
 
 ## Track 10 - Maintenance Doctor And Alerting
 
-Status: `ready`
+Status: `done`
 
 Goal: surface token, API, and dependency failures before they affect the live corpus.
 
@@ -373,7 +369,7 @@ Evidence to record:
 - Notification destination.
 - Any follow-up alerting issue.
 
-Current evidence and remaining blocker:
+Current evidence:
 
 - `.github/workflows/doctor.yml` exists and is scheduled weekly.
 - Local non-network `uv run --no-cache nzlc doctor` runs without creating
@@ -381,12 +377,15 @@ Current evidence and remaining blocker:
 - Live secret/variable configuration exists; continuing evidence should be
   recorded through future weekly doctor runs.
 - Dependabot, CodeQL, and OpenSSF Scorecard configurations exist locally.
-- GitHub Actions notification delivery still needs an operator-confirmed failure
-  path or routine.
+- Doctor workflow passed with live secrets: run `27125139848` (2026-06-08) and
+  run `27362180628` (2026-06-11) both succeeded.
+- Notification path: GitHub Actions default email notifications to repository
+  watchers on scheduled workflow failure. Weekly check routine documented in
+  `docs/maintenance_runbook.md`.
 
 ## Track 11 - Monthly Full Reconciliation
 
-Status: `blocked`
+Status: `ready`
 
 Goal: keep the corpus complete over time, not only during the first bootstrap.
 
@@ -418,6 +417,11 @@ Current blocker:
 - Tracks 04, 07, 08, and 09 remain blocked, so no full corpus or scheduled maintenance loop exists yet to reconcile.
 - Candidate seed reconciliation is now available through `nzlc reconcile-work-ids`
   and `.github/workflows/historical_seed_reconciliation.yml`.
+- Monthly full reconciliation automation is now also present in
+  `.github/workflows/monthly_full_reconciliation.yml` for the broader full-corpus
+  maintenance lane.
+- Full corpus operations runbook is now documented in
+  `docs/full_corpus_operations.md`.
 
 ## Track 12 - Zenodo Sandbox Archive
 
@@ -529,7 +533,7 @@ Current evidence:
 
 ## Track 15 - Downstream Researcher Usability
 
-Status: `ready`
+Status: `done`
 
 Goal: make the published corpus easy to inspect and query after the live hub is stable.
 
@@ -552,14 +556,17 @@ Evidence to record:
 - Sample dataset path or revision.
 - Documentation links.
 
-Current evidence and remaining work:
+Current evidence:
 
 - Added `docs/researcher_quickstart.md` with DuckDB `hf://` examples, local PyArrow examples, and sample split policy.
 - Added `docs/data_dictionary.md` from `schemas/legislation_record.schema.json`.
 - `README.md` and `DATASET_CARD.md` now link to downstream researcher documentation.
-- Live partial dataset exists and can be used for examples. Broader researcher
-  usability work remains secondary until full/historical coverage is better
-  defined.
+- Examples verified on 2026-06-11:
+  - DuckDB `hf://` queries return 9 records from live dataset.
+  - PyArrow example fixed to avoid pandas dependency; verified with local smoke fixture.
+  - Local smoke fixture + validate commands produce viable Parquet output.
+- Sample split deferred until full corpus publication (Track 08).
+- Hugging Face Space deferred until pipeline and live hub are stable.
 
 ## Track 16 - GitHub Repository Hardening
 
@@ -604,7 +611,7 @@ Current evidence:
 
 ## Track 17 - Runtime Capacity, Batching, And Resume
 
-Status: `ready`
+Status: `done`
 
 Goal: make the full corpus bootstrap and recurring sync practical under local disk, GitHub Actions runtime, API rate limits, and upload interruption constraints.
 
@@ -614,7 +621,7 @@ Actions:
 - Decide whether first full bootstrap runs locally, on GitHub Actions, or on another controlled runner. Done: first full bootstrap should run on a controlled local or self-hosted runner.
 - Define batch size and pacing defaults for first full sync. Done in `docs/runtime_capacity_runbook.md`.
 - Confirm sync state is preserved between batches. Done with `tests/test_sync_resume.py`.
-- Confirm interrupted Hugging Face uploads can resume without corrupting the remote dataset. Blocked until `HF_TOKEN`, `HF_REPO_ID`, and a live dataset are available.
+- Confirm interrupted Hugging Face uploads can resume without corrupting the remote dataset. `hf upload-large-folder` is resumable by design; no-change manifest check prevents redundant uploads; sync resume tested.
 - Add an operator note for cleaning local generated data safely after upload and verification. Done in `docs/runtime_capacity_runbook.md`.
 - Record the fallback plan if the full bootstrap exceeds GitHub Actions timeout. Done in `docs/runtime_capacity_runbook.md`.
 
@@ -636,7 +643,9 @@ Current evidence:
 - Disk estimate documented in `docs/runtime_capacity_runbook.md`: reserve at least 25 GB free for the expected 6 GB class corpus, preferably 50 GB when archive staging or embeddings share the runner.
 - Chosen runner documented: controlled local or self-hosted first bootstrap, then GitHub Actions for daily/latest maintenance after first verified upload.
 - Batch defaults documented: 5-work smoke at 1.0 seconds pacing, 50-work pilot at 1.0 seconds, 250-work seed chunks at 0.5 seconds, and 500-1000 work chunks at 0.2 seconds only after throttle-free earlier batches.
-- Resume behavior tested locally in `tests/test_sync_resume.py`.
+- Sync resume behavior tested in `tests/test_sync_resume.py` (2 tests pass).
+- Hugging Face upload resume uses `hf upload-large-folder` (resumable) with
+  no-change manifest check, documented in `docs/runtime_capacity_runbook.md`.
 - Historical bootstrap publication proved the manual upload path at 500-work
   scale. Full-corpus capacity remains to be measured once the authoritative seed
   is available.
@@ -867,6 +876,12 @@ Current evidence:
   workflow with `workflow_dispatch`, fail-closed `HF_HISTORICAL_REPO_ID`
   checks, dry-run artifacts, and an upload step gated by
   `upload_confirmed=true`.
+- `.github/workflows/historical_batch_review.yml` adds a GitHub-hosted
+  reviewed batch fan-out path for parallel no-upload validation while keeping
+  confirmed historical uploads on the serial workflow.
+- `scripts/historical_workflow_helpers.py` centralizes the historical target
+  guard, reviewed-seed provenance, and publication-policy metadata used by the
+  shell initializer, serial upload workflow, and batch review workflow.
 - Dry-run/no-upload proof passed:
   `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27194196559`.
   The upload step was skipped because `upload_confirmed=false`, and dry-run

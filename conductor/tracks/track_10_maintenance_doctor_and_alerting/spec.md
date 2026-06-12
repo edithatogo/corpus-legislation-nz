@@ -39,12 +39,13 @@ surface token, API, and dependency failures before they affect the live corpus.
   - `.github/workflows/codeql.yml`: Python CodeQL on push, pull request, and weekly schedule.
   - `.github/workflows/scorecard.yml`: OpenSSF Scorecard on public repositories, schedule, branch protection rule, and manual dispatch.
   - `docs/maintenance_runbook.md`: weekly check routine includes doctor workflow, live sync summary, and Dependabot PRs.
+- Doctor workflow passes with live secrets:
+  - Run `27125139848` on 2026-06-08: success.
+  - Run `27362180628` on 2026-06-11: success.
+  - URL: `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27362180628`.
+- Notification path:
+  - GitHub Actions default workflow notifications: GitHub sends email notifications to repository watchers when a scheduled workflow run fails. No separate webhook or issue-creation step has been added yet, consistent with the deferral decision until a live failure pattern is observed.
+  - `docs/maintenance_runbook.md` documents the weekly check routine: "Check the Non-destructive service doctor workflow" as the first weekly item.
+  - Repository settings: issues enabled, default GitHub notification delivery active.
 - Alerting decision:
   - Do not add webhook or issue creation yet. Use GitHub Actions default workflow notifications until the repository exists and the first live doctor failure mode is observed.
-
-## Blocked Items
-
-- Cannot confirm the doctor workflow is enabled on the default branch until a GitHub remote/repository is configured and pushed.
-- Cannot produce a doctor workflow run URL until GitHub Actions is available.
-- Cannot pass live network doctor until Track 02 secrets/variables are configured.
-- Cannot confirm maintainer notification delivery until a GitHub Actions run has completed under the target repository settings.

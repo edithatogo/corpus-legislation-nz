@@ -57,7 +57,9 @@ partitioning = ds.partitioning(
 )
 dataset = ds.dataset("data/parquet", format="parquet", partitioning=partitioning)
 table = dataset.to_table(columns=["stable_id", "title", "legislation_type", "year"])
-print(table.to_pandas().head(20))
+print(f"Rows: {len(table)}")
+for col in table.column_names:
+    print(f"  {col}: {table.column(col)[0]}")
 ```
 
 ## Optional interoperability artifacts
@@ -86,4 +88,7 @@ Then query `data/parquet` with the PyArrow example above.
 
 ## Sample split policy
 
-A separate public sample split should be added only after the live Hugging Face dataset exists. Until then, the repository keeps only tiny fixtures for tests and avoids publishing a sample that could be mistaken for coverage evidence.
+A separate public sample split is deferred until the full validated corpus is
+published. The live Hugging Face dataset contains a partial/API-discovery corpus
+with 9 records; publishing a sample of this partial data could be mistaken for
+coverage evidence. The repository keeps only tiny fixtures for tests.

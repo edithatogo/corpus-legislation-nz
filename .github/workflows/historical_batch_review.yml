@@ -1,64 +1,91 @@
-name: Historical Hugging Face upload
+name: Historical batch review
 
 on:
   workflow_dispatch:
     inputs:
-      upload_confirmed:
-        description: "Actually upload to HF_HISTORICAL_REPO_ID; false performs a no-upload dry run"
-        type: boolean
-        default: false
-      search_terms:
-        description: "Comma-separated search terms for seed discovery"
+      seed_batch_ids_csv:
+        description: "Comma-separated reviewed batch IDs, for example 0005,0006,0007"
         type: string
-        default: "act,bill,regulation,order,notice"
-      legislation_status:
-        description: "Status filter; use none to omit"
-        type: string
-        default: "none"
-      legislation_types:
-        description: "Comma-separated legislation types"
-        type: string
-        default: "act,bill,secondary_legislation,amendment_paper"
-      max_pages:
-        description: "Optional page limit per search/type query; use none for no limit"
-        type: string
-        default: "2"
-      max_works:
-        description: "Total discovered-work and sync limit; use none for no limit"
-        type: string
-        default: "50"
-      seed_work_ids_path:
-        description: "Optional checked-in reviewed seed/batch file. If set, discovery is skipped."
-        type: string
-        default: ""
+        default: "0005"
       merge_policy:
-        description: "Historical merge policy: restore_merge, replace_existing, or no_restore_incremental"
+        description: "Historical merge policy for local restore and sync"
         type: choice
         options:
           - restore_merge
           - replace_existing
-          - no_restore_incremental
         default: restore_merge
       min_seconds_between_requests:
         description: "Optional request spacing override in seconds"
         type: string
         default: "0.5"
-      upload_options:
-        description: "Optional comma-separated upload options: force,private"
+      max_works:
+        description: "Optional per-batch sync limit; use none for no limit"
         type: string
-        default: ""
+        default: "none"
+      max_parallel:
+        description: "Maximum number of batches to run at once"
+        type: string
+        default: "3"
 
 concurrency:
-  group: historical-hf-upload-${{ github.ref }}
+  group: historical-batch-review-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
-  historical-upload:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      batch_count: ${{ steps.plan.outputs.batch_count }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build batch matrix
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import csv
+          import json
+          import re
+          import sys
+          from pathlib import Path
+
+          raw = "${{ inputs.seed_batch_ids_csv }}"
+          batch_ids = [item.strip() for item in raw.split(",") if item.strip()]
+          if not batch_ids:
+              raise SystemExit("seed_batch_ids_csv must contain at least one batch ID")
+
+          include = []
+          for batch_id in batch_ids:
+              if not re.fullmatch(r"\d{4}", batch_id):
+                  raise SystemExit(f"Invalid batch ID: {batch_id!r}; expected four digits")
+              seed_path = Path(f"seeds/reviewed/historical-work-ids-{batch_id}.txt")
+              if not seed_path.is_file():
+                  raise SystemExit(f"Missing reviewed seed file: {seed_path.as_posix()}")
+              include.append(
+                  {
+                      "batch_id": batch_id,
+                      "seed_work_ids_path": seed_path.as_posix(),
+                  }
+              )
+
+          print(f"batch_count={len(include)}")
+          print("matrix=" + json.dumps({"include": include}))
+          PY
+
+  batch:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     env:
       HISTORICAL_OUTPUT_DIR: data-historical-upload
     steps:
@@ -75,16 +102,10 @@ jobs:
             --live-repo-id "${HF_REPO_ID:-}" \
             --summary-path "$GITHUB_STEP_SUMMARY"
           {
-            echo "Upload confirmed: ${{ inputs.upload_confirmed }}"
-            echo "Seed work IDs path: ${{ inputs.seed_work_ids_path }}"
+            echo "Batch ID: ${{ matrix.batch_id }}"
+            echo "Seed work IDs path: ${{ matrix.seed_work_ids_path }}"
             echo "Merge policy: ${{ inputs.merge_policy }}"
-            echo "Upload options: ${{ inputs.upload_options }}"
           } >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ inputs.upload_confirmed }}" = "true" ] && \
-             [ "${{ inputs.merge_policy }}" = "no_restore_incremental" ]; then
-            echo "Confirmed incremental upload requires merge_policy=restore_merge unless merge_policy=replace_existing." >&2
-            exit 1
-          fi
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -99,42 +120,11 @@ jobs:
           set -euo pipefail
           uv sync --frozen
 
-      - name: Discover historical seed
-        if: ${{ inputs.seed_work_ids_path == '' }}
-        env:
-          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
-          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
-          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
-        run: |
-          set -euo pipefail
-          add_optional_limit() {
-            local flag="$1"
-            local value="$2"
-            case "${value,,}" in
-              ""|"none"|"null"|"-") return 0 ;;
-              *) args+=("$flag" "$value") ;;
-            esac
-          }
-
-          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
-            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
-          fi
-          args=(
-            --search-terms "${{ inputs.search_terms }}"
-            --legislation-status "${{ inputs.legislation_status }}"
-            --legislation-types "${{ inputs.legislation_types }}"
-            --output-path generated/historical-work-ids.txt
-            --provenance-path generated/historical-work-ids.provenance.json
-          )
-          add_optional_limit --max-pages "${{ inputs.max_pages }}"
-          add_optional_limit --max-works "${{ inputs.max_works }}"
-          uv run nzlc discover-work-ids "${args[@]}"
-
       - name: Prepare reviewed historical seed
-        if: ${{ inputs.seed_work_ids_path != '' }}
+        shell: bash
         run: |
           set -euo pipefail
-          seed_path="${{ inputs.seed_work_ids_path }}"
+          seed_path="${{ matrix.seed_work_ids_path }}"
           mkdir -p generated
           cp "$seed_path" generated/historical-work-ids.txt
           uv run python scripts/historical_workflow_helpers.py seed-provenance \
@@ -221,24 +211,19 @@ jobs:
           MERGE_POLICY: ${{ inputs.merge_policy }}
         run: |
           set -euo pipefail
-          add_optional_limit() {
-            local flag="$1"
-            local value="$2"
-            case "${value,,}" in
-              ""|"none"|"null"|"-") return 0 ;;
-              *) args+=("$flag" "$value") ;;
-            esac
-          }
-
           if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
             export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
           fi
           args=(
-            --seed-work-ids generated/historical-work-ids.txt
+            --seed-work-ids "${{ matrix.seed_work_ids_path }}"
             --allow-no-search-terms
           )
-          if [ "$MERGE_POLICY" = "replace_existing" ]; then args+=(--replace); fi
-          add_optional_limit --max-works "${{ inputs.max_works }}"
+          if [ "$MERGE_POLICY" = "replace_existing" ]; then
+            args+=(--replace)
+          fi
+          if [ -n "${{ inputs.max_works }}" ] && [ "${{ inputs.max_works }}" != "none" ] && [ "${{ inputs.max_works }}" != "null" ] && [ "${{ inputs.max_works }}" != "-" ]; then
+            args+=(--max-works "${{ inputs.max_works }}")
+          fi
           uv run nzlc sync "${args[@]}"
 
       - name: Stage historical dataset card
@@ -305,14 +290,14 @@ jobs:
           uv run python scripts/historical_workflow_helpers.py publication-policy \
             --historical-repo-id "${HF_HISTORICAL_REPO_ID:-}" \
             --live-repo-id "${HF_REPO_ID:-}" \
-            --seed-work-ids-path "${{ inputs.seed_work_ids_path }}" \
+            --seed-work-ids-path "${{ matrix.seed_work_ids_path }}" \
             --merge-policy "${{ inputs.merge_policy }}" \
             --output-dir "$HISTORICAL_OUTPUT_DIR"
 
       - name: Upload dry-run artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: historical-hf-upload-dry-run
+          name: historical-hf-batch-${{ matrix.batch_id }}-dry-run
           path: |
             generated/
             ${{ env.HISTORICAL_OUTPUT_DIR }}/records.jsonl
@@ -321,74 +306,12 @@ jobs:
             ${{ env.HISTORICAL_OUTPUT_DIR }}/_state/
           if-no-files-found: error
 
-      - name: Upload to historical Hugging Face dataset
-        if: ${{ inputs.upload_confirmed }}
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO_ID: ${{ vars.HF_HISTORICAL_REPO_ID }}
-          NZLC_OUTPUT_DIR: ${{ env.HISTORICAL_OUTPUT_DIR }}
-          HF_XET_HIGH_PERFORMANCE: "1"
-          UPLOAD_OPTIONS: ${{ inputs.upload_options }}
-        run: |
-          set -euo pipefail
-          args=()
-          case ",${UPLOAD_OPTIONS}," in *",force,"*) args+=(--force);; esac
-          case ",${UPLOAD_OPTIONS}," in *",private,"*) args+=(--private);; esac
-          uv run nzlc hf-upload "${args[@]}"
-
-      - name: Dry-run notice
-        if: ${{ !inputs.upload_confirmed }}
-        run: |
-          set -euo pipefail
-          echo "No upload performed. Set upload_confirmed=true only after reviewing the artifact outputs." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Step summary
+      - name: Batch summary
         if: always()
         run: |
           set -euo pipefail
-          echo "## Historical Hugging Face upload" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Workflow: manual only" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Upload confirmed: ${{ inputs.upload_confirmed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Historical batch review" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Batch ID: ${{ matrix.batch_id }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Seed work IDs path: ${{ matrix.seed_work_ids_path }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Merge policy: ${{ inputs.merge_policy }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Upload options: ${{ inputs.upload_options }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Seed work IDs path: ${{ inputs.seed_work_ids_path }}" >> "$GITHUB_STEP_SUMMARY"
-          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json
-          import os
-          from pathlib import Path
-
-          output_dir = Path(os.environ["HISTORICAL_OUTPUT_DIR"])
-          state_path = output_dir / "_state" / "sync_state.json"
-          manifest_path = output_dir / "manifests" / "latest_manifest.json"
-
-          if state_path.exists():
-              state = json.loads(state_path.read_text(encoding="utf-8"))
-              stats = dict(state.get("last_stats", {}))
-              warnings = list(stats.pop("warnings", []) or [])
-              summary = {
-                  "last_stats": stats,
-                  "warning_count": len(warnings),
-                  "warning_sample": warnings[:20],
-                  "records_changed_on_disk": state.get("records_changed_on_disk"),
-              }
-              print("\n### Sync state")
-              print("```json")
-              print(json.dumps(summary, indent=2, sort_keys=True))
-              print("```")
-
-          if manifest_path.exists():
-              manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-              summary_keys = [
-                  "schema_version",
-                  "record_schema_version",
-                  "record_count",
-                  "content_sha256",
-                  "manifest_sha256",
-                  "generated_at",
-              ]
-              summary = {key: manifest.get(key) for key in summary_keys if key in manifest}
-              print("\n### Manifest")
-              print("```json")
-              print(json.dumps(summary, indent=2, sort_keys=True))
-              print("```")
-          PY
+          echo "- Upload step: skipped in review workflow" >> "$GITHUB_STEP_SUMMARY"

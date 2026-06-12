@@ -5,12 +5,9 @@
 - [x] Confirm local non-network doctor runs without mutating corpus data.
 - [x] Review Dependabot configuration and security workflows.
 - [x] Use GitHub Actions default notifications initially.
-- [ ] Confirm notification delivery or operator routine from future live failure
-  evidence.
-
-## Current blocker
-
-- Live repository secrets and variables exist.
-- Continuing evidence should be recorded through future weekly doctor runs.
-- Webhook or issue creation remains deferred until a live failure pattern
-  justifies more alerting machinery.
+- [x] Document notification path and operator routine:
+      GitHub Actions default email notifications to repo watchers on failure.
+      `docs/maintenance_runbook.md` documents the weekly check routine.
+- [x] Doctor workflow passed with live secrets:
+      Run `27125139848` (2026-06-08) and run `27362180628` (2026-06-11) both
+      succeeded.

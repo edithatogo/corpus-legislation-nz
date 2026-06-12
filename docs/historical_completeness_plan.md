@@ -176,6 +176,11 @@ Review the artifact:
 - failed-version warnings;
 - record counts by type, status, and year.
 
+If you need to review multiple batches without using the laptop, use
+`.github/workflows/historical_batch_review.yml` to fan out reviewed batch
+validation jobs across GitHub-hosted runners. Keep confirmed Hugging Face
+uploads on the serial `historical_hf_upload.yml` workflow.
+
 Current no-upload batch evidence:
 
 - GitHub Actions run:
@@ -332,10 +337,41 @@ corpus.
   are not failed versions because equivalent HTML content was fetched and
   preserved.
 
+## Confirmed batch 0004 evidence
+
+- No-upload GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27362894765`.
+- Confirmed GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27364399063`.
+- Result: success.
+- Upload behavior: `upload_confirmed=true`; historical Hugging Face upload step
+  completed.
+- Historical Hugging Face dataset:
+  `edithatogo/corpus-legislation-nz-historical`.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0004.txt`.
+- Reviewed seed work IDs: 500.
+- Validation report: `ok=true`; `missing_text_records: 0`,
+  `missing_xml_url_records: 0`, `ephemeral_identifier_records: 0`.
+- Latest manifest SHA-256:
+  `c00b6d316c423738206a92ca5c18abafdcde79fd7288b9cb30e120d0e619709c`.
+
+## Confirmed batch 0005 evidence
+
+- No-upload GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27380734131`.
+- Confirmed GitHub Actions run:
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27381903978`.
+- Result: success.
+- Upload behavior: `upload_confirmed=true`; historical Hugging Face upload step
+  completed.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0005.txt`.
+- Reviewed seed work IDs: 500.
+
 ## Next batch input
 
-- Reviewed seed path: `seeds/reviewed/historical-work-ids-0004.txt`.
-- Required first run: `upload_confirmed=false` with `merge_policy=restore_merge`
-  and historical dataset restore enabled.
+- Reviewed seed path: `seeds/reviewed/historical-work-ids-0006.txt`.
+- Batch 0006 confirmed upload in progress: run `27382946724`.
+- Batch 0007 no-upload pending: run `27383069057`.
+- Seed promotion: batches 0005-0068 promoted to reviewed and pushed to `main`.
 - Confirmed upload may follow only after reviewing validation, manifest,
   coverage, and failed-version state from the no-upload artifact.

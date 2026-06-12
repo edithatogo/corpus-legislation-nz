@@ -1,0 +1,256 @@
+name: Monthly full reconciliation
+
+on:
+  schedule:
+    - cron: "17 14 1 * *"
+  workflow_dispatch:
+    inputs:
+      baseline_work_ids_path:
+        description: "Current reviewed seed file"
+        required: true
+        type: string
+        default: "seeds/work_ids.txt"
+      candidate_work_ids_path:
+        description: "Optional candidate seed file; blank discovers a fresh candidate"
+        required: false
+        type: string
+        default: ""
+      max_pages:
+        description: "Discovery page limit; use none for no limit"
+        required: true
+        type: string
+        default: "none"
+      max_works:
+        description: "Discovery/sync limit; use none for no limit"
+        required: true
+        type: string
+        default: "none"
+      min_seconds_between_requests:
+        description: "NZ Legislation API pacing override in seconds"
+        required: true
+        type: string
+        default: "1.0"
+      run_full_sync:
+        description: "Run full seed sync after reconciliation review artifact is produced"
+        required: true
+        type: boolean
+        default: false
+      upload_confirmed:
+        description: "Upload after full sync if run_full_sync=true"
+        required: true
+        type: boolean
+        default: false
+      minimum_free_gb:
+        description: "Minimum free disk space required before API work starts"
+        required: true
+        type: string
+        default: "25"
+
+concurrency:
+  group: monthly-full-reconciliation-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440
+    env:
+      NZLC_OUTPUT_DIR: data
+      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests }}
+      MAX_WORKS: ${{ inputs.max_works }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk "NR==2 {gsub(/G/, \"\", $4); print $4}")"
+          required_gb="${{ inputs.minimum_free_gb }}"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing reconciliation with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+      - name: Check required secrets and variables
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          : "${NZ_LEGISLATION_API_KEY:?NZ_LEGISLATION_API_KEY secret is required}"
+          : "${HF_REPO_ID:?HF_REPO_ID repository variable is required}"
+          : "${HF_TOKEN:?HF_TOKEN secret is required}"
+
+      - name: Doctor
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          ARCHIVE_CREATORS_JSON: ${{ vars.ARCHIVE_CREATORS_JSON }}
+        run: |
+          set -euo pipefail
+          uv run nzlc doctor
+
+      - name: Restore current live corpus from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          from huggingface_hub import snapshot_download
+
+          snapshot_download(
+              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_type="dataset",
+              token="${{ secrets.HF_TOKEN }}",
+              local_dir="data",
+              allow_patterns=[
+                  "README.md",
+                  "records.jsonl",
+                  "_state/**",
+                  "manifests/**",
+                  "parquet/**",
+                  "raw_xml/**",
+              ],
+          )
+          PY
+          rm -rf data/.cache
+
+      - name: Validate and summarize baseline coverage
+        run: |
+          set -euo pipefail
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Discover candidate work IDs
+        if: ${{ inputs.candidate_work_ids_path == '' }}
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_TERMS: ${{ vars.NZLC_SEARCH_TERMS }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+          NZLC_LEGISLATION_TYPES: ${{ vars.NZLC_LEGISLATION_TYPES }}
+          NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
+          NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
+        run: |
+          set -euo pipefail
+          mkdir -p generated/monthly-reconciliation
+          args=(
+            --search-terms "${{ vars.NZLC_SEARCH_TERMS }}"
+            --legislation-types "${{ vars.NZLC_LEGISLATION_TYPES }}"
+            --output-path generated/monthly-reconciliation/candidate-work-ids.txt
+            --provenance-path generated/monthly-reconciliation/candidate-work-ids.provenance.json
+          )
+          case "${{ inputs.max_pages }}" in none|null|-|"") ;; *) args+=(--max-pages "${{ inputs.max_pages }}") ;; esac
+          case "${{ inputs.max_works }}" in none|null|-|"") ;; *) args+=(--max-works "${{ inputs.max_works }}") ;; esac
+          uv run nzlc discover-work-ids "${args[@]}"
+
+      - name: Prepare candidate seed path
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p generated/monthly-reconciliation
+          if [ -n "${{ inputs.candidate_work_ids_path }}" ]; then
+            cp "${{ inputs.candidate_work_ids_path }}" generated/monthly-reconciliation/candidate-work-ids.txt
+            echo "candidate_path=${{ inputs.candidate_work_ids_path }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "candidate_path=generated/monthly-reconciliation/candidate-work-ids.txt" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Reconcile candidate seed
+        env:
+          BASELINE_WORK_IDS_PATH: ${{ inputs.baseline_work_ids_path }}
+          CANDIDATE_WORK_IDS_PATH: ${{ steps.candidate.outputs.candidate_path }}
+        run: |
+          set -euo pipefail
+          mkdir -p generated/monthly-reconciliation
+          uv run nzlc reconcile-work-ids \
+            --baseline-work-ids "$BASELINE_WORK_IDS_PATH" \
+            --candidate-work-ids "$CANDIDATE_WORK_IDS_PATH" \
+            --report-path generated/monthly-reconciliation/work-id-reconciliation.json \
+            --merged-output-path generated/monthly-reconciliation/merged-work-ids.txt \
+            --baseline-label reviewed-baseline \
+            --candidate-label monthly-candidate
+
+      - name: Run full seed sync after reconciliation
+        if: ${{ inputs.run_full_sync == true }}
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_TERMS: ${{ vars.NZLC_SEARCH_TERMS }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+          NZLC_LEGISLATION_TYPES: ${{ vars.NZLC_LEGISLATION_TYPES }}
+          NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
+          NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
+        run: |
+          set -euo pipefail
+          if [ -n "$MIN_SECONDS_BETWEEN_REQUESTS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$MIN_SECONDS_BETWEEN_REQUESTS"
+          fi
+          args=(--seed-work-ids generated/monthly-reconciliation/merged-work-ids.txt --allow-no-search-terms)
+          case "${{ inputs.max_works }}" in none|null|-|"") ;; *) args+=(--max-works "${{ inputs.max_works }}") ;; esac
+          uv run nzlc sync "${args[@]}"
+          cp DATASET_CARD.md data/README.md
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Upload to live Hugging Face dataset after sync
+        if: ${{ inputs.run_full_sync == true && inputs.upload_confirmed == true }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          HF_XET_HIGH_PERFORMANCE: "1"
+        run: |
+          set -euo pipefail
+          uv run nzlc hf-upload
+
+      - name: Upload reconciliation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-full-reconciliation
+          path: |
+            generated/monthly-reconciliation/
+            data/records.jsonl
+            data/README.md
+            data/manifests/
+            data/_state/
+          if-no-files-found: error
+
+      - name: Reconciliation summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Monthly full reconciliation" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Run full sync: ${{ inputs.run_full_sync }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Upload confirmed: ${{ inputs.upload_confirmed }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f generated/monthly-reconciliation/work-id-reconciliation.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat generated/monthly-reconciliation/work-id-reconciliation.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f data/manifests/latest_manifest.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/manifests/latest_manifest.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

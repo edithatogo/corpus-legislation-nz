@@ -1,0 +1,205 @@
+name: Full corpus Hugging Face upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_confirmed:
+        description: "Upload after reviewing validation, manifest, coverage, and sync state"
+        required: true
+        type: boolean
+        default: false
+      force:
+        description: "Upload even if remote manifest hash matches"
+        required: true
+        type: boolean
+        default: false
+      restore_live_hf:
+        description: "Restore current live HF state into data before validation"
+        required: true
+        type: boolean
+        default: true
+      minimum_free_gb:
+        description: "Minimum free disk space required before API work starts"
+        required: true
+        type: string
+        default: "25"
+
+concurrency:
+  group: full-corpus-hf-upload-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440
+    env:
+      NZLC_OUTPUT_DIR: data
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk "NR==2 {gsub(/G/, \"\", $4); print $4}")"
+          required_gb="${{ inputs.minimum_free_gb }}"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing full upload with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+      - name: Check required secrets and variables
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          : "${NZ_LEGISLATION_API_KEY:?NZ_LEGISLATION_API_KEY secret is required}"
+          : "${HF_REPO_ID:?HF_REPO_ID repository variable is required}"
+          : "${HF_TOKEN:?HF_TOKEN secret is required}"
+
+      - name: Doctor
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          ARCHIVE_CREATORS_JSON: ${{ vars.ARCHIVE_CREATORS_JSON }}
+        run: |
+          set -euo pipefail
+          uv run nzlc doctor
+
+      - name: Restore current live corpus from Hugging Face
+        if: ${{ inputs.restore_live_hf == true }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          from huggingface_hub import snapshot_download
+
+          snapshot_download(
+              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_type="dataset",
+              token="${{ secrets.HF_TOKEN }}",
+              local_dir="data",
+              allow_patterns=[
+                  "README.md",
+                  "records.jsonl",
+                  "_state/**",
+                  "manifests/**",
+                  "parquet/**",
+                  "raw_xml/**",
+              ],
+          )
+          PY
+          rm -rf data/.cache
+
+      - name: Stage Hugging Face dataset card
+        run: |
+          set -euo pipefail
+          cp DATASET_CARD.md data/README.md
+
+      - name: Validate, manifest, and coverage-report
+        run: |
+          set -euo pipefail
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Upload review artifact before publish
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-corpus-hf-upload-review
+          path: |
+            data/records.jsonl
+            data/README.md
+            data/manifests/
+            data/_state/
+          if-no-files-found: error
+
+      - name: Upload to live Hugging Face dataset
+        if: ${{ inputs.upload_confirmed == true }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          HF_XET_HIGH_PERFORMANCE: "1"
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "${{ inputs.force }}" = "true" ]; then args+=(--force); fi
+          uv run nzlc hf-upload "${args[@]}"
+      - name: Verify uploaded manifest matches remote
+        if: ${{ inputs.upload_confirmed == true }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          from huggingface_hub import hf_hub_download
+
+          local = Path("data/manifests/latest_manifest.json")
+          remote_path = Path(hf_hub_download(
+              repo_id=os.environ["HF_REPO_ID"],
+              repo_type="dataset",
+              filename="manifests/latest_manifest.json",
+              token=os.environ.get("HF_TOKEN"),
+          ))
+          local_bytes = local.read_bytes()
+          remote_bytes = remote_path.read_bytes()
+          summary = {
+              "local_manifest_sha256": hashlib.sha256(local_bytes).hexdigest(),
+              "remote_manifest_sha256": hashlib.sha256(remote_bytes).hexdigest(),
+              "matches": local_bytes == remote_bytes,
+          }
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          if not summary["matches"]:
+              raise SystemExit("Remote manifest does not match local manifest after upload")
+          PY
+
+      - name: Dry-run notice
+        if: ${{ inputs.upload_confirmed == false }}
+        run: |
+          set -euo pipefail
+          echo "No Hugging Face upload performed. Set upload_confirmed=true only after reviewing the artifact outputs." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Full corpus Hugging Face upload" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Upload confirmed: ${{ inputs.upload_confirmed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Force upload: ${{ inputs.force }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f data/_state/sync_state.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/_state/sync_state.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f data/manifests/latest_manifest.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/manifests/latest_manifest.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

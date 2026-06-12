@@ -24,6 +24,10 @@ separation pattern used for Hansard. Historical upload workflows must read the
 repository variable `HF_HISTORICAL_REPO_ID` and must fail closed if that
 variable is absent or points at `HF_REPO_ID`.
 
+To create or confirm the historical shell before any data lands, use the manual
+`init_historical_hf_shell.yml` workflow. It checks the historical target and
+creates the dataset shell idempotently through the same repository variable.
+
 ## What can be automated
 
 The repository can be created and initialised through the Hugging Face API or CLI once `HF_TOKEN` is available. The included script creates the dataset repository, uploads a dataset card, sets `.gitattributes`, creates lightweight placeholder directories at repository root, and removes any older `data/...` bootstrap placeholders.
@@ -169,6 +173,11 @@ uv run nzlc validate
 uv run nzlc manifest
 uv run nzlc coverage-report
 ```
+
+If you need to review several historical batches on GitHub-hosted runners,
+use `.github/workflows/historical_batch_review.yml` for parallel no-upload
+validation. Keep the confirmed Hugging Face publish step on the serial
+`historical_hf_upload.yml` workflow.
 
 Only after review, point the upload target at the distinct historical repo:
 

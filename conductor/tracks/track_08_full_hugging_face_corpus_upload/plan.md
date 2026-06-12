@@ -17,3 +17,13 @@
 - Track 07 must complete first to produce the full local corpus and manifest.
 - Full publication must not overwrite the partial/live scope with an
   unreviewed or unreconciled search-derived corpus.
+
+
+## Implementation automation added 2026-06-12
+
+- Added `.github/workflows/full_corpus_hf_upload.yml` as the full live upload workflow.
+- The workflow defaults to `upload_confirmed=false` review mode and only calls `uv run nzlc hf-upload` when explicitly confirmed.
+- The post-upload verification step downloads the remote manifest and compares it with the local manifest.
+- See `docs/full_corpus_operations.md` for the operator inputs and review
+  sequence for this workflow.
+- Track is `ready` but still requires a real full-corpus artifact from Track 07 before confirmed publication.

@@ -1,0 +1,522 @@
+name: Full corpus bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed_work_ids_path:
+        description: "Reviewed seed file, one work ID per line"
+        required: true
+        type: string
+        default: "seeds/work_ids.txt"
+      batch_size:
+        description: "Work IDs per bootstrap batch"
+        required: true
+        type: string
+        default: "500"
+      start_batch:
+        description: "First batch number to process"
+        required: true
+        type: string
+        default: "1"
+      end_batch:
+        description: "Last batch number to process"
+        required: true
+        type: string
+        default: "68"
+      merge_policy:
+        description: "Restore and merge into the live dataset state, or replace local data"
+        required: true
+        type: choice
+        options:
+          - restore_merge
+          - replace_existing
+        default: restore_merge
+      min_seconds_between_requests:
+        description: "NZ Legislation API pacing override in seconds"
+        required: true
+        type: string
+        default: "1.0"
+      max_parallel:
+        description: "Maximum parallel batch jobs when serial=false"
+        required: true
+        type: string
+        default: "2"
+      serial:
+        description: "Process batches sequentially in one runner to preserve one cumulative data directory"
+        required: true
+        type: boolean
+        default: false
+      max_works:
+        description: "Optional per-batch or total sync limit; use none for no limit"
+        required: true
+        type: string
+        default: "none"
+
+concurrency:
+  group: full-corpus-bootstrap-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      batch_count: ${{ steps.plan.outputs.batch_count }}
+      seed_sha256: ${{ steps.plan.outputs.seed_sha256 }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
+          required_gb="25"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing to start full bootstrap with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+      - name: Build bootstrap batch matrix
+        id: plan
+        shell: bash
+        env:
+          SEED_WORK_IDS_PATH: ${{ inputs.seed_work_ids_path }}
+          BATCH_DIR: generated/full-corpus-bootstrap/batches
+          PROVENANCE_PATH: generated/full-corpus-bootstrap/provenance.json
+          START_BATCH: ${{ inputs.start_batch }}
+          END_BATCH: ${{ inputs.end_batch }}
+          BATCH_SIZE: ${{ inputs.batch_size }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY' >> "$GITHUB_OUTPUT"
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          seed_path = Path(os.environ["SEED_WORK_IDS_PATH"])
+          batch_dir = Path(os.environ["BATCH_DIR"])
+          provenance_path = Path(os.environ["PROVENANCE_PATH"])
+          start_batch = int(os.environ["START_BATCH"])
+          end_batch = int(os.environ["END_BATCH"])
+          batch_size = int(os.environ["BATCH_SIZE"])
+
+          if not seed_path.is_file():
+              raise SystemExit(f"Missing seed file: {seed_path.as_posix()}")
+          if start_batch < 1 or end_batch < start_batch or batch_size < 1:
+              raise SystemExit("start_batch/end_batch/batch_size are invalid")
+
+          work_ids: list[str] = []
+          seen: set[str] = set()
+          for line in seed_path.read_text(encoding="utf-8").splitlines():
+              stripped = line.strip()
+              if not stripped or stripped.startswith("#"):
+                  continue
+              if stripped not in seen:
+                  seen.add(stripped)
+                  work_ids.append(stripped)
+
+          if not work_ids:
+              raise SystemExit(f"Seed file contains no work IDs: {seed_path.as_posix()}")
+
+          expected_batch_count = (len(work_ids) + batch_size - 1) // batch_size
+          if end_batch > expected_batch_count:
+              raise SystemExit(
+                  f"end_batch={end_batch} exceeds computed batch count {expected_batch_count}"
+              )
+
+          batch_dir.mkdir(parents=True, exist_ok=True)
+          include = []
+          for batch_number in range(start_batch, end_batch + 1):
+              start = (batch_number - 1) * batch_size
+              stop = start + batch_size
+              batch_work_ids = work_ids[start:stop]
+              if not batch_work_ids:
+                  raise SystemExit(f"No work IDs for batch {batch_number:04d}")
+
+              batch_id = f"{batch_number:04d}"
+              batch_path = batch_dir / f"batch-{batch_id}.txt"
+              batch_path.write_text(
+                  "\n".join(batch_work_ids) + "\n",
+                  encoding="utf-8",
+              )
+              payload = "".join(f"{work_id}\n" for work_id in sorted(set(batch_work_ids))).encode(
+                  "utf-8"
+              )
+              include.append(
+                  {
+                      "batch_id": batch_id,
+                      "seed_work_ids_path": batch_path.as_posix(),
+                      "work_id_count": len(batch_work_ids),
+                      "seed_sha256": hashlib.sha256(payload).hexdigest(),
+                  }
+              )
+
+          seed_payload = "".join(f"{work_id}\n" for work_id in work_ids).encode("utf-8")
+          provenance = {
+              "schema_version": "1.0",
+              "source": "reviewed_seed_file",
+              "seed_work_ids_path": seed_path.as_posix(),
+              "source_record_count": len(work_ids),
+              "unique_record_count": len(work_ids),
+              "batch_size": batch_size,
+              "start_batch": start_batch,
+              "end_batch": end_batch,
+              "batch_count": len(include),
+              "seed_sha256": hashlib.sha256(seed_payload).hexdigest(),
+              "coverage_warning": (
+                  "This bootstrap attempts all supplied seed work IDs, but public completeness "
+                  "claims still require reconciliation evidence and failed-version triage."
+              ),
+              "batches": include,
+          }
+          provenance_path.parent.mkdir(parents=True, exist_ok=True)
+          provenance_path.write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+
+          print(f"batch_count={len(include)}")
+          print(f"seed_sha256={provenance['seed_sha256']}")
+          print("matrix=" + json.dumps({"include": include}, separators=(",", ":")))
+          PY
+
+      - name: Upload bootstrap batch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-corpus-bootstrap-batches
+          path: generated/full-corpus-bootstrap/
+          if-no-files-found: error
+  batch:
+    needs: plan
+    if: ${{ inputs.serial == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      NZLC_OUTPUT_DIR: data
+      MERGE_POLICY: ${{ inputs.merge_policy }}
+      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests }}
+      MAX_WORKS: ${{ inputs.max_works }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download bootstrap batch artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: full-corpus-bootstrap-batches
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
+          required_gb="25"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing to start full bootstrap with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Check required secrets and variables
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          : "${NZ_LEGISLATION_API_KEY:?NZ_LEGISLATION_API_KEY secret is required}"
+          : "${HF_REPO_ID:?HF_REPO_ID repository variable is required}"
+          : "${HF_TOKEN:?HF_TOKEN secret is required}"
+
+      - name: Doctor
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          ARCHIVE_CREATORS_JSON: ${{ vars.ARCHIVE_CREATORS_JSON }}
+        run: |
+          set -euo pipefail
+          uv run nzlc doctor
+
+      - name: Restore current live corpus from Hugging Face
+        if: ${{ inputs.merge_policy == 'restore_merge' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          from huggingface_hub import snapshot_download
+
+          snapshot_download(
+              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_type="dataset",
+              token="${{ secrets.HF_TOKEN }}",
+              local_dir="data",
+              allow_patterns=[
+                  "README.md",
+                  "records.jsonl",
+                  "_state/**",
+                  "manifests/**",
+                  "parquet/**",
+                  "raw_xml/**",
+              ],
+          )
+          PY
+          rm -rf data/.cache
+      - name: Sync bootstrap batch
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_TERMS: ${{ vars.NZLC_SEARCH_TERMS }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+          NZLC_LEGISLATION_TYPES: ${{ vars.NZLC_LEGISLATION_TYPES }}
+          NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
+          NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
+        run: |
+          set -euo pipefail
+          if [ -n "$MIN_SECONDS_BETWEEN_REQUESTS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$MIN_SECONDS_BETWEEN_REQUESTS"
+          fi
+          args=(
+            --seed-work-ids "${{ matrix.seed_work_ids_path }}"
+            --allow-no-search-terms
+          )
+          if [ -n "$MAX_WORKS" ] && [ "$MAX_WORKS" != "none" ] && [ "$MAX_WORKS" != "null" ] && [ "$MAX_WORKS" != "-" ]; then
+            args+=(--max-works "$MAX_WORKS")
+          fi
+          uv run nzlc sync "${args[@]}"
+
+      - name: Stage Hugging Face dataset card
+        run: |
+          set -euo pipefail
+          cp DATASET_CARD.md data/README.md
+
+      - name: Validate, manifest, and coverage-report
+        run: |
+          set -euo pipefail
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Upload batch bootstrap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-corpus-batch-${{ matrix.batch_id }}-download
+          path: |
+            generated/full-corpus-bootstrap/provenance.json
+            ${{ matrix.seed_work_ids_path }}
+            data/records.jsonl
+            data/README.md
+            data/manifests/
+            data/_state/
+          if-no-files-found: error
+
+      - name: Batch summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Full corpus bootstrap batch" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Batch ID: ${{ matrix.batch_id }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Seed work IDs: ${{ matrix.seed_work_ids_path }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Work IDs in batch: ${{ matrix.work_id_count }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Batch seed SHA-256: ${{ matrix.seed_sha256 }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Serial mode: false" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f data/_state/sync_state.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/_state/sync_state.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f data/manifests/latest_manifest.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/manifests/latest_manifest.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+  serial:
+    needs: plan
+    if: ${{ inputs.serial == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440
+    env:
+      NZLC_OUTPUT_DIR: data
+      MERGE_POLICY: ${{ inputs.merge_policy }}
+      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests }}
+      MAX_WORKS: ${{ inputs.max_works }}
+      SEED_BATCH_DIR: generated/full-corpus-bootstrap/batches
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download bootstrap batch artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: full-corpus-bootstrap-batches
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
+          required_gb="25"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing to start full bootstrap with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Check required secrets and variables
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          : "${NZ_LEGISLATION_API_KEY:?NZ_LEGISLATION_API_KEY secret is required}"
+          : "${HF_REPO_ID:?HF_REPO_ID repository variable is required}"
+          : "${HF_TOKEN:?HF_TOKEN secret is required}"
+
+      - name: Doctor
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+          ARCHIVE_CREATORS_JSON: ${{ vars.ARCHIVE_CREATORS_JSON }}
+        run: |
+          set -euo pipefail
+          uv run nzlc doctor
+
+      - name: Restore current live corpus from Hugging Face
+        if: ${{ inputs.merge_policy == 'restore_merge' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          from huggingface_hub import snapshot_download
+
+          snapshot_download(
+              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_type="dataset",
+              token="${{ secrets.HF_TOKEN }}",
+              local_dir="data",
+              allow_patterns=[
+                  "README.md",
+                  "records.jsonl",
+                  "_state/**",
+                  "manifests/**",
+                  "parquet/**",
+                  "raw_xml/**",
+              ],
+          )
+          PY
+          rm -rf data/.cache
+      - name: Sync all bootstrap batches sequentially
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          NZLC_SEARCH_TERMS: ${{ vars.NZLC_SEARCH_TERMS }}
+          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
+          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+          NZLC_LEGISLATION_TYPES: ${{ vars.NZLC_LEGISLATION_TYPES }}
+          NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
+          NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
+        run: |
+          set -euo pipefail
+          if [ -n "$MIN_SECONDS_BETWEEN_REQUESTS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$MIN_SECONDS_BETWEEN_REQUESTS"
+          fi
+          shopt -s nullglob
+          for seed_path in "$SEED_BATCH_DIR"/*.txt; do
+            echo "Syncing $seed_path"
+            args=(--seed-work-ids "$seed_path" --allow-no-search-terms)
+            if [ -n "$MAX_WORKS" ] && [ "$MAX_WORKS" != "none" ] && [ "$MAX_WORKS" != "null" ] && [ "$MAX_WORKS" != "-" ]; then
+              args+=(--max-works "$MAX_WORKS")
+            fi
+            uv run nzlc sync "${args[@]}"
+          done
+
+      - name: Stage Hugging Face dataset card
+        run: |
+          set -euo pipefail
+          cp DATASET_CARD.md data/README.md
+
+      - name: Validate, manifest, and coverage-report
+        run: |
+          set -euo pipefail
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+
+      - name: Upload serial bootstrap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-corpus-bootstrap-download
+          path: |
+            generated/full-corpus-bootstrap/
+            data/records.jsonl
+            data/README.md
+            data/manifests/
+            data/_state/
+          if-no-files-found: error
+
+      - name: Serial bootstrap summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Full corpus bootstrap serial download" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Serial mode: true" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Batch count: ${{ needs.plan.outputs.batch_count }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Seed SHA-256: ${{ needs.plan.outputs.seed_sha256 }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f data/_state/sync_state.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/_state/sync_state.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f data/manifests/latest_manifest.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat data/manifests/latest_manifest.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

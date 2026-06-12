@@ -20,3 +20,12 @@
   2026-06-09 after the first post-fix scheduled event did not dispatch.
 - Full and recurring maintenance proof remains blocked until Tracks 04, 07, and
   08 establish a full seed and full validated corpus.
+
+
+## Implementation automation added 2026-06-12
+
+- `.github/workflows/hf_sync.yml` now verifies that the remote manifest matches the local manifest after upload.
+- Full manual bootstrap and upload are now covered by `full_corpus_bootstrap.yml` and `full_corpus_hf_upload.yml`.
+- See `docs/full_corpus_operations.md` for the operator sequence and review
+  inputs that feed the bootstrap and upload workflows.
+- Track is `ready` for routine scheduled maintenance, with full recurring proof still dependent on completed Tracks 07 and 08.

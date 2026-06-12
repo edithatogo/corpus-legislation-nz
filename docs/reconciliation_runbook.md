@@ -13,6 +13,11 @@ Run a full reconciliation monthly after the first successful full bootstrap. If 
 
 ## Procedure
 
+The monthly workflow `.github/workflows/monthly_full_reconciliation.yml` automates this procedure. Use manual dispatch for the first run and for any run that may change the seed or upload to Hugging Face.
+
+See `docs/full_corpus_operations.md` for the full-corpus workflow sequence,
+host boundaries, and recommended review artifacts.
+
 1. Restore the current Hugging Face dataset state into a clean `data/` directory.
 2. Compare `seeds/work_ids.txt` against search discovery output and any official inventory/count source.
 3. Add newly verified work IDs to `seeds/work_ids.txt` with provenance.

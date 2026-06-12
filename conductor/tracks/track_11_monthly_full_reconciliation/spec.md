@@ -1,7 +1,7 @@
 # Spec - Monthly Full Reconciliation
 
 ## Status
-blocked
+ready
 
 ## Goal
 keep the corpus complete over time, not only during the first bootstrap.

@@ -1,7 +1,7 @@
 # Spec - GitHub Scheduled Hugging Face Sync
 
 ## Status
-blocked
+ready
 
 ## Goal
 make GitHub Actions the normal maintenance loop for the Hugging Face live corpus.

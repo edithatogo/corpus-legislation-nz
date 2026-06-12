@@ -141,6 +141,8 @@ uv run nzlc sync --seed-work-ids seeds/work_ids.txt
 ```
 
 For first-bootstrap batching, resume, disk budget, and cleanup rules, see `docs/runtime_capacity_runbook.md`.
+For the full-corpus workflow sequence and operator inputs, see
+`docs/full_corpus_operations.md`.
 
 Search-based discovery is useful, but do not claim complete coverage until it is reconciled against a seed inventory or official bulk source.
 
@@ -191,6 +193,17 @@ ordinary upload/update steps and behind protected environment approval.
 ## Workflows
 
 - `hf_sync.yml`: scheduled/manual live corpus sync to Hugging Face.
+- `init_historical_hf_shell.yml`: manual initialization of the historical
+  Hugging Face dataset shell.
+- `historical_batch_review.yml`: manual GitHub-hosted batch fan-out for
+  reviewed historical no-upload validation.
+- `historical_hf_upload.yml`: manual historical upload and review path.
+- `historical_seed_reconciliation.yml`: historical seed comparison before
+  promotion.
+- `full_corpus_bootstrap.yml`: full-corpus batch bootstrap and serial fallback.
+- `full_corpus_hf_upload.yml`: full-corpus Hugging Face upload and review path.
+- `monthly_full_reconciliation.yml`: monthly seed reconciliation and optional
+  full sync/upload review path.
 - `annual_zenodo_archive.yml`: annual production draft archive and optional production publish.
 - `tests.yml`: unit tests, shell syntax checks, fixture sync, validation, and manifest generation.
 - `doctor.yml`: non-destructive weekly connectivity/config check.

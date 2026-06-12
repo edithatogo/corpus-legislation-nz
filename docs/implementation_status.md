@@ -24,9 +24,15 @@ Last reconciled: 2026-06-11.
 - `nzlc reconcile-work-ids` for candidate/baseline seed reconciliation before
   historical seed promotion.
 - Ephemeral NZ Legislation identifiers containing `~` are explicitly flagged.
-- GitHub Actions for live sync, historical upload, annual Zenodo archive, weekly
+- GitHub Actions for live sync, historical upload, full-corpus bootstrap,
+  full-corpus upload, monthly reconciliation, annual Zenodo archive, weekly
   doctor, tests, CodeQL, and OpenSSF Scorecard.
+- Manual GitHub Actions workflow for historical Hugging Face upload.
 - Manual GitHub Actions workflow for historical seed reconciliation.
+- Manual GitHub Actions workflow for historical Hugging Face shell
+  initialization.
+- Shared helper script for historical workflow target guards, seed provenance,
+  and publication-policy metadata.
 - Dependabot config.
 - GitHub CLI bootstrap scripts for creating a fresh repository and configuring
   Actions secrets/variables.
@@ -79,6 +85,9 @@ Last reconciled: 2026-06-11.
   search-derived 500-work bootstrap.
 - Historical seed reconciliation is implemented locally and in a manual
   no-upload workflow.
+- Historical reviewed batch fan-out is implemented in
+  `.github/workflows/historical_batch_review.yml`, allowing parallel GitHub-hosted
+  no-upload validation without using the laptop.
 - Broad no-limit historical work-ID discovery passed in GitHub Actions run
   `27313765016`, producing 33,693 unique search-derived candidate work IDs.
 - The broad candidate was reconciled against the reviewed 10-work historical

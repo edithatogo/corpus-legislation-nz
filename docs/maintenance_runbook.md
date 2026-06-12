@@ -14,6 +14,9 @@
 3. Confirm Hugging Face upload skipped when content did not change.
 4. Run the full reconciliation procedure in `docs/reconciliation_runbook.md` after the first full bootstrap is available.
 5. Review `docs/runtime_capacity_runbook.md` before any large manual sync or bootstrap rerun.
+6. Use `docs/full_corpus_operations.md` when you need the end-to-end workflow
+   sequence, inputs, and review artifacts for bootstrap, upload, historical
+   review, or monthly reconciliation.
 
 ## Quarterly
 

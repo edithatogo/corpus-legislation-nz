@@ -23,6 +23,10 @@ publication workflow are ready.
   They must not fall back to `HF_REPO_ID`.
 - Keep historical upload workflows manual-only. Do not add a `schedule` trigger
   unless a later reviewed track deliberately approves maintenance automation.
+- For reviewed batch validation, use
+  `.github/workflows/historical_batch_review.yml` on GitHub-hosted runners.
+  Keep the confirmed historical upload on the serial
+  `historical_hf_upload.yml` workflow.
 - Make the first workflow proof a dry-run/no-upload run. Real historical writes
   require an explicit manual upload choice after target and batch-plan review.
 - Keep public wording explicit that search-derived historical seeds are partial

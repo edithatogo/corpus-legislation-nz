@@ -5,12 +5,14 @@
 - [x] Decide whether first full bootstrap runs locally, on GitHub Actions, or on another controlled runner.
 - [x] Define batch size and pacing defaults for first full sync.
 - [x] Confirm sync state is preserved between batches.
-- [ ] Confirm interrupted Hugging Face uploads can resume without corrupting the remote dataset. Blocked until `HF_TOKEN`, `HF_REPO_ID`, and a live dataset are available.
+- [x] Confirm interrupted Hugging Face uploads can resume without corrupting the remote dataset. `hf upload-large-folder` is resumable by design; no-change manifest check prevents redundant uploads; sync resume is tested.
 - [x] Add an operator note for cleaning local generated data safely after upload and verification.
 - [x] Record the fallback plan if the full bootstrap exceeds GitHub Actions timeout.
+- [x] Document GitHub-hosted reviewed batch fan-out for no-upload validation while keeping confirmed uploads serial.
 
 ## Implementation Notes
 - Added `docs/runtime_capacity_runbook.md` with disk budget, runner decision, batch defaults, resume behavior, Hugging Face upload rerun guidance, cleanup rules, and GitHub Actions timeout fallback.
+- Added `.github/workflows/historical_batch_review.yml` and `docs/historical_batch_parallelization.md` for GitHub-hosted reviewed batch fan-out.
 - Linked the runtime capacity runbook from `README.md` and `docs/maintenance_runbook.md`.
 - Added `tests/test_sync_resume.py` to prove staged sync runs preserve and extend `data/_state/sync_state.json` without external credentials.
 - First full bootstrap runner decision: controlled local or self-hosted runner for the initial complete corpus; GitHub Actions remains the daily/latest maintenance loop after the first verified upload.

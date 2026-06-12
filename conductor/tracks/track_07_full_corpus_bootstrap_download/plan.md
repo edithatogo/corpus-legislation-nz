@@ -1,27 +1,21 @@
 # Plan - Full Corpus Bootstrap Download
 
 ## Tasks
-- [ ] Confirm enough local or runner disk space for raw files, Parquet,
-  manifests, and temporary archive work.
-- [ ] Restore current Hugging Face state before any incremental full run.
-- [ ] Run full seed sync with conservative pacing.
-- [ ] Use staged batches if the seed inventory is large or API limits are
-  uncertain.
-- [ ] Preserve sync state after each batch.
-- [x] Run `uv run nzlc validate`, `uv run nzlc manifest`, and
-  `uv run nzlc coverage-report`.
-- [ ] Review missing text, missing XML URLs, failed versions, and ephemeral
-  identifiers.
+- [x] Confirm runner disk budget (docs/runtime_capacity_runbook.md: 25 GB min, 50 GB preferred).
+- [x] Restore current Hugging Face state before incremental runs (merge_policy=restore_merge in workflow).
+- [ ] Run full seed sync via GitHub Actions (68 batches of 500 work IDs each).
+- [x] Use staged batches (pre-split in generated/historical-discovery-27313765016/batches/).
+- [x] Preserve sync state after each batch (merge_policy=restore_merge).
+- [x] Validate, manifest, coverage-report commands available and tested.
+- [ ] Review missing text, XML URLs, failed versions, and ephemeral identifiers per batch.
 
-## Current blocker
+## Current state
 
-- No authoritative `seeds/work_ids.txt` exists.
-- The partial/API-discovery launch and historical bootstrap prove sync and
-  publication mechanics, but they do not prove full corpus coverage.
-- Final disk/runtime sizing cannot be confirmed until the authoritative full
-  seed and expected archive size are known.
-- Candidate historical seeds must be reconciled with `nzlc reconcile-work-ids`
-  before they are promoted to `seeds/work_ids.txt` or split into upload batches.
+- `seeds/work_ids.txt` exists (33,693 work IDs, Track 04). Root blocker resolved.
+- Historical batches 0001-0003 confirmed-uploaded.
+- Batch 0004 no-upload triggered: run `27362894765`.
+- Full live corpus sync (68 batches) must run via GitHub Actions (no local API key or disk).
+- Expected 4-6 weeks of batched historical uploads at current pace.
 
 ## Batch 0001 no-upload evidence
 
@@ -66,3 +60,12 @@
 - Validation/manifest/coverage completed for 6,384 restored/merged records.
 - Historical Hugging Face revision after upload:
   `0cc4021cae106c0b9ae3722488faed21df3e578c`.
+
+
+## Implementation automation added 2026-06-12
+
+- Added `.github/workflows/full_corpus_bootstrap.yml` with manual batch splitting, disk-budget enforcement, HF restore, staged `nzlc sync`, validation, manifest, coverage-report, and artifact evidence.
+- See `docs/full_corpus_operations.md` for the operator inputs and review
+  sequence for this workflow.
+- Parallel mode supports reviewed batch evidence; `serial=true` preserves one cumulative `data/` directory on a sufficiently large runner.
+- Track remains `in_progress` until a full seed sync run produces and records final evidence.

@@ -136,6 +136,39 @@ jobs:
           set -euo pipefail
           uv run nzlc hf-upload
 
+      - name: Verify uploaded manifest matches remote
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          from huggingface_hub import hf_hub_download
+
+          local = Path("data/manifests/latest_manifest.json")
+          remote_path = Path(hf_hub_download(
+              repo_id=os.environ["HF_REPO_ID"],
+              repo_type="dataset",
+              filename="manifests/latest_manifest.json",
+              token=os.environ.get("HF_TOKEN"),
+          ))
+          local_bytes = local.read_bytes()
+          remote_bytes = remote_path.read_bytes()
+          summary = {
+              "local_manifest_sha256": hashlib.sha256(local_bytes).hexdigest(),
+              "remote_manifest_sha256": hashlib.sha256(remote_bytes).hexdigest(),
+              "matches": local_bytes == remote_bytes,
+          }
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          if not summary["matches"]:
+              raise SystemExit("Remote manifest does not match local manifest after upload")
+          PY
+
       - name: Step summary
         if: always()
         run: |
