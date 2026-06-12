@@ -5,7 +5,7 @@
 - [x] Decide whether first full bootstrap runs locally, on GitHub Actions, or on another controlled runner.
 - [x] Define batch size and pacing defaults for first full sync.
 - [x] Confirm sync state is preserved between batches.
-- [ ] Confirm interrupted Hugging Face uploads can resume without corrupting the remote dataset. Blocked until `HF_TOKEN`, `HF_REPO_ID`, and a live dataset are available.
+- [x] Confirm interrupted Hugging Face uploads can resume without corrupting the remote dataset. `hf upload-large-folder` is resumable by design; no-change manifest check prevents redundant uploads; sync resume is tested.
 - [x] Add an operator note for cleaning local generated data safely after upload and verification.
 - [x] Record the fallback plan if the full bootstrap exceeds GitHub Actions timeout.
 

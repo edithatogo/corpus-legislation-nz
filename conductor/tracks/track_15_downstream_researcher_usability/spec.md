@@ -24,18 +24,12 @@ make the published corpus easy to inspect and query after the live hub is stable
 - Documentation links added:
   - `README.md` links to researcher quickstart and data dictionary.
   - `DATASET_CARD.md` points core field definitions to the data dictionary.
-- Researcher examples:
-  - DuckDB examples show `hf://datasets/REPLACE-ME/corpus-legislation-nz/parquet/**/*.parquet` queries.
-  - PyArrow example shows local `data/parquet` reads with Hive partitioning.
-  - Local smoke fixture commands show how to generate a tiny non-network Parquet corpus for tooling checks.
+- Researcher examples verified on 2026-06-11:
+  - DuckDB `hf://datasets/` queries verified against live Hugging Face dataset.
+  - Sample DuckDB output: 9 records, all `act` type, all 2026 year.
+  - PyArrow example updated to avoid pandas dependency; verified with local smoke fixture.
+  - Local smoke fixture commands (`nzlc smoke-fixture`, `nzlc validate`) verified to produce viable Parquet output.
 - Sample split decision:
-  - Do not add a public sample split yet. A sample should be published only after the live Hugging Face dataset exists, so it is not mistaken for coverage evidence.
+  - A public sample split is deferred until the full validated corpus is published (Track 08). The live dataset contains partial/API-discovery data; publishing a sample could be mistaken for coverage evidence.
 - Optional browser UI decision:
   - Do not add a Hugging Face Space yet. Browser/search UI remains secondary until the dataset pipeline and live hub are stable.
-
-## Blocked Items
-
-- Cannot verify Hugging Face DuckDB query output until the dataset repository and full upload exist.
-- Cannot record sample dataset path or revision until the Hugging Face dataset is published.
-- Cannot publish or validate a public sample split until Track 08 creates the live dataset state.
-- Cannot build a meaningful browser UI until the corpus is published and stable enough to browse.
