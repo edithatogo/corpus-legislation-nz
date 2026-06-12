@@ -12,7 +12,8 @@
 ## Current state
 
 - `seeds/work_ids.txt` exists (33,693 work IDs, Track 04). Root blocker resolved.
-- Historical batches 0001-0003 confirmed-uploaded.
+- All 68 reviewed historical batch files exist in `seeds/reviewed/` (0001-0068).
+- Historical batches 0001-0003 confirmed-uploaded to `edithatogo/corpus-legislation-nz-historical`.
 - Batch 0004 no-upload triggered: run `27362894765`.
 - Full live corpus sync (68 batches) must run via GitHub Actions (no local API key or disk).
 - Expected 4-6 weeks of batched historical uploads at current pace.
@@ -69,3 +70,49 @@
   sequence for this workflow.
 - Parallel mode supports reviewed batch evidence; `serial=true` preserves one cumulative `data/` directory on a sufficiently large runner.
 - Track remains `in_progress` until a full seed sync run produces and records final evidence.
+
+## Full corpus bootstrap pilot run evidence (2026-06-12)
+
+Run: `27396415830` (triggered via `gh workflow run`)
+- Inputs: `batch_size=500`, `start_batch=1`, `end_batch=1`, `min_seconds_between_requests=1.0`, `serial=false`, `max_parallel=1`, `max_works=none`
+- Plan job: completed (12s) with batch_count=1 for 500 work IDs
+- Batch 0001 job: ran from 05:24:07Z to 10:38:47Z (5h14m40s)
+  - Sync bootstrap batch step: 05:24:18Z to 10:38:46Z (5h14m28s)
+  - Validate, manifest, and coverage-report: completed
+  - Upload batch bootstrap artifact: completed
+  - Batch summary: completed
+- Serial job: skipped (serial=false)
+
+### Sync performance analysis
+
+500 work IDs (batch_0001: early imperial acts 1539-1730) took 5h14m at 1.0s pacing.
+This is ~37 seconds per work ID, far above the ~3s expected from pacing alone.
+
+Root cause: NZ Legislation API rate limiting. The `_sleep_for_low_quota` method
+triggers when `X-RateLimit-Remaining` drops below `rate_limit_low_watermark=10`,
+sleeping for `reset_time / remaining` seconds per call. Once quota is depleted,
+the client waits for the full quota reset window (typically 1 hour) before
+continuing, causing the exponential slowdown.
+
+### Recommendation for full 68-batch run
+
+1. Use `serial=true` with one cumulative data directory (24h runner timeout, 50GB+ disk)
+2. Set `min_seconds_between_requests=0.5` for initial batches, then reduce to 0.2
+   after confirming no 429/403 rate limiting
+3. Expected wall-clock time: 8-15 hours for the full 33,693 work IDs at 0.5s pacing
+   with observed API latency
+4. Monitor `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers; if quota
+   exhaustion is frequent, contact NZ Legislation API support for a higher tier
+5. Alternative: process through the historical bootstrap workflow
+   (`historical_hf_upload.yml`) which has been proven at 500-work scale with
+   batches 0001-0003
+
+## Remaining operator tasks
+
+1. Trigger `full_corpus_bootstrap.yml` with `serial=true` for the final cumulative run
+2. After completion, download artifacts: `data/records.jsonl`, `data/manifests/`, `data/_state/`
+3. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings
+4. Run `nzlc validate`, `nzlc manifest`, `nzlc coverage-report` against the output
+5. Update tracks.md with final evidence (run URL, manifest SHA, record counts)
+6. Mark Task 3 [x] and Task 7 [x] after review
+

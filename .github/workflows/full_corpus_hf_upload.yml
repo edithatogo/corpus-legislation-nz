@@ -18,6 +18,11 @@ on:
         required: true
         type: boolean
         default: true
+      bootstrap_run_id:
+        description: "Optional Track 07 serial bootstrap run ID to download artifact from (skips HF restore)"
+        required: false
+        type: string
+        default: ""
       minimum_free_gb:
         description: "Minimum free disk space required before API work starts"
         required: true
@@ -39,6 +44,14 @@ jobs:
       NZLC_OUTPUT_DIR: data
     steps:
       - uses: actions/checkout@v6
+
+      - name: Download bootstrap artifact from Track 07
+        if: ${{ inputs.bootstrap_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: full-corpus-bootstrap-download
+          path: data/
+          run-id: ${{ inputs.bootstrap_run_id }}
 
       - name: Check disk budget
         shell: bash
@@ -86,7 +99,7 @@ jobs:
           uv run nzlc doctor
 
       - name: Restore current live corpus from Hugging Face
-        if: ${{ inputs.restore_live_hf == true }}
+        if: ${{ inputs.restore_live_hf == true && inputs.bootstrap_run_id == '' }}
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}

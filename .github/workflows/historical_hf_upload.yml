@@ -70,7 +70,7 @@ jobs:
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}
         run: |
           set -euo pipefail
-          uv run python scripts/historical_workflow_helpers.py guard-target \
+          python scripts/historical_workflow_helpers.py guard-target \
             --historical-repo-id "${HF_HISTORICAL_REPO_ID:-}" \
             --live-repo-id "${HF_REPO_ID:-}" \
             --summary-path "$GITHUB_STEP_SUMMARY"

@@ -11,8 +11,16 @@ from nz_legislation_corpus.metadata_packages import PACKAGE_FILENAMES, build_met
 
 def test_build_metadata_packages_writes_expected_files(tmp_path: Path) -> None:
     output_dir = tmp_path / "metadata"
+    # Use a clean root with schemas but no data/ manifest to avoid pollution
+    root = tmp_path / "root"
+    root.mkdir()
+    for schema in ["schemas/shared_nz_corpus_core.schema.json", "schemas/legislation_record.schema.json"]:
+        src = Path.cwd() / schema
+        dst = root / schema
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(src.read_text())
 
-    result = build_metadata_packages(Path.cwd(), output_dir)
+    result = build_metadata_packages(root, output_dir)
 
     assert result["ok"] is True
     for filename in PACKAGE_FILENAMES.values():
