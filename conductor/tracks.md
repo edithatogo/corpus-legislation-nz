@@ -265,8 +265,10 @@ Current state:
 - Full corpus operations runbook is now documented in `docs/full_corpus_operations.md`.
 - Pilot run `27396415830` completed batch 0001 (500 work IDs) with full validate/manifest/coverage cycle in 5h14m at 1.0s pacing.
 - Sync is rate-limit constrained: ~37s per work ID due to NZ Legislation API quota exhaustion sleeps.
+- **2026-06-13 fix**: `rate_limit_max_sleep_seconds=60.0` added to cap `_sleep_for_low_quota`, preventing multi-hour stalls when quota is exhausted.
 - Full sync must run via GitHub Actions (no local API key; local disk ~7.5 GB free).
 - Runner disk budget: 25 GB min, 50 GB preferred (docs/runtime_capacity_runbook.md).
+- **2026-06-13 hardening**: Empty-content detection in XML->HTML fallback, seed file emptiness warning, serial-mode batch progress counters, and extended test coverage (65 tests, ruff clean).
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
@@ -1121,8 +1123,13 @@ Evidence:
   down to GitHub's 10-input `workflow_dispatch` limit.
 - CodeQL, OpenSSF Scorecard, Renovate, and pre-commit adoption decisions are
   documented.
-- `zizmor` is adopted as an advisory CI job until the existing unpinned-action
-  and template-expansion findings are resolved in a workflow-hardening pass.
+- Ruff expanded from 6 to 49 rule sets, all passing cleanly.
+- pydantic v2 with `pydantic-settings.BaseSettings` adopted for all
+  configuration.
+- Template injection risks fixed across all 8 CI workflows; `zizmor` now
+  reports zero findings.
+- All 16 workflows have explicit least-privilege `permissions:` blocks.
+- `uv_build` build backend adopted for Python packaging.
 
 
 ## track 33 artifact provenance attestations
@@ -1149,3 +1156,21 @@ Evidence:
 - Consistency checker and tests:
   `scripts/check_artifact_provenance.py` and
   `tests/test_artifact_provenance.py`.
+
+
+## track 34 sota test infrastructure
+
+Status: `done`
+
+Goal: SOTA test infrastructure with hypothesis property-based tests, integration/smoke test directories, coverage baselines, and pytest markers.
+
+Link: `conductor/tracks/track_34_sota_test_infrastructure/`
+
+Evidence:
+
+- 120 tests total (89 existing unit tests + 31 new hypothesis/integration/smoke tests).
+- 8 hypothesis property-based tests for pure functions.
+- Integration test directory: `tests/integration/` (3 cross-component tests).
+- Smoke test directory: `tests/smoke/` (2 full CLI pipeline tests).
+- Coverage configured with `fail_under = 60` in `pyproject.toml`.
+- Pytest markers (unit, integration, smoke, hypothesis) registered and applied across all test files.

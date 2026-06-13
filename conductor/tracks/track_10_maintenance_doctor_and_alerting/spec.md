@@ -1,7 +1,7 @@
 # Spec - Maintenance Doctor And Alerting
 
 ## Status
-ready
+done
 
 ## Goal
 surface token, API, and dependency failures before they affect the live corpus.

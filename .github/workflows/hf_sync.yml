@@ -89,10 +89,11 @@ jobs:
           NZLC_SCHEDULE_MAX_WORKS: ${{ vars.NZLC_SCHEDULE_MAX_WORKS || '5' }}
           NZLC_MANUAL_MIN_SECONDS_BETWEEN_REQUESTS: ${{ github.event.inputs.min_seconds_between_requests || '' }}
           NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS: ${{ vars.NZLC_SCHEDULE_MIN_SECONDS_BETWEEN_REQUESTS || '1.0' }}
+          NZLC_LATEST_ONLY: ${{ github.event.inputs.latest_only || 'false' }}
         run: |
           set -euo pipefail
           args=()
-          if [ "${{ github.event.inputs.latest_only || 'false' }}" = "true" ]; then args+=(--latest-only); fi
+          if [ "$NZLC_LATEST_ONLY" = "true" ]; then args+=(--latest-only); fi
           if [ -n "$NZLC_MANUAL_MAX_WORKS" ]; then
             args+=(--max-works "$NZLC_MANUAL_MAX_WORKS")
           elif [ "${{ github.event_name }}" = "schedule" ] && [ -n "$NZLC_SCHEDULE_MAX_WORKS" ]; then

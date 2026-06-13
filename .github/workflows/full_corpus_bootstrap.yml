@@ -278,12 +278,13 @@ jobs:
         run: |
           set -euo pipefail
           uv run python - <<'PY'
+          import os
           from huggingface_hub import snapshot_download
 
           snapshot_download(
-              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_id=os.environ["HF_REPO_ID"],
               repo_type="dataset",
-              token="${{ secrets.HF_TOKEN }}",
+              token=os.environ.get("HF_TOKEN"),
               local_dir="data",
               allow_patterns=[
                   "README.md",
@@ -438,12 +439,13 @@ jobs:
         run: |
           set -euo pipefail
           uv run python - <<'PY'
+          import os
           from huggingface_hub import snapshot_download
 
           snapshot_download(
-              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_id=os.environ["HF_REPO_ID"],
               repo_type="dataset",
-              token="${{ secrets.HF_TOKEN }}",
+              token=os.environ.get("HF_TOKEN"),
               local_dir="data",
               allow_patterns=[
                   "README.md",
@@ -471,14 +473,23 @@ jobs:
             export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$MIN_SECONDS_BETWEEN_REQUESTS"
           fi
           shopt -s nullglob
-          for seed_path in "$SEED_BATCH_DIR"/*.txt; do
-            echo "Syncing $seed_path"
+          batch_files=("$SEED_BATCH_DIR"/*.txt)
+          total="${#batch_files[@]}"
+          current=0
+          for seed_path in "${batch_files[@]}"; do
+            current=$((current + 1))
+            echo "========================================"
+            echo "Processing batch ${current}/${total}: $seed_path"
+            echo "========================================"
             args=(--seed-work-ids "$seed_path" --allow-no-search-terms)
             if [ -n "$MAX_WORKS" ] && [ "$MAX_WORKS" != "none" ] && [ "$MAX_WORKS" != "null" ] && [ "$MAX_WORKS" != "-" ]; then
               args+=(--max-works "$MAX_WORKS")
             fi
             uv run nzlc sync "${args[@]}"
           done
+          echo "========================================"
+          echo "All $total batches processed successfully"
+          echo "========================================"
 
       - name: Stage Hugging Face dataset card
         run: |

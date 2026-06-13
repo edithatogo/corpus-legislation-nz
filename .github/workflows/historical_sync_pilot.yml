@@ -56,37 +56,45 @@ jobs:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
           NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
           NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+          NZLC_INPUT_MIN_SECONDS: ${{ inputs.min_seconds_between_requests }}
+          NZLC_INPUT_SEARCH_TERMS: ${{ inputs.search_terms }}
+          NZLC_INPUT_LEGISLATION_STATUS: ${{ inputs.legislation_status }}
+          NZLC_INPUT_LEGISLATION_TYPES: ${{ inputs.legislation_types }}
+          NZLC_INPUT_MAX_PAGES: ${{ inputs.max_pages }}
+          NZLC_INPUT_MAX_WORKS: ${{ inputs.max_works }}
         run: |
           set -euo pipefail
-          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
-            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
+          if [ -n "$NZLC_INPUT_MIN_SECONDS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$NZLC_INPUT_MIN_SECONDS"
           fi
           args=(
-            --search-terms "${{ inputs.search_terms }}"
-            --legislation-status "${{ inputs.legislation_status }}"
-            --legislation-types "${{ inputs.legislation_types }}"
+            --search-terms "$NZLC_INPUT_SEARCH_TERMS"
+            --legislation-status "$NZLC_INPUT_LEGISLATION_STATUS"
+            --legislation-types "$NZLC_INPUT_LEGISLATION_TYPES"
             --output-path generated/historical-work-ids.txt
             --provenance-path generated/historical-work-ids.provenance.json
           )
-          if [ -n "${{ inputs.max_pages }}" ]; then args+=(--max-pages "${{ inputs.max_pages }}"); fi
-          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          if [ -n "$NZLC_INPUT_MAX_PAGES" ]; then args+=(--max-pages "$NZLC_INPUT_MAX_PAGES"); fi
+          if [ -n "$NZLC_INPUT_MAX_WORKS" ]; then args+=(--max-works "$NZLC_INPUT_MAX_WORKS"); fi
           uv run nzlc discover-work-ids "${args[@]}"
 
       - name: Sync pilot corpus
         env:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
           NZLC_OUTPUT_DIR: data-historical-pilot
+          NZLC_INPUT_MIN_SECONDS: ${{ inputs.min_seconds_between_requests }}
+          NZLC_INPUT_MAX_WORKS: ${{ inputs.max_works }}
         run: |
           set -euo pipefail
-          if [ -n "${{ inputs.min_seconds_between_requests }}" ]; then
-            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="${{ inputs.min_seconds_between_requests }}"
+          if [ -n "$NZLC_INPUT_MIN_SECONDS" ]; then
+            export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$NZLC_INPUT_MIN_SECONDS"
           fi
           args=(
             --seed-work-ids generated/historical-work-ids.txt
             --allow-no-search-terms
             --replace
           )
-          if [ -n "${{ inputs.max_works }}" ]; then args+=(--max-works "${{ inputs.max_works }}"); fi
+          if [ -n "$NZLC_INPUT_MAX_WORKS" ]; then args+=(--max-works "$NZLC_INPUT_MAX_WORKS"); fi
           uv run nzlc sync "${args[@]}"
 
       - name: Validate and summarize pilot

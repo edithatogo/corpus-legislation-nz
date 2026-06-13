@@ -49,7 +49,7 @@ class NZLegislationClient:
         self.api_key = require(settings.nz_api_key, "NZ_LEGISLATION_API_KEY")
         self.base_url = settings.nz_api_base_url.rstrip("/") + "/"
         self.session: HTTPSession = (
-            session if session is not None else cast(HTTPSession, requests.Session())
+            session if session is not None else cast("HTTPSession", requests.Session())
         )
         self.last_request_at = 0.0
 
@@ -81,16 +81,26 @@ class NZLegislationClient:
         wait_until_reset = max(0.0, reset - time.time())
         if wait_until_reset <= 0:
             return
-        sleep_seconds = max(
+        sleep_seconds_raw = max(
             self.settings.rate_limit_reset_padding_seconds,
             wait_until_reset / max(1, remaining),
         )
-        log.warning(
-            "NZ API quota low (remaining=%s reset=%s); sleeping %.1fs before retrying",
-            remaining,
-            reset,
-            sleep_seconds,
-        )
+        sleep_seconds = min(sleep_seconds_raw, self.settings.rate_limit_max_sleep_seconds)
+        if sleep_seconds_raw > self.settings.rate_limit_max_sleep_seconds:
+            log.warning(
+                "NZ API quota low; sleep capped at %.1fs (raw=%.1fs, remaining=%s reset=%s)",
+                sleep_seconds,
+                sleep_seconds_raw,
+                remaining,
+                reset,
+            )
+        else:
+            log.warning(
+                "NZ API quota low (remaining=%s reset=%s); sleeping %.1fs",
+                remaining,
+                reset,
+                sleep_seconds,
+            )
         time.sleep(sleep_seconds)
 
     @staticmethod
@@ -207,7 +217,7 @@ class NZLegislationClient:
             params["sort_by"] = sort_by
         if publisher:
             params["publisher"] = publisher
-        return cast(dict[str, Any], self.request_json("GET", "works/", params=params).data)
+        return cast("dict[str, Any]", self.request_json("GET", "works/", params=params).data)
 
     def iter_search_works(
         self,
@@ -253,7 +263,7 @@ class NZLegislationClient:
 
     def get_work_versions(self, work_id: str, *, sort: str = "desc") -> dict[str, Any]:
         return cast(
-            dict[str, Any],
+            "dict[str, Any]",
             self.request_json("GET", f"works/{work_id}/versions/", params={"sort": sort}).data,
         )
 
@@ -263,7 +273,7 @@ class NZLegislationClient:
         yield from results
 
     def get_version(self, version_id: str) -> dict[str, Any]:
-        return cast(dict[str, Any], self.request_json("GET", f"versions/{version_id}/").data)
+        return cast("dict[str, Any]", self.request_json("GET", f"versions/{version_id}/").data)
 
     @staticmethod
     def format_url(version: dict[str, Any], fmt: str) -> str | None:

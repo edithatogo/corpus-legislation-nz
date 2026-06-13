@@ -31,8 +31,8 @@ def extract_text_from_xml(xml_bytes: bytes) -> str:
 
 def extract_text_from_html(html_bytes: bytes) -> str:
     raw = html_bytes.decode("utf-8", errors="replace")
-    raw = re.sub(r"<script\b[^<]*(?:(?!</script>)<[^<]*)*</script>", " ", raw, flags=re.I)
-    raw = re.sub(r"<style\b[^<]*(?:(?!</style>)<[^<]*)*</style>", " ", raw, flags=re.I)
+    raw = re.sub(r"<script\b[^<]*(?:(?!</script>)<[^<]*)*</script>", " ", raw, flags=re.IGNORECASE)
+    raw = re.sub(r"<style\b[^<]*(?:(?!</style>)<[^<]*)*</style>", " ", raw, flags=re.IGNORECASE)
     raw = re.sub(r"<[^>]+>", " ", raw)
     return _flatten_text([unescape(raw)])
 
@@ -44,11 +44,11 @@ def extract_text_best_effort(
     if "xml" in marker:
         try:
             return extract_text_from_xml(content)
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
     if "html" in marker or content.lstrip().startswith(b"<html"):
         return extract_text_from_html(content)
     try:
         return extract_text_from_xml(content)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return extract_text_from_html(content)

@@ -24,10 +24,15 @@ jobs:
         run: |
           set -euo pipefail
           bash -n scripts/*.sh
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           set -euo pipefail
-          uv run pytest -q
+          uv run pytest -q --cov=nz_legislation_corpus --cov-report=xml --cov-report=term-missing
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
+          files: ./coverage.xml
       - name: Check version and release consistency
         run: |
           set -euo pipefail

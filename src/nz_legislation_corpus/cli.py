@@ -18,11 +18,11 @@ from .discovery import (
     normalize_work_ids,
 )
 from .manifest import build_change_report, build_manifest
-from .rss_feed import FEED_FILENAME, build_feed
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
 from .parquet_writer import write_partitioned_parquet
+from .rss_feed import FEED_FILENAME, build_feed
 from .schema import RECORD_SCHEMA_VERSION
 from .types import SyncStats
 from .utils import (
@@ -44,11 +44,16 @@ logging.basicConfig(level=os.getenv("NZLC_LOG_LEVEL", "INFO"), format="%(levelna
 def _load_seed_work_ids(path: Path | None) -> list[str]:
     if not path or not path.exists():
         return []
-    return [
+    work_ids = [
         line.strip()
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.startswith("#")
     ]
+    if not work_ids:
+        logging.getLogger(__name__).warning(
+            "Seed work IDs file %s is empty or contains no usable IDs", path
+        )
+    return work_ids
 
 
 def _split_option(value: str | None, default: list[str]) -> list[str]:
@@ -95,8 +100,10 @@ def _download_first_available_format(
     for fmt, url in candidates:
         try:
             raw_content = client.download_url(url)
+            if not raw_content:
+                raise RuntimeError(f"Downloaded empty content from {url}")
             return raw_content, url, _raw_content_type_for_url(url), warnings
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if fmt == "xml" and any(candidate_fmt == "html" for candidate_fmt, _ in candidates):
                 warnings.append(
                     f"XML download failed for {version.get('version_id')}: {exc}; used HTML"
@@ -113,7 +120,7 @@ def doctor(
     ] = False,
 ) -> None:
     """Check local configuration without doing destructive work."""
-    settings = Settings.from_env()
+    settings = Settings()
     checks = {
         "NZ_LEGISLATION_API_KEY": bool(settings.nz_api_key),
         "HF_REPO_ID": bool(settings.hf_repo_id),
@@ -181,7 +188,7 @@ def sync(
     ] = False,
 ) -> None:
     """Fetch legislation metadata/content, normalize records, and write JSONL + Parquet."""
-    settings = Settings.from_env()
+    settings = Settings()
     seed_ids = _load_seed_work_ids(seed_work_ids)
     if not settings.search_terms and not seed_ids and not allow_no_search_terms:
         raise typer.BadParameter(
@@ -282,7 +289,7 @@ def sync(
                     records.append(record)
                     existing_records[record["stable_id"]] = record
             known_versions[record["stable_id"]] = record["source_hash"]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             stats.records_failed += 1
             stats.warnings.append(f"version {version_id or '<unknown>'} failed: {exc}")
 
@@ -346,7 +353,7 @@ def discover_work_ids_cmd(
     ] = None,
 ) -> None:
     """Discover work IDs for deterministic seed-based bootstraps."""
-    settings = Settings.from_env()
+    settings = Settings()
     terms = _split_option(search_terms, settings.search_terms)
     if not terms:
         raise typer.BadParameter("Set NZLC_SEARCH_TERMS or pass --search-terms.")
@@ -501,7 +508,7 @@ def validate_cmd(
         bool, typer.Option(help="Allow empty text for metadata-only tests.")
     ] = False,
 ) -> None:
-    settings = Settings.from_env()
+    settings = Settings()
     path = records_path or settings.records_jsonl_path
     report = validate_records(
         path,
@@ -516,7 +523,7 @@ def validate_cmd(
 
 @app.command("manifest")
 def manifest_cmd() -> None:
-    settings = Settings.from_env()
+    settings = Settings()
     previous_path = settings.manifests_dir / "latest_manifest.json"
     previous = read_json(previous_path, default=None)
     current = build_manifest(settings.output_dir, manifest_path=previous_path)
@@ -562,7 +569,7 @@ def hf_upload_cmd(
 ) -> None:
     from .hf_sync import create_dataset_repo_if_needed, remote_manifest, upload_large_folder
 
-    settings = Settings.from_env()
+    settings = Settings()
     repo_id = require(settings.hf_repo_id, "HF_REPO_ID")
     token = require(settings.hf_token, "HF_TOKEN")
     validation = validate_records(
@@ -602,7 +609,7 @@ def archive_cmd(
         "dist/archive"
     ),
 ) -> None:
-    settings = Settings.from_env()
+    settings = Settings()
     result = build_archive(settings.output_dir, output_dir, year=year)
     console.print_json(data=result)
 
@@ -615,7 +622,7 @@ def zenodo_upload_cmd(
         bool, typer.Option(help="Publish the Zenodo draft. Default false for safety.")
     ] = False,
 ) -> None:
-    settings = Settings.from_env()
+    settings = Settings()
     token = require(settings.zenodo_token, "ZENODO_TOKEN")
     creators = settings.archive_creators
     if not creators:
@@ -671,7 +678,7 @@ def smoke_fixture(output_dir: Annotated[Path, typer.Option()] = Path("data")) ->
     if not fixture.exists():
         raise RuntimeError("Fixture missing")
     os.environ["NZLC_OUTPUT_DIR"] = str(output_dir)
-    settings = Settings.from_env()
+    settings = Settings()
     xml_bytes = fixture.read_bytes()
     version = {
         "title": "Sample Act 2026",
@@ -703,7 +710,7 @@ def smoke_fixture(output_dir: Annotated[Path, typer.Option()] = Path("data")) ->
 @app.command("coverage-report")
 def coverage_report_cmd() -> None:
     """Summarize corpus coverage and red-team risk indicators."""
-    settings = Settings.from_env()
+    settings = Settings()
     records = read_jsonl(settings.records_jsonl_path)
     by_type: dict[str, int] = {}
     by_status: dict[str, int] = {}
@@ -763,7 +770,7 @@ def rss_feed_cmd(
     ] = 50,
 ) -> None:
     """Generate an RSS 2.0 feed from the latest corpus changes."""
-    settings = Settings.from_env()
+    settings = Settings()
     result = build_feed(
         records_path=settings.records_jsonl_path,
         changes_path=settings.manifests_dir / "latest_changes.json",

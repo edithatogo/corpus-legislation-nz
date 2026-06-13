@@ -107,6 +107,48 @@ continuing, causing the exponential slowdown.
    (`historical_hf_upload.yml`) which has been proven at 500-work scale with
    batches 0001-0003
 
+## Code improvements applied 2026-06-13
+
+The following production-hardening changes were made to support reliable 68-batch processing:
+
+### Critical: quota sleep cap (`config.py`, `nz_api.py`)
+
+Added `rate_limit_max_sleep_seconds=60.0` to cap `_sleep_for_low_quota`. Previously,
+a quota-exhausted API key with `remaining=1` and `reset=3600s` could sleep 30+ minutes
+per work ID (~1800s). The cap limits the maximum individual sleep to 60s, preventing
+multi-hour stalls while still respecting the API quota system.
+
+### Logging guard: `_download_first_available_format` (`cli.py`)
+
+Added empty-content detection: if `download_url` returns zero bytes, the code now
+raises an exception, triggering the XML->HTML fallback path instead of silently
+returning empty content.
+
+### Seed file warning: `_load_seed_work_ids` (`cli.py`)
+
+Added a log warning when the seed work-IDs file exists but contains zero usable
+(non-comment, non-empty) lines, preventing silent batch processing of empty batches.
+
+### Serial mode progress tracking (`.github/workflows/full_corpus_bootstrap.yml`)
+
+Added batch-level progress counters (`Processing batch 17/68`) to the serial batch
+loop, providing real-time monitoring for the ~8-15 hour cumulative run.
+
+### Extended test coverage
+
+- **Rate limit tests** (`test_nz_api.py`): 9 new tests covering capped quota sleep,
+  `_retry_after_seconds` invalid header fallback, `download_url` retries on 429/403/5xx,
+  quota pause in download path, missing/expired header edge cases.
+- **Download fallback tests** (`test_cli_download.py`): 5 new tests for
+  `_download_first_available_format` covering XML success, XML->HTML fallback, both fail,
+  HTML-only, and no formats available.
+- **Coverage report tests** (`test_cli_coverage.py`): 3 new tests for empty corpus,
+  multi-type records with risk indicators, and history append.
+- **HF sync test** (`test_hf_sync.py`): prune stale paths test added.
+
+All 65 tests pass; ruff lint clean.
+
+
 ## Remaining operator tasks
 
 1. Trigger `full_corpus_bootstrap.yml` with `serial=true` for the final cumulative run

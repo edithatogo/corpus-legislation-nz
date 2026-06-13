@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 from jsonschema import Draft202012Validator
 
 from nz_legislation_corpus.archive import build_archive
@@ -32,6 +33,7 @@ def _write_fixture_corpus(root: Path) -> None:
     (root / "raw_xml" / "example.xml").write_text("<root />\n", encoding="utf-8")
 
 
+@pytest.mark.unit
 def test_archive_writes_release_evidence_and_checksums(tmp_path: Path) -> None:
     input_dir = tmp_path / "data"
     output_dir = tmp_path / "archive"
@@ -60,5 +62,6 @@ def test_archive_writes_release_evidence_and_checksums(tmp_path: Path) -> None:
     assert provenance_path.name in checksums
 
 
+@pytest.mark.unit
 def test_artifact_provenance_policy_is_consistent() -> None:
     assert failures() == []

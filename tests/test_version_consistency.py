@@ -4,6 +4,8 @@ import re
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
@@ -15,10 +17,12 @@ from check_version_consistency import (  # noqa: E402
 )
 
 
+@pytest.mark.unit
 def test_version_consistency_check_passes() -> None:
     assert check_version_consistency() == []
 
 
+@pytest.mark.unit
 def test_release_identifiers_are_well_formed() -> None:
     assert SEMVER_RE.fullmatch("0.5.0")
     assert re.fullmatch(r"v\d+\.\d+\.\d+-partial\.\d{8}", PARTIAL_RELEASE_TAG)

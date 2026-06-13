@@ -56,6 +56,40 @@ Agents working in either repository must treat these labels as the target naming
 - Claim source-content relicensing where the project only licenses code, manifests, and documentation.
 - Hide partial, review-stage, or derived-artifact status behind generic release language.
 
+## SOTA Tooling Convergence Requirements
+
+### Must
+
+- **Ruff** with ALL applicable rule sets (49 codes — E, F, I, N, UP, B, SIM, A, ARG, C4, COM, DJ, DTZ, EM, ERA, EXE, FA, FLY, FURB, ICN, INP, INT, ISC, LOG, NPY, PD, PERF, PGH, PIE, PL, PLC, PLE, PLR, PLW, PT, PTH, PYI, Q, RET, RSE, RUF, S, SLF, T10, T20, TC, TID, TRY, W) enabled in strict mode, with `per-file-ignores` for `tests/*`, `tests/fixtures/*`, `scripts/*`, and `scripts/__init__.py`. Enforced in CI via `code_quality.yml` using `uv run ruff check .`.
+- **`ty` static type checking** with `all = "error"` configured across `root = ["src", "tests", "scripts"]` and python-version `"3.11"`. Enforced in CI via `code_quality.yml` using `uv run ty check src tests scripts`.
+- **`uv`** for frozen dependency installation (`uv sync --extra dev --frozen`) and task running (`uv run ...`) in both `code_quality.yml` and `tests.yml` workflows. The `astral-sh/setup-uv@v7` action bootstraps uv in CI.
+- **`pytest`** as the primary test framework with distinct `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.smoke`, and `@pytest.mark.hypothesis` markers registered in `pyproject.toml` under `[tool.pytest.ini_options]`. Test paths rooted at `tests/` with `pythonpath = ["src"]`.
+- **pydantic v2 with `pydantic-settings.BaseSettings`** for all environment-based configuration, replacing raw `@dataclass` + `os.getenv()` patterns. Both `pydantic>=2.0.0` and `pydantic-settings>=2.0.0` are declared as core dependencies.
+- **Hypothesis property-based testing** for pure functions (`_parse_int_header`, `_retry_after_seconds`, `slug_for_path`, URL/content-type mappings). Already present in `tests/test_property_based.py`.
+- **Coverage reporting** via `pytest-cov` with `fail_under = 60` in `[tool.coverage.report]`, `branch = true`, and XML output (`--cov-report=xml`) uploaded to Codecov in CI.
+- **`ruff format --check`** enforced in CI alongside lint checks via a dedicated step in `code_quality.yml`.
+
+### Should
+
+- **Integration test directory** (`tests/integration/`) for cross-component pipeline tests (sync→validate→manifest→coverage, HF upload workflow). Already present with `tests/integration/test_sync_manifest_pipeline.py`.
+- **Smoke test directory** (`tests/smoke/`) for full CLI pipeline tests via `typer.testing.CliRunner`. Already present with `tests/smoke/test_cli_smoke.py`.
+- **Scalene profiling configuration** in `pyproject.toml` under `[tool.scalene]` (cpu, memory enabled; gpu, profile_all disabled; reduced_profile true) for performance-sensitive corpus bootstrap and upload paths.
+- **Vale prose linter** configuration (`.vale.ini` exists at repository root) for documentation file quality.
+
+### Could
+
+- **`uv_build`** as the build backend (replacing hatchling) for unified uv toolchain.
+- **Codecov CI upload** step for coverage trend tracking across branches. Already present in `tests.yml` with `fail_ci_if_error: false`.
+- **Mutation testing** (e.g., `mutmut` or `cosmic-ray`) for critical validation and normalization paths.
+- **Fuzz testing** for API response parsing paths using Hypothesis' `binary()` and `text()` strategies.
+
+### Won't
+
+- Remove existing test types or lower coverage thresholds without a documented plan and track.
+- Add tools that duplicate existing coverage (e.g., pylint, mypy, black, isort alongside ruff).
+- Mandate pydantic for internal data structures that are already served well by frozen dataclasses and typed dicts.
+- Gate merges on Codecov CI status until the upload is proven stable across branch/PR workflows.
+
 ## Priority Order
 
 1. Record naming preference and sibling-project cross-reference in both Conductor setups.
@@ -67,6 +101,7 @@ Agents working in either repository must treat these labels as the target naming
 6. Align Zenodo related identifiers, licenses, archive files, and concept DOI references.
 7. Decide OSF role and document file-size/mirror policy.
 8. Add optional SOTA metadata packages: Croissant, RO-Crate, Frictionless, DCAT/PROV-O.
+9. Converge on SOTA Python tooling: ruff strict, ty strict, pydantic v2 config, hypothesis property-based tests, integration/smoke test directories, and coverage baselines.
 
 ## Additional Implementation Recommendations
 
@@ -83,6 +118,7 @@ The following recommendations are part of the corpus-family roadmap and should b
 - Add generated SOTA metadata packages only through validated exporters: Croissant, RO-Crate, Frictionless Data Package, DCAT, and PROV-O.
 - Add dataset-viewer and machine-consumability gates: dataset card parses, files are public if intended, Hugging Face viewer works or is intentionally disabled, DuckDB/PyArrow examples work, and manifest hashes are cited.
 - Treat OSF as inactive until a standalone optional mirror policy is approved.
+- Add SOTA tooling convergence evidence: ruff strict lint/format CI compliance, ty static type checking CI compliance, pydantic v2 BaseSettings migration completion, Hypothesis property-based test coverage, integration/smoke test directory proof, and coverage baseline stability.
 
 ## Zenodo tooling requirement
 

@@ -85,6 +85,114 @@ metadata packages, validation manifests, and optional publication surfaces while
 keeping Hansard-specific parliamentary proceedings fields out of the legislation
 core schema.
 
+## CI/CD Pipeline Architecture
+
+```mermaid
+flowchart LR
+    subgraph Push["Push / PR"]
+        TEST_WF["tests.yml: pytest + coverage"]
+        QUAL_WF["code_quality.yml: ruff check + format + ty + typos + taplo + actionlint + zizmor"]
+        CODEQL["codeql.yml: CodeQL analysis"]
+        SCORECARD["scorecard.yml: OpenSSF Scorecard"]
+    end
+    subgraph Schedule["Scheduled"]
+        HF_SYNC["hf_sync.yml: daily live sync"]
+        DOCTOR["doctor.yml: weekly health check"]
+        MONTHLY["monthly_full_reconciliation.yml"]
+    end
+    subgraph Manual["Manual Dispatch"]
+        BOOTSTRAP["full_corpus_bootstrap.yml"]
+        HF_UPLOAD["full_corpus_hf_upload.yml"]
+        HISTORICAL["historical_hf_upload.yml"]
+        ZENODO["annual_zenodo_archive.yml"]
+    end
+    Push --> TEST_WF & QUAL_WF & CODEQL
+    Schedule --> HF_SYNC & DOCTOR
+    Manual --> BOOTSTRAP & HF_UPLOAD & HISTORICAL & ZENODO
+```
+
+Push and PR workflows run on every commit. Scheduled workflows run daily, weekly, or monthly without human intervention. Manual workflows are triggered through `workflow_dispatch` and typically require explicit confirmation flags (`upload_confirmed`, `publish`) before they mutate any publication surface. All workflows use `permissions: contents: read` unless they need specific tokens (Hugging Face, Zenodo) scoped to their job.
+
+## Test Strategy
+
+```mermaid
+flowchart TD
+    subgraph E2E["End-to-End (manual)"]
+        E2E1["Trigger full_corpus_bootstrap.yml"]
+        E2E2["Verify Hugging Face dataset"]
+        E2E3["Verify Zenodo archive"]
+    end
+    subgraph Smoke["Smoke (tests/smoke/)"]
+        S1["nzlc smoke-fixture -> validate -> manifest -> coverage-report"]
+        S2["nzlc doctor (no network)"]
+    end
+    subgraph Integration["Integration (tests/integration/)"]
+        I1["Sync -> validate -> manifest -> coverage pipeline"]
+        I2["HF upload workflow with mocked API"]
+    end
+    subgraph Property["Property-Based (tests/)"]
+        P1["Hypothesis: slug_for_path"]
+        P2["Hypothesis: _parse_int_header"]
+        P3["Hypothesis: _retry_after_seconds"]
+    end
+    subgraph Unit["Unit (tests/)"]
+        U1["API client with FakeSession"]
+        U2["Validation with sample fixtures"]
+        U3["Manifest building with tmp_path"]
+        U4["Download format fallback"]
+        U5["Rate limit handling"]
+        U6["HF sync prune/upload"]
+        U7["Coverage report generation"]
+        U8["RSS feed generation"]
+    end
+    E2E --> Smoke --> Integration --> Property --> Unit
+```
+
+Unit tests cover individual modules with isolated fixtures and fast assertions. Property-based tests use Hypothesis to find edge cases in string/header parsing. Integration tests exercise multi-step pipelines (sync → validate → manifest → coverage-report) against the real API in CI. Smoke tests run without secrets or network (offline doctor, fixture-based corpus). End-to-end tests are manual workflows that validate the full publication surface after a bootstrap or archive.
+
+## Development Tooling Stack
+
+```mermaid
+flowchart LR
+    subgraph Language["Python 3.11+"]
+        PY311["uv_build build backend"]
+    end
+    subgraph Quality["Code Quality"]
+        RUFF["ruff check (49 rule sets)"]
+        RUFF_FMT["ruff format --check"]
+        TY["ty check (all = error)"]
+        TYPOS["typos spell checker"]
+        TAPLO["taplo fmt --check pyproject.toml"]
+    end
+    subgraph Security["Security"]
+        ZIZMOR["zizmor workflow audit"]
+        CODEQL["CodeQL analysis"]
+        SCORECARD["OpenSSF Scorecard"]
+        ACTIONLINT["actionlint"]
+    end
+    subgraph Test["Testing"]
+        PYTEST["pytest (unit/integration/smoke/hypothesis)"]
+        COV["pytest-cov (coverage)"]
+        HYP["hypothesis (property-based)"]
+    end
+    subgraph Config["Configuration"]
+        PYDANTIC["pydantic v2 BaseSettings"]
+    end
+    subgraph Lint["Prose Linting"]
+        VALE["vale prose linter"]
+    end
+    subgraph Profile["Profiling"]
+        SCALENE["scalene profiler"]
+    end
+    Language --> Quality --> Security
+    Language --> Test
+    Language --> Config
+    Quality --> Lint
+    Test --> Profile
+```
+
+The Python toolchain uses `uv` for dependency management with a frozen lockfile in CI. `ruff` enforces 49 rule sets as a single blocking linter and formatter. `ty` runs strict type checking across `src`, `tests`, and `scripts`. `zizmor` audits workflow security (advisory until the hardening backlog is complete). `actionlint` checks workflow syntax. `pydantic` v2 `BaseSettings` governs all configuration through environment variables and `.env` files. `vale` provides prose linting for documentation. `scalene` is available for CPU/memory profiling during development.
+
 ## Design Notes
 
 - GitHub is the automation and documentation controller, not the large-data host.
@@ -101,17 +209,24 @@ core schema.
 
 ```mermaid
 flowchart TD
-  A["Corpus-family publication alignment"] --> B["Public-surface audit evidence"]
-  A --> C["Zenodo rights metadata harmonisation"]
-  C --> ZD["Zenodraft-based draft workflow"]
-  A --> D["Shared NZ corpus core schema"]
-  A --> E["SOTA metadata packages"]
-  A --> F["OSF optional mirror policy"]
-  A --> G["Dataset viewer and machine-consumability gates"]
-  B --> H["Release evidence ledger"]
-  D --> H
-  E --> H
-  G --> H
+    A["Corpus-family publication alignment"] --> B["Public-surface audit evidence"]
+    A --> C["Zenodo rights metadata harmonisation"]
+    C --> ZD["Zenodraft-based draft workflow"]
+    A --> D["Shared NZ corpus core schema"]
+    A --> E["SOTA metadata packages"]
+    A --> F["OSF optional mirror policy"]
+    A --> G["Dataset viewer and machine-consumability gates"]
+    A --> T["SOTA tooling convergence"]
+    T --> T1["Ruff strict (49 rule sets)"]
+    T --> T2["Pyright/ty strict type checking"]
+    T --> T3["Pydantic v2 configuration"]
+    T --> T4["Hypothesis property-based tests"]
+    T --> T5["Integration and smoke test directories"]
+    T --> T6["Coverage baselines and CI reporting"]
+    B --> H["Release evidence ledger"]
+    D --> H
+    E --> H
+    G --> H
 ```
 
 ### Zenodraft integration design

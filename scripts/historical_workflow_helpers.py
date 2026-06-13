@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -23,7 +22,9 @@ def guard_target(args: argparse.Namespace) -> None:
     if live_repo_id and historical_repo_id == live_repo_id:
         _fail("HF_HISTORICAL_REPO_ID must not equal HF_REPO_ID.")
     if forbidden_alias and historical_repo_id == forbidden_alias:
-        _fail(f"Refusing to use the live partial dataset as the historical target: {forbidden_alias}")
+        _fail(
+            f"Refusing to use the live partial dataset as the historical target: {forbidden_alias}"
+        )
 
     if args.summary_path:
         summary_path = Path(args.summary_path)

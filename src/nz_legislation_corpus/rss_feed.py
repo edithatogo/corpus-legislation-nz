@@ -34,13 +34,23 @@ def _legislation_url(record: dict[str, Any]) -> str:
 def _rfc2822(dt: datetime) -> str:
     weekday = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][dt.weekday()]
     month = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
     ][dt.month - 1]
     return f"{weekday}, {dt.day:02d} {month} {dt.year:04d} {dt.hour:02d}:{dt.minute:02d}:{dt.second:02d} GMT"
 
 
-def _add_text(parent: ET.Element, tag: str, text: str) -> None:
+def _add_text(parent: ET.Element[Any], tag: str, text: str) -> None:
     elem = ET.SubElement(parent, tag)
     elem.text = text
 
@@ -93,19 +103,20 @@ def build_feed(
             desc_parts.append(f"Status: {status.replace('_', ' ').title()}")
         description = " - ".join(desc_parts) if desc_parts else ""
 
-        items.append({
-            "title": item_title,
-            "link": link,
-            "pub_date": generated_at,
-            "description": description,
-            "category": type_label,
-            "stable_id": sid,
-        })
+        items.append(
+            {
+                "title": item_title,
+                "link": link,
+                "pub_date": generated_at,
+                "description": description,
+                "category": type_label,
+                "stable_id": sid,
+            }
+        )
         if len(items) >= max_items:
             break
 
-    rss = ET.Element("rss", attrib={"version": "2.0",
-                                     "xmlns:atom": "http://www.w3.org/2005/Atom"})
+    rss = ET.Element("rss", attrib={"version": "2.0", "xmlns:atom": "http://www.w3.org/2005/Atom"})
     channel = ET.SubElement(rss, "channel")
 
     _add_text(channel, "title", feed_title)
@@ -129,8 +140,9 @@ def build_feed(
         _add_text(elem, "link", item["link"])
         _add_text(elem, "guid", item["stable_id"])
         if item["pub_date"]:
-            _add_text(elem, "pubDate",
-                      item["pub_date"].replace("+00:00", "GMT").replace("Z", "GMT"))
+            _add_text(
+                elem, "pubDate", item["pub_date"].replace("+00:00", "GMT").replace("Z", "GMT")
+            )
         _add_text(elem, "description", item["description"])
         _add_text(elem, "category", item["category"])
 

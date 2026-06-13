@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from nz_legislation_corpus.cli import _optional_filter
 from nz_legislation_corpus.discovery import (
     build_work_id_batch_manifest,
@@ -35,6 +37,7 @@ class FakeDiscoveryClient:
         yield {"work_id": "work-2", "title": "Duplicate"}
 
 
+@pytest.mark.unit
 def test_build_work_id_inventory_deduplicates_and_records_provenance() -> None:
     client = FakeDiscoveryClient()
 
@@ -66,6 +69,7 @@ def test_build_work_id_inventory_deduplicates_and_records_provenance() -> None:
     assert client.calls[0]["legislation_status"] == "historical"
 
 
+@pytest.mark.unit
 def test_build_work_id_inventory_honors_max_works() -> None:
     inventory = build_work_id_inventory(
         FakeDiscoveryClient(),
@@ -83,6 +87,7 @@ def test_build_work_id_inventory_honors_max_works() -> None:
     assert inventory["record_count"] == 1
 
 
+@pytest.mark.unit
 def test_optional_filter_omits_blank_and_none_sentinels() -> None:
     assert _optional_filter(None, "current") == "current"
     assert _optional_filter(" historical ", None) == "historical"
@@ -92,6 +97,7 @@ def test_optional_filter_omits_blank_and_none_sentinels() -> None:
     assert _optional_filter("-", "current") is None
 
 
+@pytest.mark.unit
 def test_normalize_work_ids_sorts_deduplicates_and_ignores_comments() -> None:
     assert normalize_work_ids(
         [
@@ -105,6 +111,7 @@ def test_normalize_work_ids_sorts_deduplicates_and_ignores_comments() -> None:
     ) == ["work-1", "work-2"]
 
 
+@pytest.mark.unit
 def test_build_work_id_batch_manifest_is_stable() -> None:
     manifest = build_work_id_batch_manifest(
         ["work-3", "work-1", "work-2", "work-2"],
@@ -135,6 +142,7 @@ def test_build_work_id_batch_manifest_is_stable() -> None:
     ]
 
 
+@pytest.mark.unit
 def test_build_work_id_reconciliation_report_compares_seed_sets() -> None:
     report = build_work_id_reconciliation_report(
         baseline_lines=["work-1", "work-2", "work-2", "# comment"],

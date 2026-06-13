@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
 from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,10 +53,12 @@ def _valid_record(corpus_id: str = "corpus-nz-legislation") -> dict[str, Any]:
     }
 
 
+@pytest.mark.unit
 def test_valid_legislation_core_record_passes() -> None:
     _validator().validate(_valid_record())
 
 
+@pytest.mark.unit
 def test_valid_hansard_core_record_passes() -> None:
     record = _valid_record("corpus-nz-hansard")
     record["record_id"] = "nz-hansard-1854-000001"
@@ -75,6 +78,7 @@ def test_valid_hansard_core_record_passes() -> None:
     _validator().validate(record)
 
 
+@pytest.mark.unit
 def test_rejects_wrong_corpus_label() -> None:
     record = _valid_record("nz-legislation")
     errors = list(_validator().iter_errors(record))
@@ -82,6 +86,7 @@ def test_rejects_wrong_corpus_label() -> None:
     assert any(error.path and error.path[0] == "corpus_id" for error in errors)
 
 
+@pytest.mark.unit
 def test_rejects_missing_manifest_hash() -> None:
     record = _valid_record()
     del record["manifest_sha256"]
@@ -90,5 +95,6 @@ def test_rejects_missing_manifest_hash() -> None:
     assert any("manifest_sha256" in error.message for error in errors)
 
 
+@pytest.mark.unit
 def test_repository_shared_core_contract_is_consistent() -> None:
     assert failures() == []
