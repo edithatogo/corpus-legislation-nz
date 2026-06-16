@@ -269,6 +269,7 @@ Current state:
 - Full sync must run via GitHub Actions (no local API key; local disk ~7.5 GB free).
 - Runner disk budget: 25 GB min, 50 GB preferred (docs/runtime_capacity_runbook.md).
 - **2026-06-13 hardening**: Empty-content detection in XML->HTML fallback, seed file emptiness warning, serial-mode batch progress counters, and extended test coverage (65 tests, ruff clean).
+- **2026-06-16 test environment isolation**: `tests/conftest.py` autouse session fixture `_isolate_settings_env` clears user-shell `NZLC_*` / `NZ_LEGISLATION_*` / `HF_TOKEN` env vars before pytest. Pre-existing 34 failures (caused by developer env leaking CSV values into `pydantic_settings` list fields) are now resolved. Full suite: **122 passed** in ~8s. ruff clean on `tests/conftest.py`. Pre-existing lint findings in `embeddings.py` / `utils.py` are unrelated and tracked separately.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 

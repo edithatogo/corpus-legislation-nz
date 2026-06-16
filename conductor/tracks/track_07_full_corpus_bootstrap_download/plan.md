@@ -148,6 +148,29 @@ loop, providing real-time monitoring for the ~8-15 hour cumulative run.
 
 All 65 tests pass; ruff lint clean.
 
+## Test environment isolation applied 2026-06-16
+
+After merging the 2026-06-13 hardening, the full pytest run on a developer
+workstation exposed 34 pre-existing failures caused by user-shell `NZLC_*`
+environment variables leaking into the test process and tripping
+`pydantic_settings` list-field validation. These failures were independent of
+the hardening work and surfaced only when the developer's shell exported
+`NZLC_SEARCH_TERMS=law,act,...` style CSV values.
+
+### Fix: tests/conftest.py autouse session fixture
+
+Added a session-scoped autouse fixture (`_isolate_settings_env`) that pops the
+known `NZLC_*`, `NZ_LEGISLATION_*`, `HF_TOKEN`, and `HF_HUB_TOKEN` env vars
+before any test runs, so `Settings()` resolves to its declared defaults.
+
+### Result
+
+- `uv run pytest -q -p no:cacheprovider tests` reports **122 passed** in ~8s.
+- `uv run ruff check tests/conftest.py` reports **All checks passed**.
+- 5 pre-existing ruff findings in `embeddings.py` (D205/D212/D400/D415) and
+  `utils.py` (I001) are unrelated to this track and remain on `main`; they are
+  tracked separately.
+
 
 ## Remaining operator tasks
 

@@ -27,9 +27,10 @@ download the full corpus into local `data/` using the proven discovery method an
 - Batch 0004 no-upload triggered on 2026-06-11: run `27362894765`.
 - Full live corpus sync requires GitHub Actions (no local API key; local disk ~7.5 GB free below 25 GB minimum).
 - Runner disk budget documented in `docs/runtime_capacity_runbook.md`: minimum 25 GB, prefer 50 GB.
+- 2026-06-16: Test environment isolation added in `tests/conftest.py` (autouse session fixture `_isolate_settings_env`); full pytest run now reports **122 passed**, unblocking this track's automated validation gate.
 
 ## Remaining Tasks
 
-- Run remaining 68 historical batches through the no-upload â†’ review â†’ confirmed-upload cycle.
+- Run remaining 68 historical batches through the no-upload -> review -> confirmed-upload cycle.
 - Run full live corpus sync after historical batches are verified.
 - Review validation, manifest, coverage evidence for each batch.
