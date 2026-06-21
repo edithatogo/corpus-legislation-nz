@@ -1,0 +1,414 @@
+[2m[thinking] [0m[2mThe[0m[2m user[0m[2m is[0m[2m asking[0m[2m me[0m[2m to[0m[2m use[0m[2m a[0m[2m specific[0m[2m syntax[0m[2m for[0m[2m a[0m[2m sub[0m[2m-agent[0m[2m environment[0m[2m.[0m[2m Let[0m[2m me[0m[2m understand[0m[2m the[0m[2m context[0m[2m.[0m[2m I[0m[2m'm[0m[2m working[0m[2m in[0m[2m the[0m[2m `[0m[2mcor[0m[2mpus[0m[2m-law[0m[2m-n[0m[2mz[0m[2m`[0m[2m repository[0m[2m at[0m[2m `[0m[2mC[0m[2m:\[0m[2mUsers[0m[2m\[0m[2m602[0m[2m172[0m[2m57[0m[2m\[0m[2mOne[0m[2mDrive[0m[2m -[0m[2m Fl[0m[2minders[0m[2m\[0m[2mre[0m[2mpos[0m[2m\[0m[2mlegal[0m[2m-n[0m[2mz[0m[2m\[0m[2mcor[0m[2mpus[0m[2m-law[0m[2m-n[0m[2mz[0m[2m`.[0m[2m 
+
+[0m[2mLet[0m[2m me[0m[2m first[0m[2m explore[0m[2m what[0m[2m's[0m[2m in[0m[2m this[0m[2m repository[0m[2m to[0m[2m understand[0m[2m the[0m[2m project[0m[2m structure[0m[2m before[0m[2m I[0m[2m can[0m[2m help[0m[2m with[0m[2m anything[0m[2m specific[0m[2m.[0m[2m But[0m[2m first[0m[2m,[0m[2m the[0m[2m user[0m[2m hasn[0m[2m't[0m[2m actually[0m[2m asked[0m[2m a[0m[2m specific[0m[2m question[0m[2m yet[0m[2m -[0m[2m they[0m[2m've[0m[2m just[0m[2m told[0m[2m me[0m[2m about[0m[2m the[0m[2m environment[0m[2m setup[0m[2m.[0m[2m Let[0m[2m me[0m[2m ask[0m[2m them[0m[2m what[0m[2m they[0m[2m need[0m[2m help[0m[2m with[0m[2m.
+
+[0m[2mWait[0m[2m,[0m[2m let[0m[2m me[0m[2m re[0m[2m-read[0m[2m the[0m[2m prompt[0m[2m.[0m[2m They[0m[2m say[0m[2m "[0m[2mYou[0m[2m are[0m[2m a[0m[2m sub[0m[2m-agent[0m[2m working[0m[2m in[0m[2m the[0m[2m Ant[0m[2mig[0m[2mravity[0m[2m IDE[0m[2m.[0m[2m Your[0m[2m environment[0m[2m lacks[0m[2m native[0m[2m writing[0m[2m tools[0m[2m,[0m[2m but[0m[2m I[0m[2m have[0m[2m a[0m[2m sh[0m[2mim[0m[2m layer[0m[2m to[0m[2m help[0m[2m you[0m[2m.[0m[2m To[0m[2m perform[0m[2m actions[0m[2m,[0m[2m you[0m[2m MUST[0m[2m use[0m[2m the[0m[2m following[0m[2m syntax[0m[2m PR[0m[2mEC[0m[2mIS[0m[2mELY[0m[2m:[0m[2m"
+
+[0m[2mBut[0m[2m then[0m[2m it[0m[2m cuts[0m[2m off[0m[2m -[0m[2m the[0m[2m syntax[0m[2m isn[0m[2m't[0m[2m provided[0m[2m.[0m[2m Let[0m[2m me[0m[2m ask[0m[2m the[0m[2m user[0m[2m for[0m[2m clarification[0m[2m about[0m[2m what[0m[2m they[0m[2m want[0m[2m me[0m[2m to[0m[2m do[0m[2m and[0m[2m what[0m[2m syntax[0m[2m they[0m[2m want[0m[2m me[0m[2m to[0m[2m use[0m[2m.
+
+[0m[2mActually[0m[2m,[0m[2m I[0m[2m think[0m[2m this[0m[2m might[0m[2m be[0m[2m a[0m[2m context[0m[2m where[0m[2m they[0m[2m want[0m[2m me[0m[2m to[0m[2m just[0m[2m proceed[0m[2m with[0m[2m the[0m[2m available[0m[2m tools[0m[2m I[0m[2m have[0m[2m.[0m[2m Let[0m[2m me[0m[2m check[0m[2m what[0m[2m tools[0m[2m I[0m[2m have[0m[2m available[0m[2m and[0m[2m what[0m[2m the[0m[2m repository[0m[2m contains[0m[2m.[0m
+I see you're setting me up as a sub-agent in the Antigravity IDE, and you mentioned a specific syntax I must use — but the syntax wasn't included in your message. Could you please provide:
+
+1. **The precise syntax** you want me to use for performing actions
+2. **The task** you'd like me to work on in the `corpus-law-nz` repository
+
+In the meantime, let me explore the repository to understand what we're working with.
+[36m[run_commands][0m cmd /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz
+   [90m⎿ [0m[2mVolume in drive C is System
+  Volume Serial Number is 3E21-483F
+ 
+  Directory...[0m
+[2m[thinking] [0m[2mLet[0m[2m me[0m[2m look[0m[2m at[0m[2m some[0m[2m key[0m[2m files[0m[2m to[0m[2m understand[0m[2m the[0m[2m project[0m[2m better[0m[2m -[0m[2m sub[0m[2magents[0m[2m.yaml[0m[2m,[0m[2m swarm[0m[2m-config[0m[2m.yaml[0m[2m,[0m[2m and[0m[2m task[0m[2m_[0m[2mplan[0m[2m.md[0m[2m seem[0m[2m particularly[0m[2m relevant[0m[2m since[0m[2m this[0m[2m is[0m[2m about[0m[2m sub[0m[2m-ag[0m[2ments[0m[2m and[0m[2m swarm[0m[2m.[0m
+Let me look at the key configuration files to understand the swarm/sub-agent setup:
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | subagents:
+   2 |   - name: "Oracle"
+   3 |     description: "Complex deb... (+5 more)[0m
+[2m[thinking] [0m[2mNow[0m[2m I[0m[2m have[0m[2m a[0m[2m good[0m[2m understanding[0m[2m of[0m[2m the[0m[2m project[0m[2m.[0m[2m This[0m[2m is[0m[2m the[0m[2m `[0m[2mcor[0m[2mpus[0m[2m-leg[0m[2mislation[0m[2m-n[0m[2mz[0m[2m`[0m[2m project[0m[2m,[0m[2m which[0m[2m is[0m[2m an[0m[2m API[0m[2m-first[0m[2m NZ[0m[2m legislation[0m[2m corpus[0m[2m pipeline[0m[2m.[0m[2m The[0m[2m swarm[0m[2m is[0m[2m configured[0m[2m with[0m[2m [0m[2m4[0m[2m agents[0m[2m ([0m[2mOracle[0m[2m,[0m[2m Junior[0m[2m,[0m[2m Libr[0m[2marian[0m[2m,[0m[2m Quality[0m[2m_[0m[2mValidator[0m[2m)[0m[2m and[0m[2m the[0m[2m mission[0m[2m is[0m[2m to[0m[2m "[0m[2mExecute[0m[2m the[0m[2m Full[0m[2m Corpus[0m[2m Bootstrap[0m[2m Download[0m[2m for[0m[2m New[0m[2m Zealand[0m[2m legislation[0m[2m,[0m[2m processing[0m[2m historical[0m[2m batches[0m[2m via[0m[2m scheduled[0m[2m workflows[0m[2m and[0m[2m validating[0m[2m sche[0m[2mmas[0m[2m."
+
+[0m[2mBut[0m[2m the[0m[2m user[0m[2m hasn[0m[2m't[0m[2m actually[0m[2m given[0m[2m me[0m[2m a[0m[2m specific[0m[2m task[0m[2m yet[0m[2m.[0m[2m They[0m[2m mentioned[0m[2m I[0m[2m need[0m[2m to[0m[2m use[0m[2m a[0m[2m specific[0m[2m syntax[0m[2m,[0m[2m but[0m[2m the[0m[2m syntax[0m[2m wasn[0m[2m't[0m[2m provided[0m[2m in[0m[2m their[0m[2m message[0m[2m.[0m[2m Let[0m[2m me[0m[2m clarify[0m[2m.[0m
+I've explored the repository. Here's a summary of what I can see:
+
+**Project: `corpus-legislation-nz` v0.5.0**
+- API-first NZ legislation corpus pipeline: NZ Legislation API → optimized Parquet → Hugging Face/Xet → annual Zenodo archives
+- Python 3.11+, using Polars, PyArrow, Pydantic, Click/Typer CLI
+- Entry point: `nzlc` CLI via `nz_legislation_corpus.cli:app`
+- Tests with pytest, ruff linting, hatchling build
+
+**Swarm Configuration** (from `swarm-config.yaml`):
+- Engine: `cline` | Backend: `thread` | Default model: `deepseek-v4-flash`
+- 4 agents: **Oracle** (architecture/debugging), **Junior** (implementation), **Librarian** (research/docs), **Quality_Validator** (QA/gatekeeper)
+- Preset: `legal_nlp`
+
+**Mission** (from `task_plan.md`):
+> *Execute the Full Corpus Bootstrap Download for New Zealand legislation, processing historical batches via scheduled workflows and validating schemas.*
+
+---
+
+However, you mentioned I need to follow a **specific syntax** for actions in the Antigravity IDE shim layer, but the syntax itself wasn't provided in your message. 
+
+Could you please:
+1. **Provide the required action syntax** for the Antigravity IDE shim
+2. **Tell me what specific task you'd like me to work on** — e.g., should I act as one of the swarm agents (Oracle, Junior, Librarian, Quality_Validator), or is this something else?
+[2m[thinking] [0m[2mLet[0m[2m me[0m[2m start[0m[2m by[0m[2m understanding[0m[2m the[0m[2m task[0m[2m and[0m[2m the[0m[2m code[0m[2mbase[0m[2m structure[0m[2m.[0m[2m I[0m[2m'm[0m[2m the[0m[2m Libr[0m[2marian[0m[2m role[0m[2m,[0m[2m tasked[0m[2m with[0m[2m reading[0m[2m documentation[0m[2m,[0m[2m analyzing[0m[2m the[0m[2m code[0m[2mbase[0m[2m structure[0m[2m,[0m[2m and[0m[2m finding[0m[2m relevant[0m[2m examples[0m[2m for[0m[2m the[0m[2m mission[0m[2m "[0m[2mExecute[0m[2m the[0m[2m Full[0m[2m Corpus[0m[2m Bootstrap[0m[2m Download[0m[2m for[0m[2m New[0m[2m Zealand[0m[2m legislation[0m[2m,[0m[2m processing[0m[2m historical[0m[2m batches[0m[2m via[0m[2m scheduled[0m[2m workflows[0m[2m and[0m[2m validating[0m[2m sche[0m[2mmas[0m[2m."
+
+[0m[2mLet[0m[2m me[0m[2m first[0m[2m explore[0m[2m the[0m[2m code[0m[2mbase[0m[2m to[0m[2m understand[0m[2m what[0m[2m we[0m[2m're[0m[2m working[0m[2m with[0m[2m.[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz
+   [90m⎿ [0m[2mVolume in drive C is System
+  Volume Serial Number is 3E21-483F
+ 
+  Directory...[0m
+[2m[thinking] [0m[2mGood[0m[2m,[0m[2m I[0m[2m can[0m[2m see[0m[2m the[0m[2m repository[0m[2m structure[0m[2m.[0m[2m Let[0m[2m me[0m[2m explore[0m[2m the[0m[2m key[0m[2m areas[0m[2m to[0m[2m understand[0m[2m the[0m[2m code[0m[2mbase[0m[2m better[0m[2m.[0m[2m I[0m[2m'll[0m[2m look[0m[2m at[0m[2m:
+[0m[2m1[0m[2m.[0m[2m The[0m[2m source[0m[2m code[0m[2m in[0m[2m `[0m[2msrc[0m[2m/[0m[2m`
+[0m[2m2[0m[2m.[0m[2m Documentation[0m[2m in[0m[2m `[0m[2mdocs[0m[2m/[0m[2m`
+[0m[2m3[0m[2m.[0m[2m The[0m[2m sche[0m[2mmas[0m[2m in[0m[2m `[0m[2msche[0m[2mmas[0m[2m/[0m[2m`
+[0m[2m4[0m[2m.[0m[2m Configuration[0m[2m files[0m[2m like[0m[2m `[0m[2mpy[0m[2mproject[0m[2m.t[0m[2mom[0m[2ml[0m[2m`,[0m[2m `[0m[2msw[0m[2marm[0m[2m-config[0m[2m.yaml[0m[2m`,[0m[2m `[0m[2msub[0m[2magents[0m[2m.yaml[0m[2m`
+[0m[2m5[0m[2m.[0m[2m Script[0m[2ms[0m[2m in[0m[2m `[0m[2mscripts[0m[2m/[0m[2m`
+[0m[2m6[0m[2m.[0m[2m The[0m[2m conductor[0m[2m directory[0m[2m
+[0m[2m7[0m[2m.[0m[2m The[0m[2m READ[0m[2mME[0m[2m.md[0m[2m for[0m[2m an[0m[2m overview[0m
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | # NZ Legislation Corpus Pipeline
+   2 | 
+   3 | Low-maintenance, API-firs... (+6 more)[0m
+[2m[thinking] [0m[2mNow[0m[2m I[0m[2m have[0m[2m a[0m[2m good[0m[2m overview[0m[2m.[0m[2m Let[0m[2m me[0m[2m explore[0m[2m deeper[0m[2m into[0m[2m:
+[0m[2m1[0m[2m.[0m[2m The[0m[2m source[0m[2m code[0m[2m structure[0m[2m ([0m[2msrc[0m[2m/)
+[0m[2m2[0m[2m.[0m[2m The[0m[2m sche[0m[2mmas[0m[2m directory[0m[2m
+[0m[2m3[0m[2m.[0m[2m The[0m[2m docs[0m[2m directory[0m[2m for[0m[2m relevant[0m[2m documentation[0m[2m
+[0m[2m4[0m[2m.[0m[2m The[0m[2m scripts[0m[2m directory[0m[2m
+[0m[2m5[0m[2m.[0m[2m The[0m[2m conductor[0m[2m directory[0m[2m
+[0m[2m6[0m[2m.[0m[2m The[0m[2m workflows[0m[2m (.[0m[2mgithub[0m[2m/)
+[0m[2m7[0m[2m.[0m[2m The[0m[2m seeds[0m[2m directory[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\src\nz_legislation_corpus"; ...
+   [90m⎿ [0m[32mok[0m
+[2m[thinking] [0m[2mThe[0m[2m `[0m[2mdir[0m[2m /[0m[2ms[0m[2m /[0m[2mb[0m[2m`[0m[2m with[0m[2m quote[0m[2m escaping[0m[2m is[0m[2m having[0m[2m issues[0m[2m.[0m[2m Let[0m[2m me[0m[2m try[0m[2m a[0m[2m different[0m[2m approach[0m[2m.[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\src\nz_legislation_corpus
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\schemas
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\docs
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\scripts
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\.github\workflows
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir /s /b C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\conductor
+   [90m⎿ [0m[32mok[0m
+[2m[thinking] [0m[2mThe[0m[2m path[0m[2m has[0m[2m spaces[0m[2m ("[0m[2mOne[0m[2mDrive[0m[2m -[0m[2m Fl[0m[2minders[0m[2m")[0m[2m which[0m[2m might[0m[2m be[0m[2m causing[0m[2m issues[0m[2m with[0m[2m the[0m[2m structured[0m[2m command[0m[2m format[0m[2m.[0m[2m Let[0m[2m me[0m[2m try[0m[2m using[0m[2m the[0m[2m raw[0m[2m string[0m[2m format[0m[2m instead[0m[2m.[0m
+[36m[run_commands][0m dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\src\nz_legislation_corpus"
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\schemas"
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\docs"
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\scripts"
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\.github\workflows"
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m dir /s /b "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\conductor"
+   [90m⎿ [0m[32mok[0m
+[2m[thinking] [0m[2mPower[0m[2mShell[0m[2m's[0m[2m `[0m[2mdir[0m[2m`[0m[2m with[0m[2m `/[0m[2ms[0m[2m /[0m[2mb[0m[2m`[0m[2m flags[0m[2m isn[0m[2m't[0m[2m working[0m[2m.[0m[2m It[0m[2m's[0m[2m interpreting[0m[2m it[0m[2m as[0m[2m the[0m[2m PowerShell[0m[2m `[0m[2mdir[0m[2m`[0m[2m ([0m[2malias[0m[2m for[0m[2m Get[0m[2m-[0m[2mChild[0m[2mItem[0m[2m)[0m[2m rather[0m[2m than[0m[2m `[0m[2mcmd[0m[2m.exe[0m[2m`[0m[2m'[0m[2ms[0m[2m `[0m[2mdir[0m[2m`.[0m[2m Let[0m[2m me[0m[2m use[0m[2m cmd[0m[2m.exe[0m[2m explicitly[0m[2m or[0m[2m use[0m[2m PowerShell[0m[2m syntax[0m[2m.
+
+[0m[2mLet[0m[2m me[0m[2m try[0m[2m using[0m[2m the[0m[2m structured[0m[2m command[0m[2m approach[0m[2m with[0m[2m the[0m[2m correct[0m[2m escaping[0m[2m.[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\src\nz_legislation_corpus /s /b
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\schemas /s /b
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\docs /s /b
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\scripts /s /b
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\.github\workflows /s /b
+   [90m⎿ [0m[32mok[0m
+[36m[run_commands][0m cmd.exe /c dir C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\conductor /s /b
+   [90m⎿ [0m[32mok[0m
+[2m[thinking] [0m[2mThe[0m[2m path[0m[2m might[0m[2m need[0m[2m quotes[0m[2m around[0m[2m it[0m[2m because[0m[2m of[0m[2m the[0m[2m "[0m[2mOne[0m[2mDrive[0m[2m -[0m[2m Fl[0m[2minders[0m[2m"[0m[2m space[0m[2m.[0m[2m Let[0m[2m me[0m[2m try[0m[2m different[0m[2m approaches[0m[2m.[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\src\nz_legislation_corpus"...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\schemas" | Select-Object F...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\docs" | Select-Object Full...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\scripts" | Select-Object F...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\.github\workflows" | Selec...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\conductor" | Select-Object...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[2m[thinking] [0m[2mI[0m[2m now[0m[2m have[0m[2m a[0m[2m clear[0m[2m picture[0m[2m of[0m[2m the[0m[2m code[0m[2mbase[0m[2m.[0m[2m The[0m[2m key[0m[2m track[0m[2m for[0m[2m this[0m[2m mission[0m[2m is[0m[2m "[0m[2mtrack[0m[2m_[0m[2m07[0m[2m_full[0m[2m_c[0m[2mor[0m[2mpus[0m[2m_b[0m[2mootstrap[0m[2m_d[0m[2mownload[0m[2m".[0m[2m Let[0m[2m me[0m[2m now[0m[2m read[0m[2m the[0m[2m critical[0m[2m docs[0m[2m and[0m[2m source[0m[2m files[0m[2m to[0m[2m fulfill[0m[2m the[0m[2m Libr[0m[2marian[0m[2m role[0m[2m.[0m[2m I[0m[2m need[0m[2m to[0m[2m:
+
+[0m[2m1[0m[2m.[0m[2m Read[0m[2m the[0m[2m full[0m[2m_c[0m[2mor[0m[2mpus[0m[2m_b[0m[2mootstrap[0m[2m.yml[0m[2m workflow[0m[2m
+[0m[2m2[0m[2m.[0m[2m Read[0m[2m the[0m[2m full[0m[2m_c[0m[2mor[0m[2mpus[0m[2m_[0m[2moperations[0m[2m.md[0m[2m doc[0m[2m
+[0m[2m3[0m[2m.[0m[2m Read[0m[2m the[0m[2m sche[0m[2mmas[0m[2m
+[0m[2m4[0m[2m.[0m[2m Read[0m[2m the[0m[2m source[0m[2m code[0m[2m related[0m[2m to[0m[2m sync[0m[2m,[0m[2m validate[0m[2m,[0m[2m discovery[0m[2m,[0m[2m and[0m[2m cl[0m[2mi[0m[2m
+[0m[2m5[0m[2m.[0m[2m Read[0m[2m the[0m[2m conductor[0m[2m track[0m[2m_[0m[2m07[0m[2m for[0m[2m the[0m[2m detailed[0m[2m plan[0m[2m
+[0m[2m6[0m[2m.[0m[2m Read[0m[2m docs[0m[2m about[0m[2m historical[0m[2m batch[0m[2m processing[0m
+Excellent! Now let me read the key documentation and source files related to this mission.
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | name: Full corpus bootstrap
+   2 | 
+   3 | on:
+   4 |   workflow_dispatch... (+4 more)[0m
+[2m[thinking] [0m[2mNow[0m[2m I[0m[2m have[0m[2m a[0m[2m great[0m[2m understanding[0m[2m of[0m[2m the[0m[2m full[0m[2m corpus[0m[2m bootstrap[0m[2m workflow[0m[2m and[0m[2m its[0m[2m context[0m[2m.[0m[2m Let[0m[2m me[0m[2m now[0m[2m read[0m[2m the[0m[2m key[0m[2m source[0m[2m code[0m[2m files[0m[2m related[0m[2m to[0m[2m syn[0m[2mcing[0m[2m,[0m[2m validation[0m[2m,[0m[2m sche[0m[2mmas[0m[2m,[0m[2m and[0m[2m the[0m[2m discovery[0m[2m process[0m[2m.[0m
+Now let me read the core source files related to the mission.
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | from __future__ import annotations
+   2 | 
+   3 | import json
+   4 | impo... (+3 more)[0m
+[2m[thinking] [0m[2mLet[0m[2m me[0m[2m also[0m[2m read[0m[2m the[0m[2m sche[0m[2mmas[0m[2m,[0m[2m discovery[0m[2m module[0m[2m,[0m[2m and[0m[2m some[0m[2m other[0m[2m relevant[0m[2m doc[0m[2m files[0m[2m.[0m
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | {  2 |   "$schema": "https://json-schema.org/draft/2020-12/schema",  3 | ... (+5 more)[0m
+[2m[thinking] [0m[2mNow[0m[2m let[0m[2m me[0m[2m read[0m[2m the[0m[2m conductor[0m[2m track[0m[2m_[0m[2m07[0m[2m for[0m[2m the[0m[2m detailed[0m[2m plan[0m[2m,[0m[2m and[0m[2m a[0m[2m few[0m[2m more[0m[2m docs[0m[2m related[0m[2m to[0m[2m validation[0m[2m and[0m[2m sche[0m[2mmas[0m[2m.[0m
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\conductor\tracks\track_07*...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[2m[thinking] [0m[2mLet[0m[2m me[0m[2m find[0m[2m the[0m[2m full[0m[2m file[0m[2m names[0m[2m including[0m[2m extensions[0m[2m for[0m[2m track[0m[2m_[0m[2m07[0m[2m files[0m[2m.[0m
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | # Historical corpus bootstrap
+   2 | 
+   3 | The live Hugging Face datase... (+4 more)[0m
+[2m[thinking] [0m[2mLet[0m[2m me[0m[2m also[0m[2m check[0m[2m the[0m[2m seeds[0m[2m directory[0m[2m and[0m[2m the[0m[2m relevant[0m[2m test[0m[2m file[0m[2m for[0m[2m the[0m[2m validation[0m[2m schema[0m[2m.[0m
+Now let me check the seeds directory and a few more critical files.
+[36m[run_commands][0m Get-ChildItem -Recurse "C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\seeds" | Select-Object Ful...
+   [90m⎿ [0m[2mFullName                                                                     ...[0m
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | from __future__ import annotations
+   2 | 
+   3 | import json
+   4 | impo... (+3 more)[0m
+[2m[thinking] [0m[2mNow[0m[2m I[0m[2m have[0m[2m a[0m[2m very[0m[2m comprehensive[0m[2m understanding[0m[2m of[0m[2m the[0m[2m code[0m[2mbase[0m[2m.[0m[2m Let[0m[2m me[0m[2m also[0m[2m read[0m[2m the[0m[2m remaining[0m[2m important[0m[2m docs[0m[2m and[0m[2m scripts[0m[2m to[0m[2m provide[0m[2m thorough[0m[2m references[0m[2m.
+
+[0m[2mLet[0m[2m me[0m[2m now[0m[2m compile[0m[2m all[0m[2m my[0m[2m findings[0m[2m and[0m[2m update[0m[2m the[0m[2m shared[0m[2m state[0m[2m files[0m[2m.[0m
+Now let me read a couple more important script files for the historical workflow helpers.
+[36m[read_files][0m {"files":[{"path":"C:\\Users\\60217257\\OneDrive - Flinde...
+   [90m⎿ [0m[2m1 | from __future__ import annotations   2 |    3 | import argparse   4 | imp... (+2 more)[0m
+[2m[thinking] [0m[2mI[0m[2m now[0m[2m have[0m[2m a[0m[2m comprehensive[0m[2m understanding[0m[2m of[0m[2m the[0m[2m code[0m[2mbase[0m[2m.[0m[2m Let[0m[2m me[0m[2m compile[0m[2m my[0m[2m findings[0m[2m and[0m[2m update[0m[2m the[0m[2m shared[0m[2m state[0m[2m files[0m[2m.[0m[2m Let[0m[2m me[0m[2m now[0m[2m write[0m[2m the[0m[2m findings[0m[2m.md[0m[2m and[0m[2m progress[0m[2m.md[0m[2m with[0m[2m my[0m[2m research[0m[2m findings[0m[2m.[0m
+Now I have all the information I need. Let me update the shared state files with my comprehensive findings.
+
+<<WRITE_FILE path="C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\findings.md">>
+# Findings & Scratchpad
+
+## LIBRARIAN RESEARCH — Full Corpus Bootstrap Download
+
+### Research completed: 2026-06-14
+
+---
+
+## 1. Codebase Architecture Overview
+
+### Source package: `src/nz_legislation_corpus/`
+
+| Module | Purpose |
+|--------|---------|
+| `cli.py` | Typer-based CLI (`nzlc` command), all subcommands: sync, validate, manifest, hf-upload, discover-work-ids, split-work-id-batches, reconcile-work-ids, coverage-report, archive, zenodo-upload, doctor, smoke-fixture, metadata-packages, rss-feed |
+| `nz_api.py` | `NZLegislationClient` — HTTP client for official NZ Legislation API (`api.legislation.govt.nz/v0`). X-Api-Key auth, 429/403/5xx retry with exponential backoff, rate-limit low-quota sleeping, configurable pacing (`min_seconds_between_requests`) |
+| `schema.py` | Constants: `RECORD_SCHEMA_VERSION = "1.0"`, `RECORD_SCHEMA_ID = "nzlc-record-v1"` |
+| `normalize.py` | `normalize_version_record()` — transforms raw API version dict + raw content into normalized record dict with all required fields |
+| `validate.py` | `validate_records()` — JSON Schema (Draft202012) validation + required-field checks + SHA-256 text hash verification + duplicate detection |
+| `config.py` | `Settings` class (Pydantic Settings) reading from environment variables with aliases |
+| `discovery.py` | Work-ID inventory building, batch splitting, reconciliation between seed inventories |
+| `manifest.py` | `build_manifest()` and `build_change_report()` for data directory content hashing |
+| `hf_sync.py` | Hugging Face upload (via `hf upload-large-folder` with fallback to `HfApi.upload_folder`) and stale file pruning |
+| `types.py` | `SyncStats` dataclass and `FormatLink` |
+| `archive.py` | Yearly archive builder |
+| `zenodo.py` | Zenodo draft upload and publish |
+| `extract_text.py` | Text extraction from XML/HTML |
+| `parquet_writer.py` | Partitioned Parquet writer |
+| `rss_feed.py` | RSS feed generator |
+| `metadata_packages.py` | Croissant, RO-Crate, Frictionless, DCAT, PROV-O generation |
+| `embeddings.py` | BGE-M3 embeddings (optional) |
+| `utils.py` | File I/O, hashing helpers |
+| `artifact_provenance.py` | Attestation artifact creation |
+| `osf_optional.py` | OSF integration (optional) |
+
+### Key dependency versions (from pyproject.toml):
+- Python >= 3.11
+- requests, click, typer, rich, pyarrow, polars, defusedxml, huggingface_hub, hf-xet, jsonschema, zstandard, pydantic, pydantic-settings
+
+---
+
+## 2. Schema Landscape
+
+### Legislation Record Schema (`schemas/legislation_record.schema.json`)
+- JSON Schema Draft 2020-12
+- `$id`: `https://example.org/schemas/nz-legislation-record.schema.json`
+- 26 **required** fields: `stable_id`, `record_schema_version` (const: "1.0"), `work_id`, `version_id`, `title`, `jurisdiction` (const: "New Zealand"), `country` (const: "NZ"), `source`, `source_url`, `api_url`, `legislation_type`, `legislation_status`, `scrape_date`, `ingest_timestamp_utc`, `language`, `text`, `text_sha256` (pattern: `^[a-f0-9]{64}$`), `source_hash` (pattern: `^[a-f0-9]{64}$`), `pipeline_version`
+- Optional fields: `xml_url`, `html_url`, `pdf_url`, `legislation_subtype`, `version_date`, `year`, `administering_agencies`, `is_latest_version`, `raw_xml_sha256`, `raw_content_sha256`, `id_is_ephemeral`, `id_ephemeral_reason`, `raw_version_metadata`
+- `additionalProperties: true`
+
+### Shared NZ Corpus Core Schema (`schemas/shared_nz_corpus_core.schema.json`)
+- Cross-corpus compatibility between legislation and Hansard
+- Required: `corpus_id` (enum: "corpus-nz-legislation" | "corpus-nz-hansard"), `record_id`, `source_id`, `jurisdiction`, `country`, `document_type`, `display_title`, `language`, `record_schema_version`, `canonical_uri`, `source_url`, `source_version`, `effective_date`, `published_date`, `last_modified_date`, `content_sha256`, `manifest_sha256`, `coverage_status`, `rights_note`, `provenance`
+
+### Release Evidence Schema (`schemas/release_evidence.schema.json`)
+- Used for Zenodo archive release evidence files
+
+---
+
+## 3. Full Corpus Bootstrap Workflow (`full_corpus_bootstrap.yml`)
+
+### Trigger: `workflow_dispatch` (manual only)
+
+### Inputs:
+| Input | Default | Purpose |
+|-------|---------|---------|
+| `seed_work_ids_path` | `seeds/work_ids.txt` | Reviewed seed file |
+| `batch_size` | `500` | Work IDs per batch |
+| `start_batch` | `1` | First batch to process |
+| `end_batch` | `68` | Last batch (computed from 33,693 unique work IDs ÷ 500 = ~68 batches) |
+| `merge_policy` | `restore_merge` | Restore from HF then merge, or replace local |
+| `min_seconds_between_requests` | `1.0` | API pacing in seconds |
+| `max_parallel` | `2` | Parallel batch jobs (when serial=false) |
+| `serial` | `false` | Process batches sequentially in one runner |
+| `max_works` | `none` | Optional sync limit |
+
+### Jobs:
+1. **plan** — Reads seed file, validates, splits into batch files, computes SHA-256 hashes, writes provenance JSON, uploads batch artifact
+2. **batch** (parallel, when `serial=false`) — Fans out across runners, restores live HF state, syncs batch, validates, manifests, coverage-report, uploads batch artifact
+3. **serial** (when `serial=true`) — Processes all batches sequentially in one runner, cumulative `data/` directory
+
+### Post-sync validation gates:
+- `uv run nzlc validate` — blocks on errors
+- `uv run nzlc manifest` — builds `latest_manifest.json` and `latest_changes.json`
+- `uv run nzlc coverage-report` — writes `coverage_report.json` and appends to `coverage_history.jsonl`
+
+### Review artifacts (from each batch):
+- `data/_state/sync_state.json` — failed-version warnings
+- `data/manifests/validation_report.json`
+- `data/manifests/latest_manifest.json`
+- `data/manifests/coverage_report.json`
+
+---
+
+## 4. Historical Bootstrap Context
+
+### Dataset split:
+- **Live**: `edithatogo/corpus-legislation-nz` — daily API-discovery corpus
+- **Historical**: `edithatogo/corpus-legislation-nz-historical` — reviewed batch uploads
+
+### Current historical progress (from `historical_completeness_plan.md`):
+- Batch 0001: Confirmed, 5,173 records, revision `dcc92964ef832c7e0bd2f904f88de523998304f2`
+- Batch 0002: Confirmed, 5,779 records, revision `bb425cb308410fac43095a30f88c9d92848a0eb8`
+- Batch 0003: Confirmed, 6,384 records, revision `0cc4021cae106c0b9ae3722488faed21df3e578c`
+- Batch 0004: Confirmed, manifest SHA-256 `c00b6d316c423738206a92ca5c18abafdcde79fd7288b9cb30e120d0e619709c`
+- Batch 0005: Confirmed
+- Batch 0006: Confirmed (in progress run `27382946724`)
+- Batch 0007: No-upload pending (run `27383069057`)
+- Batches 0005-0068: Seeds promoted to `main` in `seeds/reviewed/`
+- **Total unique work IDs in seed**: 33,693
+- **Seed SHA-256**: `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`
+
+### Relevant workflows for historical processing:
+| Workflow | Purpose |
+|----------|---------|
+| `historical_batch_review.yml` | Parallel batch fan-out for no-upload validation on GitHub-hosted runners |
+| `historical_hf_upload.yml` | Serial confirmed upload to historical HF dataset |
+| `historical_seed_reconciliation.yml` | Compare candidate vs baseline seeds before promotion |
+| `historical_sync_pilot.yml` | Bounded discovery + sync pilot |
+| `historical_work_id_discovery.yml` | Broad API-discovery of work IDs |
+| `init_historical_hf_shell.yml` | Initialize historical HF dataset shell |
+
+---
+
+## 5. Scheduled Workflows
+
+| Workflow | Schedule | Purpose |
+|----------|----------|---------|
+| `hf_sync.yml` | Daily (`17 14 * * *`) | Live corpus sync + HF upload |
+| `doctor.yml` | Weekly | Non-destructive connectivity/config check |
+| `monthly_full_reconciliation.yml` | Monthly | Seed reconciliation, optional full sync/upload |
+| `annual_zenodo_archive.yml` | Annual | Production draft archive + optional publish |
+
+---
+
+## 6. Validation Governance (from `docs/schema_governance.md`)
+
+### Blocking failures (upload blockers):
+- Duplicate `stable_id` or `version_id`
+- Missing required fields
+- Empty `text` (unless `--allow-empty-text`)
+- `text_sha256` mismatch
+- JSON Schema validation errors
+- `record_schema_version` mismatch
+
+### Informational warnings (non-blocking):
+- Missing XML URL when another format is available
+- Ephemeral identifiers (`id_is_ephemeral`)
+
+### Coverage report risk indicators:
+- `missing_text_records`
+- `missing_xml_url_records`
+- `ephemeral_identifier_records`
+
+---
+
+## 7. Key Decision Log (Extracted from docs)
+
+1. **First bootstrap on controlled runner**: Not on GitHub Actions due to unknown corpus size; use local/self-hosted with ≥25GB free disk
+2. **Deterministic seed over search**: Seed files are safest; search terms are convenience for discovery
+3. **Historical != Live**: Separate HF datasets; guard script prevents accidental upload to live
+4. **XML-to-HTML fallback**: Early local/imperial Acts have XML 404s; HTML fallback remediates this
+5. **restore_merge only for incremental**: Confirmed incremental uploads MUST use `restore_merge` to avoid pruning published data
+6. **review → confirm workflow**: No-upload review first, then confirmed upload with `upload_confirmed=true`
+7. **Content SHA-256 comparison**: Upload skipped when remote manifest content hash matches local
+
+---
+
+## 8. CLI Command Reference for Bootstrap
+
+```bash
+# Sync with seed work IDs (deterministic bootstrap)
+uv run nzlc sync --seed-work-ids seeds/work_ids.txt --allow-no-search-terms
+
+# Validate records against JSON Schema
+uv run nzlc validate
+
+# Build manifest (content hashing)
+uv run nzlc manifest
+
+# Coverage report (by type/status/year, risk indicators)
+uv run nzlc coverage-report
+
+# Discover work IDs from search terms
+uv run nzlc discover-work-ids --search-terms "act,bill" --output-path seeds/discovered.txt
+
+# Split seed into deterministic batches
+uv run nzlc split-work-id-batches --seed-work-ids seeds/work_ids.txt --batch-size 500
+
+# Reconcile two seed inventories
+uv run nzlc reconcile-work-ids --baseline-work-ids seeds/baseline.txt --candidate-work-ids seeds/candidate.txt
+
+# Upload to Hugging Face
+uv run nzlc hf-upload
+```
+<<END_WRITE>>
+
+<<WRITE_FILE path="C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\corpus-law-nz\progress.md">>
+# Mission Progress
+
+Mission: Execute the Full Corpus Bootstrap Download for New Zealand legislation, processing historical batches via scheduled workflows and validating schemas.
+
+## Status Log
+
+### 2026-06-14 — Librarian Research Complete
+
+**Completed by**: Librarian agent
+**Tools used**: `read_files`, `run_commands` (via structured Get-ChildItem PowerShell commands)
+
+#### Key research findings:
+1. **Codebase**: 22 Python source modules in `src/nz_legislation_corpus/`, providing the `nzlc` CLI for sync, validate, manifest, hf-upload, discover, reconcile, and coverage reporting
+2. **Schemas**: 3 JSON Schema files — `legislation_record.schema.json` (v1.0, 26 required fields), `shared_nz_corpus_core.schema.json` (cross-corpus compatibility), `release_evidence.schema.json`
+3. **Full corpus bootstrap workflow** (`.github/workflows/full_corpus_bootstrap.yml`): Manual dispatch, 10 configurable inputs, parallel batch fan-out (max 2) or serial mode, supports `restore_merge` and `replace_existing` policies
+4. **Historical progress**: Batches 0001-0005 confirmed uploaded, 0006 in progress, 0007 pending review. 68 total batches from 33,693 unique work IDs. Seed SHA-256: `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`
+5. **Scheduled workflows**: Daily HF sync (`hf_sync.yml`), weekly doctor (`doctor.yml`), monthly reconciliation (`monthly_full_reconciliation.yml`), annual Zenodo archive
+6. **Validation gates**: 6 blocking error types (duplicate IDs, missing fields, empty text, hash mismatch, schema errors, version mismatch), 2 informational warnings (missing XML URL, ephemeral IDs)
+7. **Key architecture decisions**: Deterministic seed files over search, separate live/historical HF datasets, XML-to-HTML fallback for legacy Acts, `restore_merge` policy for incremental uploads
+
+#### Findings documented in:
+- `findings.md` — Comprehensive research with 8 sections covering architecture, schemas, workflows, historical context, validation governance, decisions, and CLI reference
+
+#### Next steps for mission:
+- **Oracle**: Design the orchestration plan for executing batches 0006-0068, handling retry logic for failed versions, and coordinating parallel batch execution
+- **Junior**: Implement the bootstrap execution script(s) for local/self-hosted runner, wire up the batch loop with proper state preservation
+- **Quality_Validator**: Validate that the output of each batch meets schema requirements, verify manifest integrity, and confirm coverage report outputs are clean
+
+<<END_WRITE>>

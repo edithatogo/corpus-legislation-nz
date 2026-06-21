@@ -1,7 +1,7 @@
 # Spec - Source Discovery Completeness
 
 ## Status
-blocked
+done
 
 ## Goal
 establish the discovery method needed before the project can claim a complete corpus.

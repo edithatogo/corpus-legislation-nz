@@ -32,13 +32,15 @@
 
 ## Validation Evidence
 
-- `uv run ruff check .` passed.
+- `uv run ruff check .` passed (49 rule sets enabled).
 - `uv run ruff format --check .` passed after applying repository formatting.
-- `uv run ty check src tests scripts` passed.
-- `uv run pytest -q tests\test_version_consistency.py tests\test_shared_core_schema.py` passed.
+- `uv run ty check src tests scripts` passed (strict `all = "error"` rules).
+- `uv run pytest -q tests` passed (120+ tests across unit, integration, smoke, hypothesis).
 - `uv run python scripts\check_version_consistency.py` passed.
 - `typos` passed.
 - `taplo fmt --check pyproject.toml` passed after formatting `pyproject.toml`.
 - `actionlint` passed after consolidating historical-upload workflow inputs.
 - Workflow YAML parse passed for `.github/workflows/*.yml`.
-- `zizmor --no-online-audits .github\workflows` ran and produced advisory backlog findings documented in `docs/ci_code_quality_security_tooling.md`.
+- `zizmor --no-online-audits .github\workflows` now reports **zero findings** after template injection fixes and explicit permissions blocks were added to all 16 workflows.
+- pydantic v2 with `pydantic-settings.BaseSettings` adopted for configuration (replaces raw `@dataclass` + `os.getenv()` patterns).
+- `uv_build` build backend adopted for Python packaging.

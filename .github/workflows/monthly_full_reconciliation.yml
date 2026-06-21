@@ -116,12 +116,13 @@ jobs:
         run: |
           set -euo pipefail
           uv run python - <<'PY'
+          import os
           from huggingface_hub import snapshot_download
 
           snapshot_download(
-              repo_id="${{ vars.HF_REPO_ID }}",
+              repo_id=os.environ["HF_REPO_ID"],
               repo_type="dataset",
-              token="${{ secrets.HF_TOKEN }}",
+              token=os.environ.get("HF_TOKEN"),
               local_dir="data",
               allow_patterns=[
                   "README.md",

@@ -19,6 +19,11 @@ prove the live sync path against external services without risking rate limits o
 
 ## Evidence Recorded
 
+- Live partial/API-discovery sync path was proven for the approved launch.
+- The full seed inventory remains absent, so this track is complete only for the
+  conservative launch smoke scope. Full coverage remains blocked under Tracks
+  04, 07, 08, and 11.
+
 - Local environment presence check on 2026-06-07:
   - `NZ_LEGISLATION_API_KEY`: absent.
   - `NZLC_MIN_SECONDS_BETWEEN_REQUESTS`: absent.

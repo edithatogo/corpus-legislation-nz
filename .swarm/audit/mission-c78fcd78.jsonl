@@ -1,0 +1,5 @@
+{"ts": 1781368134.5715082, "agent": "Oracle", "event": "spawned", "detail": "mode=parallel", "meta": {"backend": "thread", "retry": 0}}
+{"ts": 1781368134.5877662, "agent": "Junior", "event": "spawned", "detail": "mode=parallel", "meta": {"backend": "thread", "retry": 0}}
+{"ts": 1781368134.6015918, "agent": "Librarian", "event": "spawned", "detail": "mode=parallel", "meta": {"backend": "thread", "retry": 0}}
+{"ts": 1781368371.949543, "agent": "Librarian", "event": "warning", "detail": "watchdog_soft_shutdown_requested", "meta": {"idle_seconds": 90.01}}
+{"ts": 1781368372.0777361, "agent": "Librarian", "event": "status_change", "detail": "shutdown", "meta": {}}

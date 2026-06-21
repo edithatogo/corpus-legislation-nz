@@ -54,26 +54,29 @@ jobs:
 
       - name: Resolve archive settings
         id: settings
+        env:
+          INPUT_YEAR: ${{ inputs.year || '' }}
+          ZENODO_API_URL_VAR: ${{ vars.ZENODO_API_URL || 'https://zenodo.org/api' }}
+          ZENODO_SANDBOX_API_URL_VAR: ${{ vars.ZENODO_SANDBOX_API_URL || 'https://sandbox.zenodo.org/api' }}
+          INPUT_USE_SANDBOX: ${{ inputs.use_sandbox || false }}
+          INPUT_PUBLISH: ${{ inputs.publish || false }}
         run: |
           set -euo pipefail
-          YEAR="${{ inputs.year || '' }}"
+          YEAR="$INPUT_YEAR"
           if [ -z "$YEAR" ]; then YEAR="$(date -u +%Y)"; fi
 
-          PROD_URL="${{ vars.ZENODO_API_URL || 'https://zenodo.org/api' }}"
-          SANDBOX_URL="${{ vars.ZENODO_SANDBOX_API_URL || 'https://sandbox.zenodo.org/api' }}"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.use_sandbox || false }}" = "true" ]; then
-            ZENODO_API_URL="$SANDBOX_URL"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$INPUT_USE_SANDBOX" = "true" ]; then
+            ZENODO_API_URL="$ZENODO_SANDBOX_API_URL_VAR"
             ZENODO_ENV="sandbox"
           else
-            ZENODO_API_URL="$PROD_URL"
+            ZENODO_API_URL="$ZENODO_API_URL_VAR"
             ZENODO_ENV="production-draft"
           fi
 
-          PUBLISH="${{ inputs.publish || false }}"
           echo "year=$YEAR" >> "$GITHUB_OUTPUT"
           echo "zenodo_api_url=$ZENODO_API_URL" >> "$GITHUB_OUTPUT"
           echo "zenodo_env=$ZENODO_ENV" >> "$GITHUB_OUTPUT"
-          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
+          echo "publish=$INPUT_PUBLISH" >> "$GITHUB_OUTPUT"
 
       - name: Download live corpus from Hugging Face
         env:

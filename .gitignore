@@ -26,3 +26,7 @@ test-tmp/
 .DS_Store
 .vscode/
 .idea/
+
+# Local logs
+logs/
+

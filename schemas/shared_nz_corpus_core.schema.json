@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/shared-nz-corpus-core.schema.json",
-  "title": "Shared NZ Corpus Core Record",
-  "description": "Shared compatibility fields for corpus-nz-legislation and corpus-nz-hansard records.",
+  "$id": "https://github.com/edithatogo/legal-nz/schemas/shared-nz-corpus-core.schema.json",
+  "title": "Shared NZ Corpus Core Record (Canonical Additive)",
+  "description": "Unified additive core schema for all NZ corpora (legislation, hansard, committees). Fields from both corpus-law-nz and corpus-nz-hansard are merged; corpus-specific fields are optional. This is the CANONICAL schema — all subproject schemas must be derived from or compatible with this.",
   "type": "object",
   "required": [
     "corpus_id",
@@ -31,7 +31,10 @@
       "type": "string",
       "enum": [
         "corpus-nz-legislation",
-        "corpus-nz-hansard"
+        "corpus-nz-hansard",
+        "corpus-nz-select-committee",
+        "corpus-nz-parliament-submissions",
+        "corpus-nz-regulations-review"
       ]
     },
     "record_id": {
@@ -63,6 +66,9 @@
         "speech_turn",
         "sitting",
         "proceeding_item",
+        "select_committee_report",
+        "parliament_submission",
+        "regulations_review_proceeding",
         "other"
       ]
     },
@@ -83,37 +89,22 @@
       "format": "uri"
     },
     "source_url": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uri"
     },
     "source_version": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "effective_date": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date"
     },
     "published_date": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date"
     },
     "last_modified_date": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date"
     },
     "content_sha256": {
@@ -152,41 +143,14 @@
         "license_note"
       ],
       "properties": {
-        "pipeline_name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "pipeline_version": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_record_id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_retrieved_at": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "date-time"
-        },
-        "release_version": {
-          "type": "string",
-          "minLength": 1
-        },
-        "release_commit": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{7,40}$"
-        },
-        "license_note": {
-          "type": "string",
-          "minLength": 1
-        }
+        "pipeline_name": { "type": "string", "minLength": 1 },
+        "pipeline_version": { "type": "string", "minLength": 1 },
+        "source_name": { "type": "string", "minLength": 1 },
+        "source_record_id": { "type": "string", "minLength": 1 },
+        "source_retrieved_at": { "type": ["string", "null"], "format": "date-time" },
+        "release_version": { "type": "string", "minLength": 1 },
+        "release_commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "license_note": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": true
     }

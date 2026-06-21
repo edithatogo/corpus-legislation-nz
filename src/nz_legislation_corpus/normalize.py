@@ -65,7 +65,7 @@ def normalize_version_record(
         "contains ~ segment per NZ Legislation API identifier rules" if id_is_ephemeral else ""
     )
     now = datetime.now(UTC).replace(microsecond=0)
-    record = {
+    return {
         "record_schema_version": RECORD_SCHEMA_VERSION,
         "stable_id": stable_id,
         "work_id": work_id,
@@ -111,4 +111,3 @@ def normalize_version_record(
         "id_ephemeral_reason": id_ephemeral_reason,
         "raw_version_metadata": version,
     }
-    return record

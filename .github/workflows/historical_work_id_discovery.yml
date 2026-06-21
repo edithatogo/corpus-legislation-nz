@@ -52,6 +52,11 @@ jobs:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
           NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
           NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
+          NZLC_INPUT_SEARCH_TERMS: ${{ inputs.search_terms }}
+          NZLC_INPUT_LEGISLATION_STATUS: ${{ inputs.legislation_status }}
+          NZLC_INPUT_LEGISLATION_TYPES: ${{ inputs.legislation_types }}
+          NZLC_INPUT_MAX_PAGES: ${{ inputs.max_pages }}
+          NZLC_INPUT_MAX_WORKS: ${{ inputs.max_works }}
         run: |
           set -euo pipefail
           add_optional_limit() {
@@ -64,14 +69,14 @@ jobs:
           }
 
           args=(
-            --search-terms "${{ inputs.search_terms }}"
-            --legislation-status "${{ inputs.legislation_status }}"
-            --legislation-types "${{ inputs.legislation_types }}"
+            --search-terms "$NZLC_INPUT_SEARCH_TERMS"
+            --legislation-status "$NZLC_INPUT_LEGISLATION_STATUS"
+            --legislation-types "$NZLC_INPUT_LEGISLATION_TYPES"
             --output-path generated/historical-work-ids.txt
             --provenance-path generated/historical-work-ids.provenance.json
           )
-          add_optional_limit --max-pages "${{ inputs.max_pages }}"
-          add_optional_limit --max-works "${{ inputs.max_works }}"
+          add_optional_limit --max-pages "$NZLC_INPUT_MAX_PAGES"
+          add_optional_limit --max-works "$NZLC_INPUT_MAX_WORKS"
           uv run nzlc discover-work-ids "${args[@]}"
 
       - name: Upload discovery artifact

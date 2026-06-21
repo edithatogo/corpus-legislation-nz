@@ -2,15 +2,19 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from nz_legislation_corpus.embeddings import compute_all_three_embeddings
 
 
+@pytest.mark.unit
 def test_compute_all_three_embeddings_empty():
     res = compute_all_three_embeddings("")
     assert res == {"dense": [], "lexical_weights": {}, "colbert_multivector": []}
 
 
 @patch("nz_legislation_corpus.embeddings.get_bge_m3_model")
+@pytest.mark.unit
 def test_compute_all_three_embeddings_mocked(mock_get_model):
     mock_model = MagicMock()
     # Mocking BGE-M3 model output

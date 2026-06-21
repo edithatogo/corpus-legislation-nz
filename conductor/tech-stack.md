@@ -3,7 +3,7 @@
 ## Runtime
 
 - Python 3.11+
-- Packaging with `hatchling`
+- Packaging with `uv_build` (migrated from `hatchling`)
 - CLI entry point: `nzlc`
 
 ## Core libraries
@@ -16,6 +16,8 @@
 - `huggingface_hub` and `hf-xet` for Hugging Face dataset publishing.
 - `jsonschema` for schema validation.
 - `zstandard` for compression support.
+- `pydantic` and `pydantic-settings` for environment-based configuration
+  (pydantic v2 with `BaseSettings`).
 
 ## Development tools
 
@@ -24,6 +26,10 @@
 - `ty` for static typing, with all available rules promoted to errors where
   the current `ty` release supports that severity.
 - `pre-commit` for local checks.
+- `hypothesis` for property-based testing of pure functions.
+- `pytest-cov` for coverage reporting with `fail_under = 60`.
+- `scalene` for CPU/memory profiling of performance-sensitive paths.
+- `vale` for prose linting of documentation files (optional/advisory).
 
 ## Data and artifact formats
 

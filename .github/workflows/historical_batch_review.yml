@@ -46,16 +46,19 @@ jobs:
       - name: Build batch matrix
         id: plan
         shell: bash
+        env:
+          SEED_BATCH_IDS_CSV: ${{ inputs.seed_batch_ids_csv }}
         run: |
           set -euo pipefail
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import csv
           import json
+          import os
           import re
           import sys
           from pathlib import Path
 
-          raw = "${{ inputs.seed_batch_ids_csv }}"
+          raw = os.environ["SEED_BATCH_IDS_CSV"]
           batch_ids = [item.strip() for item in raw.split(",") if item.strip()]
           if not batch_ids:
               raise SystemExit("seed_batch_ids_csv must contain at least one batch ID")

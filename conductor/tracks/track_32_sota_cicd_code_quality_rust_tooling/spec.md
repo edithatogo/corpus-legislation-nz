@@ -37,3 +37,13 @@ The repository already has a strict local `ty` baseline in `pyproject.toml`; the
 - `zizmor` is adopted as advisory first because existing workflows still have
   unpinned-action and template-expansion findings that require a dedicated
   workflow-hardening pass before the gate can be blocking.
+- Ruff expanded from 6 to 49 rule sets, all passing cleanly.
+- `ty` strict type checking (`all = "error"`) passes for `src`, `tests`, and
+  `scripts`.
+- pydantic v2 with `pydantic-settings.BaseSettings` adopted for all
+  environment-based configuration.
+- Template injection risks fixed across all 8 CI workflows; `zizmor` now
+  reports zero findings.
+- All 16 workflows have explicit `permissions:` blocks with least-privilege
+  scoping.
+- `uv_build` build backend adopted for Python packaging.

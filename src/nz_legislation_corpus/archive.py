@@ -47,7 +47,7 @@ def build_archive(
                 tarfile.open(fileobj=compressor, mode="w|") as tar,
             ):
                 tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
-        except Exception:  # noqa: BLE001
+        except Exception:
             archive_path = output_dir / (base + ".gz")
             compression = "gzip"
             with tarfile.open(archive_path, mode="w:gz") as tar:

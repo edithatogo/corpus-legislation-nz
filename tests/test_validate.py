@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from nz_legislation_corpus.normalize import normalize_version_record
 from nz_legislation_corpus.utils import write_jsonl
 from nz_legislation_corpus.validate import validate_records
 
 
+@pytest.mark.unit
 def test_validate_record(tmp_path: Path):
     xml = Path("tests/fixtures/sample_legislation.xml").read_bytes()
     record = normalize_version_record(
@@ -27,6 +30,7 @@ def test_validate_record(tmp_path: Path):
     assert report["record_schema_version"] == "1.0"
 
 
+@pytest.mark.unit
 def test_validate_html_record_warns_without_xml_url(tmp_path: Path):
     html = Path("tests/fixtures/sample_legislation.html").read_bytes()
     record = normalize_version_record(
@@ -49,6 +53,7 @@ def test_validate_html_record_warns_without_xml_url(tmp_path: Path):
     assert report["informational_warning_types"] == ["missing_xml_url"]
 
 
+@pytest.mark.unit
 def test_validate_missing_text_blocks_upload(tmp_path: Path):
     record = normalize_version_record(
         {
@@ -68,6 +73,7 @@ def test_validate_missing_text_blocks_upload(tmp_path: Path):
     assert "missing_xml_url" in report["informational_warning_types"]
 
 
+@pytest.mark.unit
 def test_ephemeral_identifier_flagged():
     from nz_legislation_corpus.normalize import normalize_version_record
 
@@ -82,6 +88,7 @@ def test_ephemeral_identifier_flagged():
     assert "~" in record["id_ephemeral_reason"]
 
 
+@pytest.mark.unit
 def test_year_prefers_structured_identifier_over_title_target_year():
     record = normalize_version_record(
         {
@@ -97,6 +104,7 @@ def test_year_prefers_structured_identifier_over_title_target_year():
     assert record["year"] == 2025
 
 
+@pytest.mark.unit
 def test_validate_ephemeral_identifier_is_informational(tmp_path: Path):
     xml = Path("tests/fixtures/sample_legislation.xml").read_bytes()
     record = normalize_version_record(
@@ -119,6 +127,7 @@ def test_validate_ephemeral_identifier_is_informational(tmp_path: Path):
     assert "ephemeral_identifier" in report["informational_warning_types"]
 
 
+@pytest.mark.unit
 def test_hf_upload_stops_before_remote_calls_on_validation_failure(tmp_path: Path, monkeypatch):
     from nz_legislation_corpus import cli, hf_sync
 

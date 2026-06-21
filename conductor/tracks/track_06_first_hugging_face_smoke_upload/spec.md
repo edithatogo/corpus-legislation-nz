@@ -18,6 +18,13 @@ prove upload, restore, and no-change behavior on Hugging Face with the small smo
 
 ## Evidence Recorded
 
+- Live Hugging Face upload, restore/no-change behavior, and sample dataset
+  verification passed for the approved partial/API-discovery launch.
+- Live dataset target:
+  `https://huggingface.co/datasets/edithatogo/corpus-legislation-nz`.
+- Current verified revision:
+  `6b082e2f85802cb374898d689d264017a047799b`.
+
 - Local environment presence check on 2026-06-07:
   - `HF_TOKEN`: absent.
   - `HF_REPO_ID`: absent.
