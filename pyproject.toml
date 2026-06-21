@@ -24,7 +24,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.2.0", "pytest-cov>=6.0.0", "ruff>=0.15.16", "ty>=0.0.46", "pre-commit>=4.0.0", "hypothesis>=6.100.0", "scalene>=1.5.44"]
+dev = [
+  "pytest>=8.2.0",
+  "pytest-cov>=6.0.0",
+  "ruff>=0.15.16",
+  "ty>=0.0.46",
+  "pre-commit>=4.0.0",
+  "hypothesis>=6.100.0",
+  "scalene>=1.5.44",
+]
 embeddings = ["FlagEmbedding>=1.2.0", "torch>=2.0.0", "transformers>=5.10.2"]
 
 [project.scripts]
@@ -43,99 +51,141 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = [
-    "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "T20",
-    "PT", "SIM", "ARG", "PTH", "PL", "RUF",
-    "ANN", "D", "TCH", "YTT", "RET", "FURB",
-    "COM", "DJ", "DTZ", "EM", "ERA", "EXE",
-    "FA", "FLY", "ICN", "INP", "INT", "ISC", "LOG",
-    "NPY", "PD", "PERF", "PGH", "PIE",
-    "PYI", "Q", "RSE", "S", "SLF", "T10", "TC", "TID", "TRY",
+  "E",
+  "W",
+  "F",
+  "I",
+  "N",
+  "UP",
+  "B",
+  "A",
+  "C4",
+  "T20",
+  "PT",
+  "SIM",
+  "ARG",
+  "PTH",
+  "PL",
+  "RUF",
+  "ANN",
+  "D",
+  "TCH",
+  "YTT",
+  "RET",
+  "FURB",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FA",
+  "FLY",
+  "ICN",
+  "INP",
+  "INT",
+  "ISC",
+  "LOG",
+  "NPY",
+  "PD",
+  "PERF",
+  "PGH",
+  "PIE",
+  "PYI",
+  "Q",
+  "RSE",
+  "S",
+  "SLF",
+  "T10",
+  "TC",
+  "TID",
+  "TRY",
 ]
 ignore = [
-    "E501",        # Line length enforced by formatter
-    "COM812",      # Trailing comma missing — handled by formatter
-    "ISC001",      # Implicit string concat — handled by formatter
-    "D100",        # Missing docstring in public module — enforced selectively
-    "D101",        # Missing docstring in public class
-    "D102",        # Missing docstring in public method
-    "D103",        # Missing docstring in public function
-    "D104",        # Missing docstring in public package
-    "D105",        # Missing docstring in magic method
-    "D106",        # Missing docstring in public nested class
-    "D107",        # Missing docstring in __init__
-    "ANN001",      # Missing type annotation for function argument
-    "ANN201",      # Missing return type annotation for public function
-    "ANN202",      # Missing return type annotation for private function
-    "ANN204",      # Missing return type annotation for __init__
-    "ANN205",      # Missing return type annotation for __init__ (static)
-    "ANN206",      # Missing return type annotation for __init__ (class)
-    "ANN401",      # Dynamic type in annotations
-    "S404",        # subprocess call — allow for hf upload
-    "S603",        # subprocess call with shell=False is fine
-    "S607",        # subprocess call with partial path
-    "PLW2901",     # Re-for loop variable overwritten — pattern used intentionally
-    "PLR2004",     # Magic number in comparison — acceptable for tests and config
-    "PLR0913",     # Too many arguments — acceptable for CLI commands
-    "ERA001",      # Commented-out code — acceptable in config
-    "EXE001",      # Shebang issues
-    "TC001",       # Type-checking imports
-    "TC002",       # Type-checking imports
-    "TC003",       # Type-checking imports
-    "FA100",       # Missing `from __future__ import annotations` — already present
-    "ICN001",      # Import convention naming
-    "PLC0415",     # Import at module level — lazy imports for optional deps
-    "TRY301",      # Abstract raise to inner function — simple patterns
-    "TRY003",      # Long exception messages — purposeful context
-    "EM101",       # String literal in exception — legitimate pattern
-    "EM102",       # F-string in exception — legitimate pattern
-    "PERF401",     # List comprehension vs loop — readability preference
-    "RUF100",      # Unused noqa directive — already clean
-    "PLR0912",     # Too many branches — CLI commands have many paths
-    "PLR0915",     # Too many statements — CLI sync function
-    "TRY004",      # Prefer TypeError — ValueError is fine
-    "PLW0603",     # Global statement — intentional for module-level cache
-    "N814",        # Camelcase imported as constant — intentional alias
-    "S110",        # try-except-pass — intentional fallback logic
-    "S311",        # Random for retry jitter — not cryptographic
+  "E501",    # Line length enforced by formatter
+  "COM812",  # Trailing comma missing — handled by formatter
+  "ISC001",  # Implicit string concat — handled by formatter
+  "D100",    # Missing docstring in public module — enforced selectively
+  "D101",    # Missing docstring in public class
+  "D102",    # Missing docstring in public method
+  "D103",    # Missing docstring in public function
+  "D104",    # Missing docstring in public package
+  "D105",    # Missing docstring in magic method
+  "D106",    # Missing docstring in public nested class
+  "D107",    # Missing docstring in __init__
+  "ANN001",  # Missing type annotation for function argument
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "ANN204",  # Missing return type annotation for __init__
+  "ANN205",  # Missing return type annotation for __init__ (static)
+  "ANN206",  # Missing return type annotation for __init__ (class)
+  "ANN401",  # Dynamic type in annotations
+  "S404",    # subprocess call — allow for hf upload
+  "S603",    # subprocess call with shell=False is fine
+  "S607",    # subprocess call with partial path
+  "PLW2901", # Re-for loop variable overwritten — pattern used intentionally
+  "PLR2004", # Magic number in comparison — acceptable for tests and config
+  "PLR0913", # Too many arguments — acceptable for CLI commands
+  "ERA001",  # Commented-out code — acceptable in config
+  "EXE001",  # Shebang issues
+  "TC001",   # Type-checking imports
+  "TC002",   # Type-checking imports
+  "TC003",   # Type-checking imports
+  "FA100",   # Missing `from __future__ import annotations` — already present
+  "ICN001",  # Import convention naming
+  "PLC0415", # Import at module level — lazy imports for optional deps
+  "TRY301",  # Abstract raise to inner function — simple patterns
+  "TRY003",  # Long exception messages — purposeful context
+  "EM101",   # String literal in exception — legitimate pattern
+  "EM102",   # F-string in exception — legitimate pattern
+  "PERF401", # List comprehension vs loop — readability preference
+  "RUF100",  # Unused noqa directive — already clean
+  "PLR0912", # Too many branches — CLI commands have many paths
+  "PLR0915", # Too many statements — CLI sync function
+  "TRY004",  # Prefer TypeError — ValueError is fine
+  "PLW0603", # Global statement — intentional for module-level cache
+  "N814",    # Camelcase imported as constant — intentional alias
+  "S110",    # try-except-pass — intentional fallback logic
+  "S311",    # Random for retry jitter — not cryptographic
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
-    "S101",        # assert allowed in tests
-    "T20",         # print allowed in tests
-    "SLF",         # Private member access in test fixtures
-    "ARG",         # Unused function args in test fixtures
-    "PLR2004",     # Magic number comparison in tests
-    "D",           # Docstrings optional in tests
-    "ERA001",      # Commented-out code in tests
-    "INP001",      # Import from parent module
-    "S106",        # Passwords in tests
-    "S107",        # Passwords in tests
-    "PGH001",      # eval in tests
-    "PIE790",      # Unnecessary pass
-    "ANN",         # Type annotations optional in tests
-    "PLC0415",     # Import not at top-level — lazy imports for fixtures
-    "EM",          # Exception messages in tests
-    "TRY",         # Try/raise patterns in test helpers
-    "PERF",        # Performance micro-optimizations not needed in tests
-    "FLY002",      # String join patterns in test data
-    "PT017",       # Assert on exception in except block
-    "C408",        # dict() call pattern
-    "TC006",       # cast() typestring
-    "Q000",        # Quote style — handled by formatter
-    "S314",        # xml parsing test-only generated output
+  "S101",    # assert allowed in tests
+  "T20",     # print allowed in tests
+  "SLF",     # Private member access in test fixtures
+  "ARG",     # Unused function args in test fixtures
+  "PLR2004", # Magic number comparison in tests
+  "D",       # Docstrings optional in tests
+  "ERA001",  # Commented-out code in tests
+  "INP001",  # Import from parent module
+  "S106",    # Passwords in tests
+  "S107",    # Passwords in tests
+  "PGH001",  # eval in tests
+  "PIE790",  # Unnecessary pass
+  "ANN",     # Type annotations optional in tests
+  "PLC0415", # Import not at top-level — lazy imports for fixtures
+  "EM",      # Exception messages in tests
+  "TRY",     # Try/raise patterns in test helpers
+  "PERF",    # Performance micro-optimizations not needed in tests
+  "FLY002",  # String join patterns in test data
+  "PT017",   # Assert on exception in except block
+  "C408",    # dict() call pattern
+  "TC006",   # cast() typestring
+  "Q000",    # Quote style — handled by formatter
+  "S314",    # xml parsing test-only generated output
 ]
 "tests/fixtures/*" = ["INP001"]
 "scripts/*" = [
-    "INP001",      # Scripts not in a package
-    "ANN001",      # Type annotations optional in scripts
-    "ANN201",      # Return type annotations optional in scripts
-    "T20",         # print/logging intentional in scripts
-    "PERF",        # Performance micro-optimizations
-    "EM",          # Exception strings in scripts
-    "TRY",         # Try/raise patterns in scripts
-    "PLR0912",     # Too many branches in validation script
-    "F401",        # Unused import — re used conditionally
+  "INP001",  # Scripts not in a package
+  "ANN001",  # Type annotations optional in scripts
+  "ANN201",  # Return type annotations optional in scripts
+  "T20",     # print/logging intentional in scripts
+  "PERF",    # Performance micro-optimizations
+  "EM",      # Exception strings in scripts
+  "TRY",     # Try/raise patterns in scripts
+  "PLR0912", # Too many branches in validation script
+  "F401",    # Unused import — re used conditionally
 ]
 "scripts/__init__.py" = ["INP001"]
 
@@ -158,10 +208,10 @@ show_missing = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "unit: Fast mock-isolated unit tests",
-    "integration: Cross-component integration tests",
-    "smoke: CLI smoke tests that exercise the full toolchain",
-    "hypothesis: Property-based tests using Hypothesis",
+  "unit: Fast mock-isolated unit tests",
+  "integration: Cross-component integration tests",
+  "smoke: CLI smoke tests that exercise the full toolchain",
+  "hypothesis: Property-based tests using Hypothesis",
 ]
 
 [tool.ty.environment]
