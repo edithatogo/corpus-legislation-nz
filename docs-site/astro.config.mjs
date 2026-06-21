@@ -7,8 +7,6 @@ export default defineConfig({
   site: 'https://edithatogo.github.io',
   base: '/corpus-law-nz/',
   integrations: [
-    mdx(),
-    sitemap(),
     starlight({
       title: 'Corpus Law NZ',
       description: 'Legal NZ documentation portal for Corpus Law NZ.',
@@ -16,5 +14,7 @@ export default defineConfig({
         { label: 'Start', items: ['index', 'docs-tooling-audit'] },
       ],
     }),
+    mdx(),
+    sitemap(),
   ],
 });
