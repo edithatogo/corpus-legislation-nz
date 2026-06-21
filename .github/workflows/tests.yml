@@ -20,6 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           uv sync --extra dev --frozen
+          uv pip install "hypothesis>=6.100.0"
       - name: Validate shell scripts
         run: |
           set -euo pipefail
