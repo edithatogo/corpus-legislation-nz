@@ -10,4 +10,9 @@ This track implements multi-git repository mirroring and backup publishing strat
 ## Acceptance Criteria
 - `.github/workflows/mirror_sync.yml` exists and triggers on pushes to main/master branches.
 - Workflow successfully executes dry-run or bypasses when credentials are empty.
+- Workflow supports multiple secondary SSH remotes through newline-separated
+  `GIT_MIRROR_URLS`, while retaining single-remote `GIT_MIRROR_URL`
+  compatibility.
+- Mirror setup documentation identifies the required GitHub secrets and live
+  verification commands without storing secret values in the repository.
 - Multi-archive setup covers Hugging Face, Zenodo, and the OSF optional mirror policy (`docs/osf-optional-mirror-policy.md`).

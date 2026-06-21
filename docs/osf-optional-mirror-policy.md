@@ -98,5 +98,5 @@ user approval for the specific action.
 Run the local policy validator with:
 
 ```powershell
-python scripts/validate_osf_optional_mirror_policy.py
+python scripts/check_osf_optional_policy.py
 ```

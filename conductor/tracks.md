@@ -265,11 +265,8 @@ Current state:
 - Full corpus operations runbook is now documented in `docs/full_corpus_operations.md`.
 - Pilot run `27396415830` completed batch 0001 (500 work IDs) with full validate/manifest/coverage cycle in 5h14m at 1.0s pacing.
 - Sync is rate-limit constrained: ~37s per work ID due to NZ Legislation API quota exhaustion sleeps.
-- **2026-06-13 fix**: `rate_limit_max_sleep_seconds=60.0` added to cap `_sleep_for_low_quota`, preventing multi-hour stalls when quota is exhausted.
 - Full sync must run via GitHub Actions (no local API key; local disk ~7.5 GB free).
 - Runner disk budget: 25 GB min, 50 GB preferred (docs/runtime_capacity_runbook.md).
-- **2026-06-13 hardening**: Empty-content detection in XML->HTML fallback, seed file emptiness warning, serial-mode batch progress counters, and extended test coverage (65 tests, ruff clean).
-- **2026-06-16 test environment isolation**: `tests/conftest.py` autouse session fixture `_isolate_settings_env` clears user-shell `NZLC_*` / `NZ_LEGISLATION_*` / `HF_TOKEN` env vars before pytest. Pre-existing 34 failures (caused by developer env leaking CSV values into `pydantic_settings` list fields) are now resolved. Full suite: **122 passed** in ~8s. ruff clean on `tests/conftest.py`. Pre-existing lint findings in `embeddings.py` / `utils.py` are unrelated and tracked separately.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
@@ -1124,13 +1121,8 @@ Evidence:
   down to GitHub's 10-input `workflow_dispatch` limit.
 - CodeQL, OpenSSF Scorecard, Renovate, and pre-commit adoption decisions are
   documented.
-- Ruff expanded from 6 to 49 rule sets, all passing cleanly.
-- pydantic v2 with `pydantic-settings.BaseSettings` adopted for all
-  configuration.
-- Template injection risks fixed across all 8 CI workflows; `zizmor` now
-  reports zero findings.
-- All 16 workflows have explicit least-privilege `permissions:` blocks.
-- `uv_build` build backend adopted for Python packaging.
+- `zizmor` is adopted as an advisory CI job until the existing unpinned-action
+  and template-expansion findings are resolved in a workflow-hardening pass.
 
 
 ## track 33 artifact provenance attestations
@@ -1157,40 +1149,3 @@ Evidence:
 - Consistency checker and tests:
   `scripts/check_artifact_provenance.py` and
   `tests/test_artifact_provenance.py`.
-
-
-## track 34 sota test infrastructure
-
-Status: `done`
-
-Goal: SOTA test infrastructure with hypothesis property-based tests, integration/smoke test directories, coverage baselines, and pytest markers.
-
-Link: `conductor/tracks/track_34_sota_test_infrastructure/`
-
-Evidence:
-
-- 120 tests total (89 existing unit tests + 31 new hypothesis/integration/smoke tests).
-- 8 hypothesis property-based tests for pure functions.
-- Integration test directory: `tests/integration/` (3 cross-component tests).
-- Smoke test directory: `tests/smoke/` (2 full CLI pipeline tests).
-- Coverage configured with `fail_under = 60` in `pyproject.toml`.
-- Pytest markers (unit, integration, smoke, hypothesis) registered and applied across all test files.
-
-## track 35 multi-git and multi-archive mirroring setup
-
-Status: `in_progress`
-
-Goal: Establish multi-git and multi-archive mirroring setup to prevent single-point-of-failure repository/dataset takedowns.
-
-Link: `conductor/tracks/track_35_multi_git_and_multi_archive_mirroring_setup/`
-
-Evidence:
-- Git mirror workflow configured: `.github/workflows/mirror_sync.yml`.
-- Mirror workflow locally linted with `actionlint` and hardened to skip when mirror secrets are absent.
-- Zenodo and Hugging Face pipelines hardened.
-- OSF optional mirror convenience policy mapped in `docs/osf-optional-mirror-policy.md` (inactive pending live setup).
-- OSF policy validator added: `scripts/check_osf_optional_policy.py`.
-- OSF unit tests added: `tests/test_osf_optional.py`.
-- Local Phase 2 validation command: `python scripts/check_osf_optional_policy.py`.
-- Local validation passed: OSF policy validators, `tests/test_osf_optional.py`, direct Ruff check, and `actionlint .github/workflows/mirror_sync.yml`.
-- Remaining Track 35 items are gated external/user-verification work: GitHub mirror secrets, manual/push trigger verification, and Conductor user manual verification.
