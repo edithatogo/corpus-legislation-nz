@@ -31,8 +31,8 @@ def extract_text_from_xml(xml_bytes: bytes) -> str:
 
 def extract_text_from_html(html_bytes: bytes) -> str:
     raw = html_bytes.decode("utf-8", errors="replace")
-    raw = re.sub(r"<script\b[^>]*>.*?</script\s*>", " ", raw, flags=re.IGNORECASE | re.DOTALL)
-    raw = re.sub(r"<style\b[^>]*>.*?</style\s*>", " ", raw, flags=re.IGNORECASE | re.DOTALL)
+    raw = re.sub(r"<script\b[^>]*>.*?</script\b[^>]*>", " ", raw, flags=re.IGNORECASE | re.DOTALL)
+    raw = re.sub(r"<style\b[^>]*>.*?</style\b[^>]*>", " ", raw, flags=re.IGNORECASE | re.DOTALL)
     raw = re.sub(r"<[^>]+>", " ", raw)
     return _flatten_text([unescape(raw)])
 
