@@ -30,7 +30,7 @@ def test_mirror_sync_fails_when_any_mirror_command_fails() -> None:
 
     assert "set -euo pipefail" in workflow
     assert 'done <<< "$MIRROR_URLS"' in workflow
-    assert 'printf \'%s\\n\' "$MIRROR_URLS" | while' not in workflow
+    assert "printf '%s\\n' \"$MIRROR_URLS\" | while" not in workflow
 
 
 def test_osf_policy_uses_existing_validator_command() -> None:
