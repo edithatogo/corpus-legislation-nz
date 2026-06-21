@@ -14,12 +14,17 @@ jobs:
           fetch-depth: 0
       - name: Mirror to Secondary Git Remote
         env:
+          GIT_MIRROR_URLS: ${{ secrets.GIT_MIRROR_URLS }}
           GIT_MIRROR_URL: ${{ secrets.GIT_MIRROR_URL }}
           GIT_MIRROR_SSH_PRIVATE_KEY: ${{ secrets.GIT_MIRROR_SSH_PRIVATE_KEY }}
         shell: bash
         run: |
-          if [ -z "$GIT_MIRROR_URL" ]; then
-            echo "GIT_MIRROR_URL is not set, skipping mirror."
+          set -euo pipefail
+
+          MIRROR_URLS="${GIT_MIRROR_URLS:-$GIT_MIRROR_URL}"
+
+          if [ -z "$MIRROR_URLS" ]; then
+            echo "GIT_MIRROR_URLS/GIT_MIRROR_URL is not set, skipping mirror."
             exit 0
           fi
 
@@ -28,21 +33,29 @@ jobs:
             exit 0
           fi
 
-          case "$GIT_MIRROR_URL" in
-            git@*:*) ;;
-            *)
-              echo "GIT_MIRROR_URL must be an SSH remote in git@host:owner/repo.git form."
-              exit 1
-              ;;
-          esac
-
           mkdir -p ~/.ssh
           echo "$GIT_MIRROR_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          # Extract host from git@host:user/repo.git
-          HOST=$(echo "$GIT_MIRROR_URL" | cut -d'@' -f2 | cut -d':' -f1)
-          ssh-keyscan -t ed25519 "$HOST" >> ~/.ssh/known_hosts
+          MIRROR_INDEX=0
+          while IFS= read -r MIRROR_URL; do
+            if [ -z "$MIRROR_URL" ]; then
+              continue
+            fi
 
-          git remote add mirror "$GIT_MIRROR_URL"
-          git push --force --prune mirror "HEAD:${GITHUB_REF}"
+            case "$MIRROR_URL" in
+              git@*:*) ;;
+              *)
+                echo "Each mirror URL must be an SSH remote in git@host:owner/repo.git form."
+                exit 1
+                ;;
+            esac
+
+            MIRROR_INDEX=$((MIRROR_INDEX + 1))
+            REMOTE_NAME="mirror_${MIRROR_INDEX}"
+            HOST=$(echo "$MIRROR_URL" | cut -d'@' -f2 | cut -d':' -f1)
+
+            ssh-keyscan -t ed25519 "$HOST" >> ~/.ssh/known_hosts
+            git remote add "$REMOTE_NAME" "$MIRROR_URL"
+            git push --force --prune "$REMOTE_NAME" "HEAD:${GITHUB_REF}"
+          done <<< "$MIRROR_URLS"
