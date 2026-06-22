@@ -45,12 +45,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Require Track 07 artifact for confirmed full upload
+        if: ${{ inputs.upload_confirmed == true && inputs.bootstrap_run_id == '' }}
+        run: |
+          set -euo pipefail
+          echo "Confirmed full upload requires bootstrap_run_id from a completed Track 07 full-corpus bootstrap run." >&2
+          exit 1
+
       - name: Download bootstrap artifact from Track 07
         if: ${{ inputs.bootstrap_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
           name: full-corpus-bootstrap-download
-          path: data/
+          path: .
           run-id: ${{ inputs.bootstrap_run_id }}
 
       - name: Check disk budget
@@ -138,6 +145,11 @@ jobs:
           uv run nzlc manifest
           uv run nzlc coverage-report
 
+      - name: Review full bootstrap artifact before publish
+        run: |
+          set -euo pipefail
+          uv run nzlc review-full-corpus-bootstrap --artifact-root data --output-path generated/full-corpus-bootstrap/review_report.json
+
       - name: Generate RSS feed
         env:
           NZLC_OUTPUT_DIR: data
@@ -154,6 +166,7 @@ jobs:
             data/README.md
             data/manifests/
             data/_state/
+            generated/full-corpus-bootstrap/review_report.json
           if-no-files-found: error
 
       - name: Upload to live Hugging Face dataset

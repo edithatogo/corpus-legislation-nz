@@ -28,6 +28,15 @@ download the full corpus into local `data/` using the proven discovery method an
 - Full live corpus sync requires GitHub Actions (no local API key; local disk ~7.5 GB free below 25 GB minimum).
 - Runner disk budget documented in `docs/runtime_capacity_runbook.md`: minimum 25 GB, prefer 50 GB.
 - 2026-06-16: Test environment isolation added in `tests/conftest.py` (autouse session fixture `_isolate_settings_env`); full pytest run now reports **122 passed**, unblocking this track's automated validation gate.
+- 2026-06-21: Added `nzlc review-full-corpus-bootstrap` as the deterministic
+  post-artifact review gate for validation, manifest, coverage, sync-state, and
+  failed-version evidence. The gate now fails artifacts with manifest/count
+  mismatches or non-zero missing text, missing XML URL, or ephemeral identifier
+  risk indicators.
+- 2026-06-21: Final serial bootstrap dispatched after GitHub CLI auth was
+  refreshed: run `27898963687`,
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27898963687`.
+  The run remains `in_progress` pending completion of the `serial` job.
 
 ## Remaining Tasks
 

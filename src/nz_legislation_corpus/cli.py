@@ -10,6 +10,7 @@ import typer
 from rich.console import Console
 
 from .archive import build_archive
+from .bootstrap_review import write_full_corpus_bootstrap_review
 from .config import Settings, require
 from .discovery import (
     build_work_id_batch_manifest,
@@ -22,6 +23,7 @@ from .metadata_packages import build_metadata_packages, validate_metadata_packag
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
 from .parquet_writer import write_partitioned_parquet
+from .period_shards import split_period_seed_files
 from .rss_feed import FEED_FILENAME, build_feed
 from .schema import RECORD_SCHEMA_VERSION
 from .types import SyncStats
@@ -496,6 +498,66 @@ def reconcile_work_ids_cmd(
     )
 
 
+@app.command("split-work-id-periods")
+def split_work_id_periods_cmd(
+    seed_work_ids: Annotated[
+        Path, typer.Option(help="Reviewed work-ID seed file, one work ID per line.")
+    ] = Path("seeds/work_ids.txt"),
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory for generated period seed files.")
+    ] = Path("seeds/periods"),
+    manifest_path: Annotated[
+        Path, typer.Option(help="Period manifest path.")
+    ] = Path("seeds/periods/manifest.json"),
+    source_metadata_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional discovery provenance JSON containing works metadata."),
+    ] = Path("generated/historical-discovery-27313765016/historical-work-ids.provenance.json"),
+    api_boundary_year: Annotated[
+        int,
+        typer.Option(help="First year to shard annually for recent/API-native handoff."),
+    ] = 2008,
+    api_boundary_source: Annotated[
+        str,
+        typer.Option(help="Evidence label for the recent/API-native boundary."),
+    ] = "planning_fallback_unverified",
+    api_boundary_verified: Annotated[
+        bool,
+        typer.Option(help="Mark the recent/API-native boundary as verified evidence."),
+    ] = False,
+) -> None:
+    """Split a reviewed work-ID seed into canonical period shards."""
+    manifest = split_period_seed_files(
+        seed_work_ids,
+        output_dir=output_dir,
+        manifest_path=manifest_path,
+        source_metadata_path=source_metadata_path,
+        api_boundary_year=api_boundary_year,
+        api_boundary_source=api_boundary_source,
+        api_boundary_verified=api_boundary_verified,
+    )
+    console.print_json(
+        data={
+            "unique_work_id_count": manifest["unique_work_id_count"],
+            "period_count": manifest["period_count"],
+            "seed_sha256": manifest["seed_sha256"],
+            "api_boundary_year": manifest["api_boundary_year"],
+            "api_boundary_verified": manifest["api_boundary_verified"],
+            "output_dir": str(output_dir),
+            "manifest_path": str(manifest_path),
+            "unknown_year_count": next(
+                (
+                    period["work_id_count"]
+                    for period in manifest["periods"]
+                    if period["period_id"] == "unknown_year_review"
+                ),
+                0,
+            ),
+            "coverage_warning": manifest["coverage_warning"],
+        }
+    )
+
+
 @app.command("validate")
 def validate_cmd(
     records_path: Annotated[
@@ -756,6 +818,26 @@ def coverage_report_cmd() -> None:
     with history_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(report, sort_keys=True, ensure_ascii=False) + "\n")
     console.print_json(data=report)
+
+
+@app.command("review-full-corpus-bootstrap")
+def review_full_corpus_bootstrap_cmd(
+    artifact_root: Annotated[
+        Path,
+        typer.Option(
+            help="Downloaded workflow artifact root, or the artifact's data directory.",
+        ),
+    ] = Path(),
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Write the deterministic review report JSON."),
+    ] = Path("generated/full-corpus-bootstrap/review_report.json"),
+) -> None:
+    """Review full bootstrap artifacts before claiming completeness."""
+    report = write_full_corpus_bootstrap_review(artifact_root, output_path)
+    console.print_json(data=report)
+    if not report["ok"]:
+        raise typer.Exit(code=2)
 
 
 @app.command("rss-feed")

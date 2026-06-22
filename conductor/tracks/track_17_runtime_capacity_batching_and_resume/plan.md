@@ -17,3 +17,11 @@
 - Added `tests/test_sync_resume.py` to prove staged sync runs preserve and extend `data/_state/sync_state.json` without external credentials.
 - First full bootstrap runner decision: controlled local or self-hosted runner for the initial complete corpus; GitHub Actions remains the daily/latest maintenance loop after the first verified upload.
 - Conservative disk budget: reserve at least 25 GB free for the expected 6 GB class corpus; prefer 50 GB if archive staging or embeddings run on the same host. Final measured disk usage remains blocked until Track 07 produces the full corpus.
+
+## Period-shard dependency added 2026-06-21
+
+- Track 36 owns the next layer above runtime batching: canonical time-period
+  shards, recent annual shards, per-period checkpoint artifacts, and agent
+  handoff status.
+- Track 17 remains the lower-level capacity/resume foundation. Do not treat the
+  existing 500-work operational batches as final period handoff units.

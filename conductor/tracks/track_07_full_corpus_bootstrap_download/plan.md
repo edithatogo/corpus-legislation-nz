@@ -17,6 +17,23 @@
 - Batch 0004 no-upload triggered: run `27362894765`.
 - Full live corpus sync (68 batches) must run via GitHub Actions (no local API key or disk).
 - Expected 4-6 weeks of batched historical uploads at current pace.
+- 2026-06-21 live dispatch check: `gh auth status` reports the active
+  `edithatogo` keyring token is invalid, so this shell cannot trigger or inspect
+  the GitHub Actions run until GitHub CLI authentication is refreshed.
+- 2026-06-21 final serial bootstrap dispatched after GitHub CLI auth was
+  refreshed: run `27898963687`,
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27898963687`.
+  Inputs: `seed_work_ids_path=seeds/work_ids.txt`, `batch_size=500`,
+  `start_batch=1`, `end_batch=68`, `merge_policy=restore_merge`,
+  `min_seconds_between_requests=0.5`, `max_parallel=1`, `serial=true`,
+  `max_works=none`.
+- 2026-06-21 period-sharding decision: the current serial run remains the
+  full-bootstrap evidence path, but period-level agent handoff is now split to
+  Track 36. Track 36 owns canonical time-period shards, annual recent/API-native
+  shards, per-period checkpoint artifacts, and period-level review status.
+- 2026-06-21 latest live check: run `27898963687` remains `in_progress`.
+  `plan` completed successfully, `batch` was skipped because `serial=true`,
+  and `serial` is still running `Sync all bootstrap batches sequentially`.
 
 ## Batch 0001 no-upload evidence
 
@@ -171,13 +188,44 @@ before any test runs, so `Settings()` resolves to its declared defaults.
   `utils.py` (I001) are unrelated to this track and remain on `main`; they are
   tracked separately.
 
+## Artifact review gate added 2026-06-21
+
+- Added `nzlc review-full-corpus-bootstrap` to review a downloaded
+  `full_corpus_bootstrap.yml` artifact before any completeness claim.
+- The review gate checks for `records.jsonl`, validation, manifest, coverage,
+  and sync-state artifacts; records failed; failed-version warnings; manifest
+  hash presence; manifest and coverage record-count agreement with
+  `records.jsonl`; and missing text, missing XML URL, and ephemeral identifier
+  risk indicators.
+- The command writes `generated/full-corpus-bootstrap/review_report.json` by
+  default and exits non-zero when required evidence is missing or failed.
+- 2026-06-21 review fix: non-zero risk indicators and manifest/count
+  mismatches now fail the review and require triage before Track 07 completion.
+- Focused validation passed:
+  `.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests\test_bootstrap_review.py tests\smoke\test_cli_smoke.py -q`
+  reported 20 passed.
+- Lint passed:
+  `.venv\Scripts\python.exe -m ruff check --no-cache src\nz_legislation_corpus\bootstrap_review.py src\nz_legislation_corpus\cli.py tests\test_bootstrap_review.py tests\smoke\test_cli_smoke.py tests\conftest.py`.
+- Test fixture hardening: `tests/conftest.py` now falls back from locked
+  `test-tmp/` to `.tmp/test-tmp/` after a writability probe, preserving
+  repo-local test temp directories on OneDrive-backed worktrees.
+
 
 ## Remaining operator tasks
 
-1. Trigger `full_corpus_bootstrap.yml` with `serial=true` for the final cumulative run
-2. After completion, download artifacts: `data/records.jsonl`, `data/manifests/`, `data/_state/`
-3. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings
-4. Run `nzlc validate`, `nzlc manifest`, `nzlc coverage-report` against the output
-5. Update tracks.md with final evidence (run URL, manifest SHA, record counts)
-6. Mark Task 3 [x] and Task 7 [x] after review
+1. Monitor dispatched run `27898963687` until the `serial` job completes.
+2. After completion, download artifacts: `data/records.jsonl`, `data/manifests/`, `data/_state/`.
+3. Run `nzlc review-full-corpus-bootstrap --artifact-root <downloaded-artifact>` and review `generated/full-corpus-bootstrap/review_report.json`.
+4. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings.
+5. Run `nzlc validate`, `nzlc manifest`, `nzlc coverage-report` against the output.
+6. Update tracks.md with final evidence (run URL, manifest SHA, record counts).
+7. Mark Task 3 [x] and Task 7 [x] after review.
+
+## Deferred to Track 36
+
+- Generate period-specific seed files and a period manifest.
+- Verify the API-native/recent boundary year before making recent shards annual.
+- Add per-period checkpoint artifacts so another agent can start work as soon
+  as a period completes.
+- Add or extend the review gate for single-period artifacts.
 

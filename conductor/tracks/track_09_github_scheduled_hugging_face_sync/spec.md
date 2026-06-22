@@ -20,6 +20,11 @@ make GitHub Actions the normal maintenance loop for the Hugging Face live corpus
 
 - `.github/workflows/hf_sync.yml` exists on the default branch.
 - GitHub secrets and variables required for live sync exist.
+- 2026-06-21 repo-side scheduled maintenance guard:
+  - Restore from the live Hugging Face dataset now fails closed instead of
+    continuing after restore errors.
+  - Routine runs upload `hf-sync-maintenance-evidence` containing sync state,
+    latest changes, latest manifest, and coverage report artifacts for review.
 - Manual live sync and no-change upload proof passed for the approved
   partial/API-discovery launch.
 - The scheduled-run launch gate was explicitly waived by the repository owner on

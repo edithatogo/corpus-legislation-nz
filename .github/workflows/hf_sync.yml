@@ -56,7 +56,6 @@ jobs:
           uv run nzlc doctor
 
       - name: Restore current live corpus from Hugging Face
-        continue-on-error: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ vars.HF_REPO_ID }}
@@ -176,6 +175,18 @@ jobs:
           if not summary["matches"]:
               raise SystemExit("Remote manifest does not match local manifest after upload")
           PY
+
+      - name: Upload routine maintenance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-sync-maintenance-evidence
+          path: |
+            data/_state/sync_state.json
+            data/manifests/latest_changes.json
+            data/manifests/latest_manifest.json
+            data/manifests/coverage_report.json
+          if-no-files-found: warn
 
       - name: Step summary
         if: always()

@@ -46,7 +46,14 @@ def _isolate_settings_env() -> None:
 def tmp_path() -> Path:
     """Provide a repo-local temporary directory for filesystem tests."""
     root = Path.cwd() / "test-tmp"
-    root.mkdir(parents=True, exist_ok=True)
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        probe = root / f".probe-{uuid.uuid4().hex}"
+        probe.mkdir()
+        probe.rmdir()
+    except PermissionError:
+        root = Path.cwd() / ".tmp" / "test-tmp"
+        root.mkdir(parents=True, exist_ok=True)
     path = root / f"case-{uuid.uuid4().hex}"
     path.mkdir()
     return path
