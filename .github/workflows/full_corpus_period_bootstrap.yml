@@ -1,0 +1,206 @@
+name: Full corpus period bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      period_id:
+        description: "Period ID to process, e.g. pre_1908 or year_2020"
+        required: true
+        type: string
+      seed_work_ids_path:
+        description: "Reviewed seed file, one work ID per line"
+        required: true
+        type: string
+        default: "seeds/work_ids.txt"
+      source_metadata_path:
+        description: "Discovery provenance JSON with works metadata"
+        required: true
+        type: string
+        default: "generated/historical-discovery-27313765016/historical-work-ids.provenance.json"
+      api_boundary_year:
+        description: "First annual recent/API-native shard year"
+        required: true
+        type: string
+        default: "2008"
+      api_boundary_source:
+        description: "Evidence label for the annual recent/API-native boundary"
+        required: true
+        type: string
+        default: "planning_fallback_unverified"
+      api_boundary_verified:
+        description: "Whether the annual recent/API-native boundary is verified"
+        required: true
+        type: boolean
+        default: false
+      min_seconds_between_requests:
+        description: "NZ Legislation API pacing override in seconds"
+        required: true
+        type: string
+        default: "0.5"
+      max_works:
+        description: "Optional sync limit for smoke tests; use none for no limit"
+        required: true
+        type: string
+        default: "none"
+
+concurrency:
+  group: full-corpus-period-bootstrap-${{ github.ref }}-${{ inputs.period_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  period:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440
+    env:
+      NZLC_OUTPUT_DIR: data
+      PERIOD_ID: ${{ inputs.period_id }}
+      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests }}
+      MAX_WORKS: ${{ inputs.max_works }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
+          required_gb="25"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing to start period bootstrap with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Build period seed files
+        run: |
+          set -euo pipefail
+          verified_flag=()
+          if [ "${{ inputs.api_boundary_verified }}" = "true" ]; then
+            verified_flag=(--api-boundary-verified)
+          fi
+          uv run nzlc split-work-id-periods \
+            --seed-work-ids "${{ inputs.seed_work_ids_path }}" \
+            --source-metadata-path "${{ inputs.source_metadata_path }}" \
+            --output-dir generated/full-corpus-periods/seeds \
+            --manifest-path generated/full-corpus-periods/manifest.json \
+            --api-boundary-year "${{ inputs.api_boundary_year }}" \
+            --api-boundary-source "${{ inputs.api_boundary_source }}" \
+            "${verified_flag[@]}"
+          seed_path="generated/full-corpus-periods/seeds/${PERIOD_ID}.txt"
+          if [ ! -s "$seed_path" ]; then
+            echo "Missing or empty period seed: $seed_path" >&2
+            exit 1
+          fi
+          uv run python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          period_id = os.environ["PERIOD_ID"]
+          manifest = json.loads(Path("generated/full-corpus-periods/manifest.json").read_text())
+          period = next((p for p in manifest["periods"] if p["period_id"] == period_id), None)
+          if period is None:
+              raise SystemExit(f"Period not found in manifest: {period_id}")
+          context = {
+              "period_id": period_id,
+              "period": period,
+              "api_boundary_year": manifest["api_boundary_year"],
+              "api_boundary_source": manifest["api_boundary_source"],
+              "api_boundary_verified": manifest["api_boundary_verified"],
+              "api_boundary_decision": manifest["api_boundary_decision"],
+              "period_manifest_sha256": manifest["seed_sha256"],
+          }
+          Path("generated/full-corpus-periods/period_context.json").write_text(
+              json.dumps(context, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Check required secrets and variables
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          : "${NZ_LEGISLATION_API_KEY:?NZ_LEGISLATION_API_KEY secret is required}"
+          : "${HF_REPO_ID:?HF_REPO_ID repository variable is required}"
+          : "${HF_TOKEN:?HF_TOKEN secret is required}"
+
+      - name: Restore current live corpus from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
+        run: |
+          set -euo pipefail
+          uv run python - <<'PY'
+          import os
+          from huggingface_hub import snapshot_download
+
+          snapshot_download(
+              repo_id=os.environ["HF_REPO_ID"],
+              repo_type="dataset",
+              token=os.environ.get("HF_TOKEN"),
+              local_dir="data",
+              allow_patterns=[
+                  "README.md",
+                  "records.jsonl",
+                  "_state/**",
+                  "manifests/**",
+                  "parquet/**",
+                  "raw_xml/**",
+              ],
+          )
+          PY
+          rm -rf data/.cache
+
+      - name: Sync period seed
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set -euo pipefail
+          export NZLC_MIN_SECONDS_BETWEEN_REQUESTS="$MIN_SECONDS_BETWEEN_REQUESTS"
+          args=(--seed-work-ids "generated/full-corpus-periods/seeds/${PERIOD_ID}.txt" --allow-no-search-terms)
+          if [ -n "$MAX_WORKS" ] && [ "$MAX_WORKS" != "none" ] && [ "$MAX_WORKS" != "null" ] && [ "$MAX_WORKS" != "-" ]; then
+            args+=(--max-works "$MAX_WORKS")
+          fi
+          uv run nzlc sync "${args[@]}"
+
+      - name: Stage dataset card and validate
+        run: |
+          set -euo pipefail
+          cp DATASET_CARD.md data/README.md
+          uv run nzlc validate
+          uv run nzlc manifest
+          uv run nzlc coverage-report
+          uv run nzlc review-full-corpus-bootstrap \
+            --artifact-root . \
+            --output-path generated/full-corpus-periods/review_report.json
+
+      - name: Upload period checkpoint artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-corpus-period-${{ inputs.period_id }}-checkpoint
+          path: |
+            generated/full-corpus-periods/
+            data/records.jsonl
+            data/README.md
+            data/manifests/
+            data/_state/
+          if-no-files-found: error
