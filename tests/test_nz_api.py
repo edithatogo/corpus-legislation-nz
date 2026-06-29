@@ -29,13 +29,16 @@ class FakeResponse:
 
 
 class FakeSession:
-    def __init__(self, responses: list[FakeResponse]):
+    def __init__(self, responses: list[FakeResponse | requests.RequestException]):
         self.responses = list(responses)
         self.requests: list[tuple[str, str]] = []
 
     def request(self, method: str, url: str, **kwargs: Any) -> FakeResponse:
         self.requests.append((method, url))
-        return self.responses.pop(0)
+        response = self.responses.pop(0)
+        if isinstance(response, requests.RequestException):
+            raise response
+        return response
 
     def get(self, url: str, **kwargs: Any) -> FakeResponse:
         return self.request("GET", url, **kwargs)
@@ -110,6 +113,34 @@ def test_request_json_retries_on_429_with_retry_after(monkeypatch: pytest.Monkey
 
     assert response.data == {"ok": True}
     assert sleeps == [7.0]
+    assert session.requests == [
+        ("GET", "https://api.example.invalid/v0/works/"),
+        ("GET", "https://api.example.invalid/v0/works/"),
+    ]
+
+
+@pytest.mark.unit
+def test_request_json_retries_on_transient_request_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession(
+        [
+            requests.ReadTimeout("slow upstream"),
+            FakeResponse(status_code=200, payload={"ok": True}),
+        ]
+    )
+    client = NZLegislationClient(
+        make_settings(min_seconds_between_requests=0.0, max_retries=2), session=session
+    )
+    sleeps: list[float] = []
+    monkeypatch.setattr("nz_legislation_corpus.nz_api.time.sleep", sleeps.append)
+    monkeypatch.setattr("nz_legislation_corpus.nz_api.time.monotonic", lambda: 100.0)
+    monkeypatch.setattr("nz_legislation_corpus.nz_api.random.random", lambda: 0.0)
+
+    response = client.request_json("GET", "works/")
+
+    assert response.data == {"ok": True}
+    assert sleeps == [2.0]
     assert session.requests == [
         ("GET", "https://api.example.invalid/v0/works/"),
         ("GET", "https://api.example.invalid/v0/works/"),
@@ -295,6 +326,31 @@ def test_download_url_retries_on_403(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert content == b"ok"
     assert sleeps == [30.0]
+
+
+@pytest.mark.unit
+def test_download_url_retries_on_transient_request_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession(
+        [
+            requests.ReadTimeout("slow upstream"),
+            FakeResponse(status_code=200, content=b"ok"),
+        ]
+    )
+    client = NZLegislationClient(
+        make_settings(min_seconds_between_requests=0.0, max_retries=2), session=session
+    )
+    sleeps: list[float] = []
+    monkeypatch.setattr("nz_legislation_corpus.nz_api.time.sleep", sleeps.append)
+    monkeypatch.setattr("nz_legislation_corpus.nz_api.time.monotonic", lambda: 100.0)
+    monkeypatch.setattr("nz_legislation_corpus.nz_api.random.random", lambda: 0.0)
+
+    content = client.download_url("https://example.invalid/file.xml")
+
+    assert content == b"ok"
+    assert sleeps == [2.0]
+    assert len(session.requests) == 2
 
 
 @pytest.mark.unit

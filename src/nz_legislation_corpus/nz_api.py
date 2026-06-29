@@ -113,6 +113,10 @@ class NZLegislationClient:
                 pass
         return min(120, (2**fallback_attempt) + random.random())
 
+    @staticmethod
+    def _transient_error_sleep_seconds(attempt: int) -> float:
+        return min(60, (2**attempt) + random.random())
+
     def request_json(self, method: str, path: str, **kwargs: Any) -> NZAPIResponse:
         headers = dict(kwargs.pop("headers", {}) or {})
         headers["X-Api-Key"] = self.api_key
@@ -123,7 +127,21 @@ class NZLegislationClient:
         for attempt in range(1, self.settings.max_retries + 1):
             self._sleep_for_pacing()
             self.last_request_at = time.monotonic()
-            response = self.session.request(method, url, headers=headers, timeout=timeout, **kwargs)
+            try:
+                response = self.session.request(
+                    method, url, headers=headers, timeout=timeout, **kwargs
+                )
+            except requests.RequestException:
+                if attempt >= self.settings.max_retries:
+                    raise
+                sleep_seconds = self._transient_error_sleep_seconds(attempt)
+                log.warning(
+                    "NZ API request failed transiently; retrying after %.1fs",
+                    sleep_seconds,
+                    exc_info=True,
+                )
+                time.sleep(sleep_seconds)
+                continue
             remaining = response.headers.get("X-RateLimit-Remaining")
             reset = response.headers.get("X-RateLimit-Reset")
             if remaining is not None:
@@ -146,7 +164,7 @@ class NZLegislationClient:
                 continue
 
             if response.status_code >= 500 and attempt < self.settings.max_retries:
-                sleep_seconds = min(60, (2**attempt) + random.random())
+                sleep_seconds = self._transient_error_sleep_seconds(attempt)
                 log.warning("NZ API %s; retrying after %.1fs", response.status_code, sleep_seconds)
                 time.sleep(sleep_seconds)
                 continue
@@ -166,9 +184,21 @@ class NZLegislationClient:
         for attempt in range(1, self.settings.max_retries + 1):
             self._sleep_for_pacing()
             self.last_request_at = time.monotonic()
-            response = self.session.get(
-                url, headers=headers, timeout=self.settings.request_timeout_seconds
-            )
+            try:
+                response = self.session.get(
+                    url, headers=headers, timeout=self.settings.request_timeout_seconds
+                )
+            except requests.RequestException:
+                if attempt >= self.settings.max_retries:
+                    raise
+                sleep_seconds = self._transient_error_sleep_seconds(attempt)
+                log.warning(
+                    "Download request failed transiently; retrying after %.1fs",
+                    sleep_seconds,
+                    exc_info=True,
+                )
+                time.sleep(sleep_seconds)
+                continue
             if response.status_code == 429 and attempt < self.settings.max_retries:
                 sleep_seconds = self._retry_after_seconds(response, fallback_attempt=attempt)
                 log.warning(
@@ -184,7 +214,7 @@ class NZLegislationClient:
                 time.sleep(sleep_seconds)
                 continue
             if response.status_code >= 500 and attempt < self.settings.max_retries:
-                time.sleep(min(60, (2**attempt) + random.random()))
+                time.sleep(self._transient_error_sleep_seconds(attempt))
                 continue
             response.raise_for_status()
             self._sleep_for_low_quota(response.headers)
