@@ -13,7 +13,7 @@ This runbook covers the critical path from full bootstrap download through live 
 
 Workflow: `.github/workflows/full_corpus_bootstrap.yml`
 
-Recommended first run is parallel no-upload review:
+Recommended hosted-runner run is parallel shard review and merge:
 
 ```text
 seed_work_ids_path=seeds/work_ids.txt
@@ -27,7 +27,17 @@ serial=false
 max_works=none
 ```
 
-Use `serial=true` only on a runner with enough disk and runtime to preserve one cumulative `data/` directory across all batches. The serial mode is the closest workflow equivalent to a full local bootstrap download.
+Do not use `serial=true` for all 68 batches on GitHub-hosted runners. The
+2026-06-21 full serial run was cancelled during the sync step after about six
+hours, before validation, coverage, or artifact upload. Hosted runs should use
+`serial=false`: each batch uploads a shard artifact, then the workflow's
+`merge_batches` job assembles those shards into the standard
+`full-corpus-bootstrap-download` artifact with a root `data/` tree.
+
+Use `serial=true` only on a local or self-hosted runner with enough disk and
+runtime to preserve one cumulative `data/` directory across all batches. The
+serial mode is the closest workflow equivalent to a full local bootstrap
+download, but it is not viable for the first all-batch hosted run.
 
 Review each batch artifact for:
 
@@ -41,6 +51,16 @@ After downloading a workflow artifact, run the deterministic review gate:
 
 ```text
 nzlc review-full-corpus-bootstrap --artifact-root path/to/downloaded-artifact
+```
+
+If shard artifacts are downloaded outside GitHub Actions, assemble them with:
+
+```text
+nzlc merge-bootstrap-artifacts \
+  --artifact-root path/to/full-corpus-batch-0001-download \
+  --artifact-root path/to/full-corpus-batch-0002-download \
+  --output-dir data
+nzlc review-full-corpus-bootstrap --artifact-root data
 ```
 
 The command writes `generated/full-corpus-bootstrap/review_report.json` by

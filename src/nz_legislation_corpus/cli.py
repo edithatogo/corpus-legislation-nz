@@ -10,6 +10,7 @@ import typer
 from rich.console import Console
 
 from .archive import build_archive
+from .bootstrap_merge import build_coverage_report, merge_bootstrap_artifacts
 from .bootstrap_review import write_full_corpus_bootstrap_review
 from .config import Settings, require
 from .discovery import (
@@ -25,7 +26,6 @@ from .nz_api import NZLegislationClient
 from .parquet_writer import write_partitioned_parquet
 from .period_shards import split_period_seed_files
 from .rss_feed import FEED_FILENAME, build_feed
-from .schema import RECORD_SCHEMA_VERSION
 from .types import SyncStats
 from .utils import (
     read_json,
@@ -774,50 +774,38 @@ def coverage_report_cmd() -> None:
     """Summarize corpus coverage and red-team risk indicators."""
     settings = Settings()
     records = read_jsonl(settings.records_jsonl_path)
-    by_type: dict[str, int] = {}
-    by_status: dict[str, int] = {}
-    by_year: dict[str, int] = {}
-    missing_text = 0
-    missing_xml = 0
-    ephemeral_ids = 0
-    for record in records:
-        by_type[str(record.get("legislation_type") or "unknown")] = (
-            by_type.get(str(record.get("legislation_type") or "unknown"), 0) + 1
-        )
-        by_status[str(record.get("legislation_status") or "unknown")] = (
-            by_status.get(str(record.get("legislation_status") or "unknown"), 0) + 1
-        )
-        by_year[str(record.get("year") or "unknown")] = (
-            by_year.get(str(record.get("year") or "unknown"), 0) + 1
-        )
-        if not str(record.get("text") or "").strip():
-            missing_text += 1
-        if not str(record.get("xml_url") or "").strip():
-            missing_xml += 1
-        if record.get("id_is_ephemeral"):
-            ephemeral_ids += 1
-    report = {
-        "schema_version": "1.0",
-        "record_schema_version": RECORD_SCHEMA_VERSION,
-        "record_count": len(records),
-        "by_type": dict(sorted(by_type.items())),
-        "by_status": dict(sorted(by_status.items())),
-        "by_year": dict(sorted(by_year.items())),
-        "risk_indicators": {
-            "missing_text_records": missing_text,
-            "missing_xml_url_records": missing_xml,
-            "ephemeral_identifier_records": ephemeral_ids,
-        },
-        "recommendation": "Use a seed work-id list or official bulk source before claiming corpus completeness."
-        if records
-        else "No records found.",
-    }
+    report = build_coverage_report(records)
     write_json(settings.manifests_dir / "coverage_report.json", report)
     history_path = settings.manifests_dir / "coverage_history.jsonl"
     history_path.parent.mkdir(parents=True, exist_ok=True)
     with history_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(report, sort_keys=True, ensure_ascii=False) + "\n")
     console.print_json(data=report)
+
+
+@app.command("merge-bootstrap-artifacts")
+def merge_bootstrap_artifacts_cmd(
+    artifact_root: Annotated[
+        list[Path],
+        typer.Option(
+            "--artifact-root",
+            help="Downloaded full-corpus batch or period artifact root. Repeat for each shard.",
+        ),
+    ],
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory where the merged corpus artifact will be written."),
+    ] = Path("generated/full-corpus-bootstrap/merged"),
+    schema_path: Annotated[
+        Path,
+        typer.Option(help="Record JSON Schema used for validation."),
+    ] = Path("schemas/legislation_record.schema.json"),
+) -> None:
+    """Merge reviewed bootstrap shard artifacts into one validated corpus artifact."""
+    report = merge_bootstrap_artifacts(artifact_root, output_dir, schema_path=schema_path)
+    console.print_json(data=report)
+    if not report["validation_ok"]:
+        raise typer.Exit(code=2)
 
 
 @app.command("review-full-corpus-bootstrap")

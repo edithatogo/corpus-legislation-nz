@@ -284,6 +284,16 @@ Current state:
   `min_seconds_between_requests=0.5`, `max_parallel=1`, `serial=true`, and
   `max_works=none`. Initial live checks passed through required secrets,
   doctor, and Hugging Face restore; the serial sync step is in progress.
+- **2026-06-29 hosted serial failure confirmed**: run `27898963687` completed
+  with conclusion `cancelled`. The serial job was cancelled during
+  `Sync all bootstrap batches sequentially` after about six hours, so
+  validation, manifest, coverage, and artifact upload were skipped. Track 07
+  cannot rely on a single all-batch hosted serial runner.
+- **2026-06-29 sharded merge remediation**: `nzlc merge-bootstrap-artifacts`
+  and the `full_corpus_bootstrap.yml` `merge_batches` job now support hosted
+  `serial=false` runs: batch artifacts are merged into a standard
+  `full-corpus-bootstrap-download` artifact with root `data/`, manifests,
+  sync state, raw content, Parquet, and review report.
 - **2026-06-21 period handoff note**: this all-batch serial run remains valid
   for full-bootstrap evidence, but it is not the final agent-handoff shape.
   Track 36 now owns period-sharded seed manifests, annual recent shards,

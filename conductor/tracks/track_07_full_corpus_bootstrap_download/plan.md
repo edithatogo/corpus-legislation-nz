@@ -34,6 +34,17 @@
 - 2026-06-21 latest live check: run `27898963687` remains `in_progress`.
   `plan` completed successfully, `batch` was skipped because `serial=true`,
   and `serial` is still running `Sync all bootstrap batches sequentially`.
+- 2026-06-29 follow-up check: run `27898963687` completed with conclusion
+  `cancelled`. The `serial` job was cancelled during
+  `Sync all bootstrap batches sequentially` after about six hours, and the
+  validate/manifest/coverage/artifact steps were skipped. This confirms that a
+  single all-batch serial run is not viable on GitHub-hosted runners.
+- 2026-06-29 remediation: added `nzlc merge-bootstrap-artifacts` and a
+  `merge_batches` job to `.github/workflows/full_corpus_bootstrap.yml`.
+  Hosted runs should now use `serial=false`; each batch uploads a shard
+  artifact, and the merge job assembles a standard
+  `full-corpus-bootstrap-download` artifact with root `data/`, manifests,
+  sync state, Parquet, raw content, and review report.
 
 ## Batch 0001 no-upload evidence
 
@@ -214,10 +225,15 @@ before any test runs, so `Settings()` resolves to its declared defaults.
 ## Remaining operator tasks
 
 1. Monitor dispatched run `27898963687` until the `serial` job completes.
-2. After completion, download artifacts: `data/records.jsonl`, `data/manifests/`, `data/_state/`.
-3. Run `nzlc review-full-corpus-bootstrap --artifact-root <downloaded-artifact>` and review `generated/full-corpus-bootstrap/review_report.json`.
-4. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings.
-5. Run `nzlc validate`, `nzlc manifest`, `nzlc coverage-report` against the output.
+2. Dispatch a hosted `serial=false` full bootstrap run for all 68 batches, or
+   run `serial=true` only on a local/self-hosted runner with runtime above the
+   hosted six-hour ceiling.
+3. After the hosted batch run completes, download
+   `full-corpus-bootstrap-download`: `data/records.jsonl`,
+   `data/manifests/`, `data/_state/`, `data/parquet/`, and `data/raw_xml/`.
+4. Run `nzlc review-full-corpus-bootstrap --artifact-root <downloaded-artifact>`
+   and review `generated/full-corpus-bootstrap/review_report.json`.
+5. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings.
 6. Update tracks.md with final evidence (run URL, manifest SHA, record counts).
 7. Mark Task 3 [x] and Task 7 [x] after review.
 
