@@ -66,7 +66,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          available_gb="$(df -BG . | awk "NR==2 {gsub(/G/, \"\", $4); print $4}")"
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
           required_gb="${{ inputs.minimum_free_gb }}"
           echo "Available disk: ${available_gb}G; required: ${required_gb}G"
           if [ "$available_gb" -lt "$required_gb" ]; then
