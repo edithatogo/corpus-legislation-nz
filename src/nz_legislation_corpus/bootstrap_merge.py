@@ -37,7 +37,7 @@ def _copy_tree_contents(source: Path, destination: Path) -> int:
 def _merge_sync_states(states: list[dict[str, Any]]) -> dict[str, Any]:
     versions: dict[str, str] = {}
     warnings: list[str] = []
-    totals = {
+    totals: dict[str, Any] = {
         "works_checked": 0,
         "versions_checked": 0,
         "records_added": 0,
