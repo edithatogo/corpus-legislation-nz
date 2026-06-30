@@ -72,6 +72,12 @@
   Merged sync state recorded 1,000 works checked, 1,582 versions checked,
   1,582 records added, and 22 Parquet files written. Next daily window is
   batches 0027-0028 with `max_parallel=2`.
+- 2026-07-01 scheduler utilisation update: the automatic dispatcher now starts
+  at batch 0029 with schedule day 0 on 2026-07-01, after manual continuation
+  covered batches 0024-0028. It keeps the maximum conservative daily cadence:
+  10,000 API requests/day, 80% utilisation (8,000 usable requests/day), 500
+  work IDs/batch, 8 requests/work ID budget, and `max_parallel=2`, which yields
+  two fresh batches/day without duplicating already-consumed quota.
 
 ## Batch 0001 no-upload evidence
 

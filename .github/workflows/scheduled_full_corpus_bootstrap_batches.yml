@@ -10,7 +10,7 @@ on:
         description: "First remaining batch number"
         required: true
         type: string
-        default: "24"
+        default: "29"
       end_batch:
         description: "Last remaining batch number"
         required: true
@@ -20,7 +20,7 @@ on:
         description: "Pacific/Auckland date for day 0 of the daily schedule"
         required: true
         type: string
-        default: "2026-06-30"
+        default: "2026-07-01"
       batch_size:
         description: "Work IDs per bootstrap batch"
         required: true
@@ -70,9 +70,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      START_BATCH: ${{ inputs.start_batch || '24' }}
+      START_BATCH: ${{ inputs.start_batch || '29' }}
       END_BATCH: ${{ inputs.end_batch || '68' }}
-      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-06-30' }}
+      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-07-01' }}
       BATCH_SIZE: ${{ inputs.batch_size || '500' }}
       DAILY_REQUEST_LIMIT: ${{ inputs.daily_request_limit || '10000' }}
       UTILIZATION_PERCENT: ${{ inputs.utilization_percent || '80' }}
