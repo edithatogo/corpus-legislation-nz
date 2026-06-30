@@ -145,9 +145,9 @@ def test_split_period_seed_files_writes_manifest_and_period_files(tmp_path: Path
 
 @pytest.mark.unit
 def test_period_bootstrap_workflow_carries_boundary_decision_context() -> None:
-    workflow = (
-        ROOT / ".github" / "workflows" / "full_corpus_period_bootstrap.yml"
-    ).read_text(encoding="utf-8")
+    workflow = (ROOT / ".github" / "workflows" / "full_corpus_period_bootstrap.yml").read_text(
+        encoding="utf-8"
+    )
 
     assert '"api_boundary_decision": manifest["api_boundary_decision"]' in workflow
     assert '"period": period' in workflow

@@ -42,9 +42,7 @@ def _period_work_id_count(period_context: dict[str, Any]) -> Any:
 def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
     """Build a deterministic review summary for a full bootstrap artifact."""
     data_root = _data_root(root)
-    missing = [
-        artifact for artifact in REQUIRED_ARTIFACTS if not (data_root / artifact).exists()
-    ]
+    missing = [artifact for artifact in REQUIRED_ARTIFACTS if not (data_root / artifact).exists()]
     validation = read_json(data_root / "manifests" / "validation_report.json", default={}) or {}
     manifest = read_json(data_root / "manifests" / "latest_manifest.json", default={}) or {}
     coverage = read_json(data_root / "manifests" / "coverage_report.json", default={}) or {}

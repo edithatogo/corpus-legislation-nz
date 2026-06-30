@@ -506,9 +506,9 @@ def split_work_id_periods_cmd(
     output_dir: Annotated[
         Path, typer.Option(help="Directory for generated period seed files.")
     ] = Path("seeds/periods"),
-    manifest_path: Annotated[
-        Path, typer.Option(help="Period manifest path.")
-    ] = Path("seeds/periods/manifest.json"),
+    manifest_path: Annotated[Path, typer.Option(help="Period manifest path.")] = Path(
+        "seeds/periods/manifest.json"
+    ),
     source_metadata_path: Annotated[
         Path | None,
         typer.Option(help="Optional discovery provenance JSON containing works metadata."),

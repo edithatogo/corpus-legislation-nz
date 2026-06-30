@@ -23,11 +23,14 @@ def test_monthly_reconciliation_schedule_has_safe_input_defaults() -> None:
     text = _workflow_text()
     env_block = text[text.index("    env:\n") : text.index("    steps:\n")]
 
-    assert "MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests || '1.0' }}" in env_block
+    assert (
+        "MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests || '1.0' }}"
+        in env_block
+    )
     assert "MAX_WORKS: ${{ inputs.max_works || 'none' }}" in env_block
 
     disk_block = _step_block(text, "Check disk budget")
-    assert 'required_gb="${{ inputs.minimum_free_gb || \'25\' }}"' in disk_block
+    assert "required_gb=\"${{ inputs.minimum_free_gb || '25' }}\"" in disk_block
 
     reconcile_block = _step_block(text, "Reconcile candidate seed")
     assert (

@@ -24,7 +24,9 @@ def _year_from_text(value: Any) -> int | None:
     return int(match.group(1)) if match else None
 
 
-def derive_work_year(work_id: str, metadata: dict[str, Any] | None = None) -> tuple[int | None, str]:
+def derive_work_year(
+    work_id: str, metadata: dict[str, Any] | None = None
+) -> tuple[int | None, str]:
     """Derive a work year from source metadata fields."""
     metadata = metadata or {}
     for field in ("work_id", "latest_version_id", "title"):

@@ -33,9 +33,7 @@ def test_full_corpus_upload_enforces_review_gate_before_publish() -> None:
     review_artifact_block = _step_block(text, "Upload review artifact before publish")
 
     assert "uv run nzlc review-full-corpus-bootstrap --artifact-root data" in review_block
-    assert (
-        "generated/full-corpus-bootstrap/review_report.json" in review_artifact_block
-    )
+    assert "generated/full-corpus-bootstrap/review_report.json" in review_artifact_block
     assert text.index("Review full bootstrap artifact before publish") < text.index(
         "Upload to live Hugging Face dataset"
     )
@@ -50,8 +48,7 @@ def test_full_corpus_upload_requires_bootstrap_run_for_confirmed_publish() -> No
     )
 
     assert (
-        "if: ${{ inputs.upload_confirmed == true && inputs.bootstrap_run_id == '' }}"
-        in guard_block
+        "if: ${{ inputs.upload_confirmed == true && inputs.bootstrap_run_id == '' }}" in guard_block
     )
     assert "Confirmed full upload requires bootstrap_run_id" in guard_block
     assert text.index("Require Track 07 artifact for confirmed full upload") < text.index(

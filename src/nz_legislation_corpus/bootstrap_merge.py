@@ -151,7 +151,9 @@ def merge_bootstrap_artifacts(
     validation = validate_records(output_dir / "records.jsonl", schema_path=schema_path)
     write_json(output_dir / "manifests" / "validation_report.json", validation)
     previous_manifest = read_json(output_dir / "manifests" / "latest_manifest.json", default=None)
-    manifest = build_manifest(output_dir, manifest_path=output_dir / "manifests" / "latest_manifest.json")
+    manifest = build_manifest(
+        output_dir, manifest_path=output_dir / "manifests" / "latest_manifest.json"
+    )
     if previous_manifest:
         from .manifest import build_change_report
 
