@@ -45,8 +45,12 @@ download, but it is not viable for the first all-batch hosted run.
 For quota-safe continuation from batch 0024 onward, use the scheduled
 dispatcher. The NZ Legislation API daily key limit is 10,000 requests, so the
 dispatcher plans at 80% utilisation: 8,000 requests/day. With `batch_size=500`
-and a conservative `requests_per_work_id_budget=16`, the request budget is
-8,000 requests per batch and the scheduled window is one batch per day:
+and `requests_per_work_id_budget=8`, the request budget is 4,000 requests per
+batch and the scheduled window is two batches per day. Batch 0024 evidence
+supports this: it checked 500 works and 874 versions with 483 HTML fallbacks,
+which gives an approximate upper-bound of 2,731 API requests. Two similar
+batches remain comfortably under 8,000 requests/day; three fallback-heavy
+batches could be close to the cap.
 
 ```text
 start_batch=24
@@ -54,10 +58,10 @@ end_batch=68
 schedule_start_date=2026-06-30
 daily_request_limit=10000
 utilization_percent=80
-requests_per_work_id_budget=16
+requests_per_work_id_budget=8
 batch_size=500
 min_seconds_between_requests=1.0
-max_parallel=1
+max_parallel=2
 max_works=none
 ```
 
