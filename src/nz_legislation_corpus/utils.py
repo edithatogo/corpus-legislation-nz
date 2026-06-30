@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
-import hashlib
 from collections.abc import Iterable
 from contextlib import suppress
 from pathlib import Path
 from typing import Any
+
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()

@@ -30,3 +30,8 @@ test-tmp/
 # Local logs
 logs/
 
+# Docs site local outputs
+docs-site/.astro/
+docs-site/dist/
+docs-site/node_modules/
+

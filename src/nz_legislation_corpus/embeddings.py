@@ -30,8 +30,8 @@ def get_bge_m3_model() -> Any:
 
 
 def compute_all_three_embeddings(text: str) -> dict[str, Any]:
-    """
-    Compute dense, sparse, and late-interaction (ColBERT) embeddings for a given text.
+    """Compute dense, sparse, and late-interaction embeddings for text.
+
     Returns a dictionary containing:
       - 'dense': list of 1024 floats
       - 'lexical_weights': dict mapping token/lexical ID to float weight

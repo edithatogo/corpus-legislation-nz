@@ -97,7 +97,7 @@ def test_coverage_report_with_records(tmp_path: Path, monkeypatch) -> None:
     assert risk["missing_text_records"] == 1  # sec_leg_2024_001 has empty text
     assert risk["missing_xml_url_records"] == 2  # bill and sec_leg have no xml_url
     assert risk["ephemeral_identifier_records"] == 1
-    assert "Use a seed work-id list" in report["recommendation"]
+    assert "Review merged shard provenance" in report["recommendation"]
 
 
 @pytest.mark.unit
