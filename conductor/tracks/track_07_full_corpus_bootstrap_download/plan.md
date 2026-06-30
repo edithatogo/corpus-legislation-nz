@@ -52,6 +52,14 @@
   10,000 requests, schedules at 80% utilisation (8,000 requests/day), and with
   `batch_size=500` plus `requests_per_work_id_budget=16` dispatches one batch
   per day through batch 0068.
+- 2026-06-30 batch 0024 continuation evidence: run `28410878072`
+  completed successfully and `nzlc review-full-corpus-bootstrap` passed against
+  the downloaded `full-corpus-bootstrap-download` artifact. Review counts:
+  969 records in `records.jsonl`, manifest, and coverage; validation OK; 0
+  records failed; 483 XML-to-HTML fallback warnings; manifest SHA-256
+  `0c41ca5a4c793247e0c94ca612992c4d2a675f80917eee1796410b9f38df4cb6`.
+  Sync state recorded 500 works checked, 874 versions checked, 874 records
+  added, and 12 Parquet files written. Next daily window is batch 0025.
 
 ## Batch 0001 no-upload evidence
 
