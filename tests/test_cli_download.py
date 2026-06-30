@@ -166,6 +166,25 @@ def test_download_html_only(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.unit
+def test_download_uses_alternate_dated_html_suffix() -> None:
+    session = FakeSession(
+        [
+            FakeResponse(status_code=404, content=b""),
+            FakeResponse(status_code=200, content=b"<html/>"),
+        ]
+    )
+    client = NZLegislationClient(make_settings(min_seconds_between_requests=0.0), session=session)
+    version = _make_version(html_url="https://example.invalid/1992-04-10/")
+
+    raw_content, url, content_type, warnings = _download_first_available_format(client, version)
+
+    assert raw_content == b"<html/>"
+    assert url == "https://example.invalid/1992-04-10A/"
+    assert content_type == "text/html"
+    assert "Used alternate dated URL" in warnings[0]
+
+
+@pytest.mark.unit
 def test_download_neither_available() -> None:
     session = FakeSession([])
     client = NZLegislationClient(make_settings(min_seconds_between_requests=0.0), session=session)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -92,6 +93,14 @@ def _raw_suffix_for_content_type(content_type: str | None) -> str:
     return ".xml" if content_type == "application/xml" else ".html"
 
 
+def _alternate_letter_suffix_url(url: str) -> str | None:
+    """Return a dated legislation URL with an appended A suffix when plausible."""
+    match = re.search(r"(?P<date>\d{4}-\d{2}-\d{2})(?P<suffix>\.xml|/)$", url)
+    if not match:
+        return None
+    return f"{url[: match.start('date')]}{match.group('date')}A{match.group('suffix')}"
+
+
 def _download_first_available_format(
     client: NZLegislationClient,
     version: dict[str, Any],
@@ -100,18 +109,37 @@ def _download_first_available_format(
     warnings: list[str] = []
     candidates = [(fmt, url) for fmt in ("xml", "html") if (url := client.format_url(version, fmt))]
     for fmt, url in candidates:
-        try:
-            raw_content = client.download_url(url)
-            if not raw_content:
-                raise RuntimeError(f"Downloaded empty content from {url}")
-            return raw_content, url, _raw_content_type_for_url(url), warnings
-        except Exception as exc:
+        urls = [url]
+        alternate_url = _alternate_letter_suffix_url(url)
+        if alternate_url and alternate_url not in urls:
+            urls.append(alternate_url)
+
+        last_exc: Exception | None = None
+        for candidate_url in urls:
+            try:
+                raw_content = client.download_url(candidate_url)
+                if not raw_content:
+                    raise RuntimeError(f"Downloaded empty content from {candidate_url}")
+                if candidate_url != url:
+                    warnings.append(
+                        f"Used alternate dated URL {candidate_url} for {version.get('version_id')}"
+                    )
+                return (
+                    raw_content,
+                    candidate_url,
+                    _raw_content_type_for_url(candidate_url),
+                    warnings,
+                )
+            except Exception as exc:
+                last_exc = exc
+
+        if last_exc is not None:
             if fmt == "xml" and any(candidate_fmt == "html" for candidate_fmt, _ in candidates):
                 warnings.append(
-                    f"XML download failed for {version.get('version_id')}: {exc}; used HTML"
+                    f"XML download failed for {version.get('version_id')}: {last_exc}; used HTML"
                 )
                 continue
-            raise
+            raise last_exc
     return b"", None, None, warnings
 
 
