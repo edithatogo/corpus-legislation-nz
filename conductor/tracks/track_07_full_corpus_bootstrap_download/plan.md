@@ -62,6 +62,16 @@
   under the 8,000 request/day target while three fallback-heavy batches could
   approach the cap. Next daily window is batches 0025-0026 with
   `max_parallel=2`.
+- 2026-06-30 batches 0025-0026 continuation evidence: run `28418448745`
+  completed successfully with `max_parallel=2`, and
+  `nzlc review-full-corpus-bootstrap` passed against the downloaded
+  `full-corpus-bootstrap-download` artifact. Review counts: 1,677 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  966 XML-to-HTML fallback warnings; manifest SHA-256
+  `98899d1e183898240f4eb83a78e9397cd757f91f79fa9ed71a4957dc9ed975dd`.
+  Merged sync state recorded 1,000 works checked, 1,582 versions checked,
+  1,582 records added, and 22 Parquet files written. Next daily window is
+  batches 0027-0028 with `max_parallel=2`.
 
 ## Batch 0001 no-upload evidence
 
