@@ -13,6 +13,9 @@ This runbook covers the critical path from full bootstrap download through live 
 
 Workflow: `.github/workflows/full_corpus_bootstrap.yml`
 
+Scheduled continuation workflow:
+`.github/workflows/scheduled_full_corpus_bootstrap_batches.yml`
+
 Recommended hosted-runner run is parallel shard review and merge:
 
 ```text
@@ -38,6 +41,29 @@ Use `serial=true` only on a local or self-hosted runner with enough disk and
 runtime to preserve one cumulative `data/` directory across all batches. The
 serial mode is the closest workflow equivalent to a full local bootstrap
 download, but it is not viable for the first all-batch hosted run.
+
+For quota-safe continuation from batch 0024 onward, use the scheduled
+dispatcher. The NZ Legislation API daily key limit is 10,000 requests, so the
+dispatcher plans at 80% utilisation: 8,000 requests/day. With `batch_size=500`
+and a conservative `requests_per_work_id_budget=16`, the request budget is
+8,000 requests per batch and the scheduled window is one batch per day:
+
+```text
+start_batch=24
+end_batch=68
+schedule_start_date=2026-06-30
+daily_request_limit=10000
+utilization_percent=80
+requests_per_work_id_budget=16
+batch_size=500
+min_seconds_between_requests=1.0
+max_parallel=1
+max_works=none
+```
+
+The dispatcher skips itself after the computed daily window passes batch 0068.
+Manual dispatch of the dispatcher is useful for proving the calculation on a
+branch, but scheduled runs only execute from GitHub's default branch.
 
 Review each batch artifact for:
 

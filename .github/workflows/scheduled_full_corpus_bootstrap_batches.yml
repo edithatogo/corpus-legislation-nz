@@ -1,0 +1,172 @@
+name: Scheduled full corpus bootstrap batches
+
+on:
+  schedule:
+    # Runs shortly after the NZ Legislation API daily quota resets at midnight NZ local time.
+    - cron: "30 12 * * *"
+  workflow_dispatch:
+    inputs:
+      start_batch:
+        description: "First remaining batch number"
+        required: true
+        type: string
+        default: "24"
+      end_batch:
+        description: "Last remaining batch number"
+        required: true
+        type: string
+        default: "68"
+      schedule_start_date:
+        description: "Pacific/Auckland date for day 0 of the daily schedule"
+        required: true
+        type: string
+        default: "2026-06-30"
+      batch_size:
+        description: "Work IDs per bootstrap batch"
+        required: true
+        type: string
+        default: "500"
+      daily_request_limit:
+        description: "NZ Legislation API request limit per day"
+        required: true
+        type: string
+        default: "10000"
+      utilization_percent:
+        description: "Percent of the daily request limit to schedule"
+        required: true
+        type: string
+        default: "80"
+      requests_per_work_id_budget:
+        description: "Conservative request budget per work ID"
+        required: true
+        type: string
+        default: "16"
+      min_seconds_between_requests:
+        description: "NZ Legislation API pacing override in seconds"
+        required: true
+        type: string
+        default: "1.0"
+      max_parallel:
+        description: "Maximum parallel batch jobs in dispatched bootstrap runs"
+        required: true
+        type: string
+        default: "1"
+      max_works:
+        description: "Optional per-batch sync limit; use none for no limit"
+        required: true
+        type: string
+        default: "none"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: scheduled-full-corpus-bootstrap-batches
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      START_BATCH: ${{ inputs.start_batch || '24' }}
+      END_BATCH: ${{ inputs.end_batch || '68' }}
+      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-06-30' }}
+      BATCH_SIZE: ${{ inputs.batch_size || '500' }}
+      DAILY_REQUEST_LIMIT: ${{ inputs.daily_request_limit || '10000' }}
+      UTILIZATION_PERCENT: ${{ inputs.utilization_percent || '80' }}
+      REQUESTS_PER_WORK_ID_BUDGET: ${{ inputs.requests_per_work_id_budget || '16' }}
+      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests || '1.0' }}
+      MAX_PARALLEL: ${{ inputs.max_parallel || '1' }}
+      MAX_WORKS: ${{ inputs.max_works || 'none' }}
+    steps:
+      - name: Plan daily batch window
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import math
+          import os
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          start_batch = int(os.environ["START_BATCH"])
+          end_batch = int(os.environ["END_BATCH"])
+          schedule_start = datetime.strptime(
+              os.environ["SCHEDULE_START_DATE"], "%Y-%m-%d"
+          ).date()
+          batch_size = int(os.environ["BATCH_SIZE"])
+          daily_request_limit = int(os.environ["DAILY_REQUEST_LIMIT"])
+          utilization_percent = int(os.environ["UTILIZATION_PERCENT"])
+          requests_per_work_id_budget = int(os.environ["REQUESTS_PER_WORK_ID_BUDGET"])
+
+          if start_batch < 1 or end_batch < start_batch:
+              raise SystemExit("start_batch/end_batch are invalid")
+          if batch_size < 1 or daily_request_limit < 1:
+              raise SystemExit("batch_size/daily_request_limit are invalid")
+          if not 1 <= utilization_percent <= 100:
+              raise SystemExit("utilization_percent must be 1..100")
+          if requests_per_work_id_budget < 1:
+              raise SystemExit("requests_per_work_id_budget must be at least 1")
+
+          usable_requests = math.floor(daily_request_limit * utilization_percent / 100)
+          requests_per_batch_budget = batch_size * requests_per_work_id_budget
+          batches_per_day = max(1, usable_requests // requests_per_batch_budget)
+          today = datetime.now(ZoneInfo("Pacific/Auckland")).date()
+          days_elapsed = max(0, (today - schedule_start).days)
+          current_start = start_batch + days_elapsed * batches_per_day
+          current_end = min(end_batch, current_start + batches_per_day - 1)
+          should_dispatch = current_start <= end_batch
+
+          values = {
+              "usable_requests": usable_requests,
+              "requests_per_batch_budget": requests_per_batch_budget,
+              "batches_per_day": batches_per_day,
+              "current_start": current_start,
+              "current_end": current_end,
+              "should_dispatch": str(should_dispatch).lower(),
+              "days_elapsed": days_elapsed,
+          }
+          for key, value in values.items():
+              print(f"{key}={value}")
+          PY
+
+      - name: Dispatch full corpus bootstrap batch window
+        if: ${{ steps.plan.outputs.should_dispatch == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT_START: ${{ steps.plan.outputs.current_start }}
+          CURRENT_END: ${{ steps.plan.outputs.current_end }}
+        run: |
+          set -euo pipefail
+          gh workflow run full_corpus_bootstrap.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$GITHUB_REF_NAME" \
+            -f seed_work_ids_path=seeds/work_ids.txt \
+            -f batch_size="$BATCH_SIZE" \
+            -f start_batch="$CURRENT_START" \
+            -f end_batch="$CURRENT_END" \
+            -f merge_policy=restore_merge \
+            -f min_seconds_between_requests="$MIN_SECONDS_BETWEEN_REQUESTS" \
+            -f max_parallel="$MAX_PARALLEL" \
+            -f serial=false \
+            -f max_works="$MAX_WORKS"
+
+      - name: Summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Scheduled full corpus bootstrap batches"
+            echo "- Daily request limit: ${DAILY_REQUEST_LIMIT}"
+            echo "- Scheduled utilization: ${UTILIZATION_PERCENT}%"
+            echo "- Usable requests/day: ${{ steps.plan.outputs.usable_requests }}"
+            echo "- Request budget per batch: ${{ steps.plan.outputs.requests_per_batch_budget }}"
+            echo "- Batches/day: ${{ steps.plan.outputs.batches_per_day }}"
+            echo "- Remaining schedule range: ${START_BATCH}-${END_BATCH}"
+            echo "- Today's batch window: ${{ steps.plan.outputs.current_start }}-${{ steps.plan.outputs.current_end }}"
+            echo "- Dispatch attempted: ${{ steps.plan.outputs.should_dispatch }}"
+            echo "- Days elapsed: ${{ steps.plan.outputs.days_elapsed }}"
+          } >> "$GITHUB_STEP_SUMMARY"

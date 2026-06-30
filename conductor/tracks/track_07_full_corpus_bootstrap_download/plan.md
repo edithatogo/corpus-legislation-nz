@@ -45,6 +45,13 @@
   artifact, and the merge job assembles a standard
   `full-corpus-bootstrap-download` artifact with root `data/`, manifests,
   sync state, Parquet, raw content, and review report.
+- 2026-06-30 quota-safe continuation: cancelled replacement full-range run
+  `28409376276` and added
+  `.github/workflows/scheduled_full_corpus_bootstrap_batches.yml` to resume at
+  batch 0024. The dispatcher uses the NZ Legislation API daily key limit of
+  10,000 requests, schedules at 80% utilisation (8,000 requests/day), and with
+  `batch_size=500` plus `requests_per_work_id_budget=16` dispatches one batch
+  per day through batch 0068.
 
 ## Batch 0001 no-upload evidence
 
