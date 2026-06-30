@@ -78,6 +78,17 @@
   10,000 API requests/day, 80% utilisation (8,000 usable requests/day), 500
   work IDs/batch, 8 requests/work ID budget, and `max_parallel=2`, which yields
   two fresh batches/day without duplicating already-consumed quota.
+- 2026-07-01 batch 0028 repair evidence: run `28464210390` completed
+  successfully after the dated-URL fallback patch. Local review of the
+  downloaded `full-corpus-bootstrap-download` artifact passed: 1,389 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  474 warnings, including 473 XML-to-HTML fallback warnings; manifest SHA-256
+  `6622c7e7c1256cfe73096cc31f3c72576ff9ffa5855d378e64b241003779c073`.
+  Sync state recorded 1,294 versions checked, 1,294 records added, 0 failed,
+  and 10 Parquet files written. The stale
+  `act_public_1992_27_en_1992-04-10` URL was recovered through the
+  `1992-04-10A` alternate and now maps to the same content hash as the
+  `act_public_1992_27_en_1992-04-10A` version.
 
 ## Batch 0001 no-upload evidence
 
