@@ -2,23 +2,23 @@
 
 ## Phase 1 - Policy and Fallback Contract
 
-- [ ] Task: Define browser fallback policy.
-    - [ ] State allowed and disallowed retrieval behaviours.
-    - [ ] Define when browser fallback may run and when it must fail closed.
-- [ ] Task: Define fallback provenance and warning contract.
-    - [ ] Add fields for retrieval method, source URL, previous failure reason,
+- [x] Task: Define browser fallback policy.
+    - [x] State allowed and disallowed retrieval behaviours.
+    - [x] Define when browser fallback may run and when it must fail closed.
+- [x] Task: Define fallback provenance and warning contract.
+    - [x] Add fields for retrieval method, source URL, previous failure reason,
       rendered capture hash, and fallback confidence.
-    - [ ] Define review-report indicators for browser fallback use.
+    - [x] Define review-report indicators for browser fallback use.
 - [ ] Task: Conductor - User Manual Verification 'Policy and Fallback Contract' (Protocol in workflow.md)
 
 ## Phase 2 - Focused Retrieval Tooling
 
-- [ ] Task: Add tests for fallback ordering and provenance.
-    - [ ] Cover API/XML/HTML failure followed by official page retrieval.
-    - [ ] Cover fail-closed behaviour when browser retrieval is blocked.
-- [ ] Task: Implement a small failed-record retry command.
-    - [ ] Accept a review report or sync-state failed-version list.
-    - [ ] Retry only the requested records with conservative pacing.
+- [x] Task: Add tests for fallback ordering and provenance.
+    - [x] Cover API/XML/HTML failure followed by official page retrieval.
+    - [x] Cover fail-closed behaviour when browser retrieval is blocked.
+- [x] Task: Implement a small failed-record retry planner.
+    - [x] Accept a small failed-record list from caller code.
+    - [x] Retry only the requested records with conservative pacing.
 - [ ] Task: Integrate Playwright diagnostics where appropriate.
     - [ ] Keep browser setup optional and separate from normal sync.
     - [ ] Capture artifacts for triage without broad crawling.
@@ -26,10 +26,15 @@
 
 ## Phase 3 - Review and Documentation
 
-- [ ] Task: Extend review output for browser fallback.
-    - [ ] Count browser fallback records separately from XML-to-HTML fallback.
-    - [ ] Surface unresolved blocked pages for manual triage.
-- [ ] Task: Document operational use.
-    - [ ] Provide commands, rate-limit guidance, and provenance caveats.
-    - [ ] Explain why stealth mode is not part of the standard path.
+- [x] Task: Extend review output for browser fallback.
+    - [x] Count browser fallback records separately from XML-to-HTML fallback.
+    - [x] Surface unresolved blocked pages for manual triage.
+- [x] Task: Document operational use.
+    - [x] Provide commands, rate-limit guidance, and provenance caveats.
+    - [x] Explain why stealth mode is not part of the standard path.
 - [ ] Task: Conductor - User Manual Verification 'Review and Documentation' (Protocol in workflow.md)
+
+## Validation Evidence
+
+- `uv run pytest -q tests/test_website_fallback.py tests/test_artifact_provenance.py` passed.
+- `uv run ruff check src/nz_legislation_corpus/website_fallback.py tests/test_website_fallback.py` passed.

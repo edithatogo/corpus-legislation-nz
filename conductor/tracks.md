@@ -1316,7 +1316,7 @@ Remaining:
 
 ---
 
-- [ ] **Track: Official feed change detection**
+- [~] **Track: Official feed change detection**
 *Link: [./tracks/track_37_official_feed_change_detection/](./tracks/track_37_official_feed_change_detection/)*
 
 Goal: Use official NZ Legislation feeds and API/search metadata as a redundant
@@ -1325,7 +1325,7 @@ queues without replacing the canonical full bootstrap.
 
 ---
 
-- [ ] **Track: Official website fallback retrieval**
+- [~] **Track: Official website fallback retrieval**
 *Link: [./tracks/track_38_official_website_fallback_retrieval/](./tracks/track_38_official_website_fallback_retrieval/)*
 
 Goal: Add a conservative, provenance-rich official-website retrieval fallback
@@ -1334,7 +1334,7 @@ access-control bypass.
 
 ---
 
-- [ ] **Track: NZLII redundancy reconciliation**
+- [~] **Track: NZLII redundancy reconciliation**
 *Link: [./tracks/track_39_nzlii_redundancy_reconciliation/](./tracks/track_39_nzlii_redundancy_reconciliation/)*
 
 Goal: Use NZLII as an independent secondary source for coverage checks,
@@ -1343,7 +1343,7 @@ canonical source.
 
 ---
 
-- [ ] **Track: Source redundancy resolver and provenance**
+- [~] **Track: Source redundancy resolver and provenance**
 *Link: [./tracks/track_40_source_redundancy_resolver_provenance/](./tracks/track_40_source_redundancy_resolver_provenance/)*
 
 Goal: Define the shared fallback resolver and provenance model across API,

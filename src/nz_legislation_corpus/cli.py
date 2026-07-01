@@ -20,10 +20,12 @@ from .discovery import (
     build_work_id_reconciliation_report,
     normalize_work_ids,
 )
+from .feed_change import write_feed_change_artifacts
 from .manifest import build_change_report, build_manifest
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
+from .nzlii_reconcile import write_nzlii_reconciliation_report
 from .parquet_writer import write_partitioned_parquet
 from .period_shards import split_period_seed_files
 from .rss_feed import FEED_FILENAME, build_feed
@@ -37,6 +39,7 @@ from .utils import (
     write_jsonl_if_changed,
 )
 from .validate import validate_records
+from .website_fallback import OfficialWebsiteFallbackPolicy, plan_failed_record_retries
 from .zenodo import upload_archive_to_zenodo
 
 app = typer.Typer(help="NZ legislation corpus pipeline CLI")
@@ -878,6 +881,105 @@ def rss_feed_cmd(
     console.print_json(data=result)
     if not result["ok"]:
         raise typer.Exit(code=2)
+
+
+@app.command("feed-change-detect")
+def feed_change_detect_cmd(
+    feed_path: Annotated[
+        Path,
+        typer.Option(help="RSS/Atom XML feed file to parse."),
+    ],
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory for feed_state.jsonl, refresh_queue.jsonl, and report."),
+    ] = Path("generated/feed-change-detection"),
+    feed_url: Annotated[
+        str,
+        typer.Option(help="Source feed URL recorded in the report."),
+    ] = "",
+    previous_state_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional previous feed_state.jsonl for idempotent refresh queues."),
+    ] = None,
+    retrieved_at: Annotated[
+        str | None,
+        typer.Option(help="Optional retrieval timestamp override for deterministic tests."),
+    ] = None,
+) -> None:
+    """Build advisory official-feed change-detection artifacts."""
+    previous_state = (
+        read_jsonl(previous_state_path)
+        if previous_state_path is not None and previous_state_path.exists()
+        else None
+    )
+    report = write_feed_change_artifacts(
+        output_dir,
+        feed_path,
+        feed_url=feed_url,
+        retrieved_at=retrieved_at,
+        previous_state=previous_state,
+    )
+    console.print_json(data=report)
+
+
+@app.command("plan-website-fallbacks")
+def plan_website_fallbacks_cmd(
+    failed_records_path: Annotated[
+        Path,
+        typer.Option(help="JSONL failed-record input from review/sync triage."),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output official-website fallback retry plan JSON."),
+    ] = Path("generated/website-fallback/retry_plan.json"),
+    max_records: Annotated[
+        int | None,
+        typer.Option(help="Maximum failed records to plan; defaults to policy limit."),
+    ] = None,
+    allow_browser_rendering: Annotated[
+        bool,
+        typer.Option(help="Plan optional browser-rendered fallback attempts; no browser is run."),
+    ] = False,
+    retrieved_at: Annotated[
+        str | None,
+        typer.Option(help="Optional retrieval timestamp override for deterministic tests."),
+    ] = None,
+) -> None:
+    """Plan conservative official-website fallback retries without fetching pages."""
+    failed_records = read_jsonl(failed_records_path)
+    policy = OfficialWebsiteFallbackPolicy(allow_browser_rendering=allow_browser_rendering)
+    report = plan_failed_record_retries(
+        failed_records,
+        policy=policy,
+        max_records=max_records,
+        retrieval_timestamp_utc=retrieved_at,
+    )
+    write_json(output_path, report)
+    console.print_json(data=report)
+    if report["blocked_count"] and not report["planned_count"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("reconcile-nzlii")
+def reconcile_nzlii_cmd(
+    official_records_path: Annotated[
+        Path,
+        typer.Option(help="JSONL official metadata records to reconcile."),
+    ],
+    candidate_groups_path: Annotated[
+        Path,
+        typer.Option(help="JSON mapping work/version IDs to NZLII candidate lists."),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output NZLII reconciliation report JSON."),
+    ] = Path("generated/nzlii-reconciliation/report.json"),
+) -> None:
+    """Build a secondary-source NZLII reconciliation report."""
+    official_records = read_jsonl(official_records_path)
+    candidate_groups = read_json(candidate_groups_path, default={}) or {}
+    report = write_nzlii_reconciliation_report(output_path, official_records, candidate_groups)
+    console.print_json(data=report)
 
 
 if __name__ == "__main__":

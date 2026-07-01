@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .source_redundancy import summarize_source_redundancy
 from .utils import read_json, read_jsonl, write_json
 
 REQUIRED_ARTIFACTS = (
@@ -48,6 +49,7 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
     coverage = read_json(data_root / "manifests" / "coverage_report.json", default={}) or {}
     sync_state = read_json(data_root / "_state" / "sync_state.json", default={}) or {}
     records = read_jsonl(data_root / "records.jsonl")
+    source_redundancy = summarize_source_redundancy(records)
 
     warnings = _warning_texts(sync_state)
     failed_warnings = [warning for warning in warnings if "failed" in warning.lower()]
@@ -118,6 +120,7 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
         "warning_count": len(warnings),
         "xml_to_html_fallback_warning_count": len(xml_fallback_warnings),
         "risk_indicators": risk_counts,
+        "source_redundancy": source_redundancy,
         "period_context": period_context,
         "period_quality": period_quality,
         "triage_required": not ok,
