@@ -10,6 +10,33 @@ historical completeness.
 - Atom feeds with `entry` elements.
 - Feed payloads loaded from a string, bytes object, or local XML file path.
 
+## Official Source Discovery
+
+The supported official freshness signals are:
+
+- Search-based RSS feeds generated from search result pages on the new NZ
+  Legislation website. The website help pages state that saved feeds from the
+  earlier website must be regenerated on the new site, and that search results
+  expose RSS feeds for keeping up to date.
+- The official API RSS search endpoint documented at
+  `https://api.legislation.govt.nz/api/rss/search/`.
+- The official API `works/` search endpoint for API-driven freshness checks. The
+  project maps this to `NZLegislationClient.search_works(...)` with parameters
+  `search_term`, `search_field`, `page`, `per_page`, `legislation_type`,
+  `legislation_status`, `sort_by`, and `publisher`.
+
+Recommended API freshness settings mirror the existing discovery pipeline:
+
+- `NZLC_SEARCH_SORT_BY=most_recently_updated`
+- `NZLC_SEARCH_FIELD=title` or `fulltext`
+- broad `NZLC_SEARCH_TERMS` only as a change-detection hint
+- optional `NZLC_LEGISLATION_TYPES`, `NZLC_LEGISLATION_STATUS`, and
+  `NZLC_PUBLISHER` filters when the queue should be scoped
+
+The API docs describe the API as version zero and search-oriented. This track
+therefore treats API/search and RSS results as freshness signals only; they do
+not prove full historical coverage.
+
 ## Recorded feed item state
 
 Each parsed item is reduced to a JSON-serializable state record with:
@@ -56,6 +83,19 @@ explicit search-based feed URL through `workflow_dispatch` or the
 `NZLC_OFFICIAL_FEED_URL` repository variable. It refuses non-official feed hosts,
 downloads the feed, runs `nzlc feed-change-detect`, and uploads the advisory
 feed-state, refresh-queue, review-candidate, and report artifacts.
+
+## Manual Verification Evidence
+
+Track 37 was manually verified on 2026-07-01 with:
+
+- `uv run nzlc feed-change-detect --feed-path generated/track37-manual-verification/feed.xml --output-dir generated/track37-manual-verification/artifacts --feed-url https://www.legislation.govt.nz/search/rss/example --retrieved-at 2026-07-01T00:00:00Z`
+- JSON parse checks for `feed_change_report.json`, `feed_state.jsonl`,
+  `refresh_queue.jsonl`, and `review_candidates.jsonl`.
+- `uv run python -m pytest -q -p no:cacheprovider tests\test_feed_change.py tests\test_official_feed_change_detection_workflow.py tests\smoke\test_cli_smoke.py -q`
+- `uv run ruff check --no-cache src\nz_legislation_corpus\feed_change.py src\nz_legislation_corpus\cli.py tests\test_feed_change.py tests\test_official_feed_change_detection_workflow.py`
+- `uv run ruff format --check src\nz_legislation_corpus\feed_change.py src\nz_legislation_corpus\cli.py tests\test_feed_change.py tests\test_official_feed_change_detection_workflow.py`
+- `uv run ty check src tests`
+- `git diff --check`
 
 ## Caveat
 

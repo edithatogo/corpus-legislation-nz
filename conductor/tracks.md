@@ -1316,7 +1316,7 @@ Remaining:
 
 ---
 
-- [~] **Track: Official feed change detection**
+- [x] **Track: Official feed change detection**
 *Link: [./tracks/track_37_official_feed_change_detection/](./tracks/track_37_official_feed_change_detection/)*
 
 Goal: Use official NZ Legislation feeds and API/search metadata as a redundant
