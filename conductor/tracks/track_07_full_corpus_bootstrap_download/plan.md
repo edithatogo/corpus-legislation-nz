@@ -80,8 +80,11 @@
   batches/day. After batches 0029-0030 succeeded, the scheduler was retargeted
   to start at batch 0031 on 2026-07-02 with `target_batches_per_day=3` and
   `max_parallel=3`: two batches are within the conservative budget and the
-  third is an opportunistic catch-up batch. If the third batch fails or exceeds
-  quota, resume or rerun that batch in the next daily window before advancing.
+  third is an opportunistic catch-up batch. Batches 0031 and 0032 were then
+  run manually in the same NZ quota window, so the scheduler was retargeted
+  again to start at batch 0033 on 2026-07-02 to avoid duplicate dispatches.
+  If an opportunistic batch fails or exceeds quota, resume or rerun that batch
+  in the next daily window before advancing.
 - 2026-07-01 batch 0028 repair evidence: run `28464210390` completed
   successfully after the dated-URL fallback patch. Local review of the
   downloaded `full-corpus-bootstrap-download` artifact passed: 1,389 records in
@@ -106,8 +109,26 @@
   36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
   written. The downloaded local review report was written to ignored generated
   evidence path `generated/full-corpus-bootstrap/review_report_28496717521_merged.json`.
-  The next scheduled window is batches 0031-0033, with batch 0033 treated as
-  the opportunistic third batch.
+- 2026-07-01 manual third-batch evidence: run `28502342645` covered batch
+  0031 on `main` and completed successfully. Batch 0031 completed in 49m14s,
+  and the `merge_batches` job completed in 38s. Local review of the downloaded
+  merged `full-corpus-bootstrap-download` artifact passed: 1,702 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  78 warnings, including 77 XML-to-HTML fallback warnings; 0 browser fallback
+  warnings; manifest SHA-256
+  `203559ef1425477f761a16e22b99c435b2ba52038fc122e4f495ed5cecc71568`.
+  Merged sync state recorded 1,627 versions checked, 1,607 records added,
+  20 records unchanged, 0 failed, and 12 Parquet files written.
+- 2026-07-01 manual fourth-batch evidence: run `28505079812` covered batch
+  0032 on `main` and completed successfully. Local review of the downloaded
+  merged `full-corpus-bootstrap-download` artifact passed: 1,541 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  0 warnings; manifest SHA-256
+  `88579cb57d688b3db3ea114734a3538229ec33824de74e1fb8f67af8255e45a1`.
+  Merged sync state recorded 500 works checked, 1,446 versions checked,
+  1,446 records added, 0 records unchanged, 0 failed, and 13 Parquet files
+  written. The next scheduled window is batches 0033-0035, with batch 0035
+  treated as the opportunistic third batch.
 
 ## Batch 0001 no-upload evidence
 
