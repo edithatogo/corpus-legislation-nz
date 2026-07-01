@@ -35,4 +35,17 @@
 - [x] Task: Update archive and public wording caveats if needed.
     - [x] Preserve official-source primacy and source-rights warnings.
     - [x] Avoid public completeness claims until reconciliation evidence exists.
-- [ ] Task: Conductor - User Manual Verification 'Documentation and Track Coordination' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Documentation and Track Coordination' (Protocol in workflow.md)
+    - [x] Verified `docs/source_redundancy_resolver.md` now names Tracks 37-39
+      and explains how feed signals, official website fallback evidence, and
+      NZLII reconciliation plug into the resolver.
+    - [x] Verified fallback/secondary rights notes, manual review gates, and
+      conservative public completeness/coverage-status rules are documented.
+
+## Validation Evidence
+
+- `uv run pytest -q -p no:cacheprovider tests\test_source_redundancy.py tests\test_bootstrap_review.py tests\test_nzlii_reconcile.py` - 27 passed.
+- `uv run ruff check src\nz_legislation_corpus\source_redundancy.py tests\test_source_redundancy.py tests\test_bootstrap_review.py` - passed.
+- `uv run ruff format --check src\nz_legislation_corpus\source_redundancy.py tests\test_source_redundancy.py tests\test_bootstrap_review.py` - passed.
+- `uv run ty check src\nz_legislation_corpus\source_redundancy.py tests\test_source_redundancy.py tests\test_bootstrap_review.py` - passed.
+- `uv run python -c "import json, pathlib; json.loads(pathlib.Path('schemas/source_redundancy.schema.json').read_text(encoding='utf-8')); print('schema ok')"` - passed.

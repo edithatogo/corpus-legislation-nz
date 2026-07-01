@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/corpus-legislation-nz/schemas/source_redundancy.schema.json",
+  "title": "NZ legislation source redundancy decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "selected_source",
+    "selected_url",
+    "selected_method",
+    "confidence",
+    "canonical",
+    "manual_review_required",
+    "attempts"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "canonical_api",
+        "official_html_fallback",
+        "alternate_dated_url",
+        "official_website_fallback",
+        "secondary_corroborated",
+        "rescued_secondary",
+        "unresolved"
+      ]
+    },
+    "selected_source": {
+      "type": ["string", "null"]
+    },
+    "selected_url": {
+      "type": ["string", "null"]
+    },
+    "selected_method": {
+      "type": ["string", "null"]
+    },
+    "confidence": {
+      "enum": ["high", "medium", "low", "unknown"]
+    },
+    "canonical": {
+      "type": "boolean"
+    },
+    "manual_review_required": {
+      "type": "boolean"
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/retrievalAttempt"
+      }
+    }
+  },
+  "$defs": {
+    "retrievalAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_name",
+        "url",
+        "method",
+        "retrieved_at",
+        "status",
+        "canonical",
+        "confidence"
+      ],
+      "properties": {
+        "source_name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "retrieved_at": {
+          "type": ["string", "null"]
+        },
+        "status": {
+          "enum": ["success", "failed", "blocked", "skipped"]
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "warning": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "canonical": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "enum": ["high", "medium", "low", "unknown"]
+        },
+        "rights_note": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

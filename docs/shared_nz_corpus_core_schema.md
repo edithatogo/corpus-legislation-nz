@@ -97,6 +97,13 @@ Additional corpus-specific provenance fields are allowed.
 The legislation core schema must not import Hansard speaker, member, party,
 vote, motion, sitting, or proceeding-specific fields.
 
+Source redundancy resolver outputs should keep `coverage_status` conservative:
+use `partial`, `search_derived`, or `unknown` for fallback-assisted,
+feed-detected, or NZLII-corroborated records unless a reviewed authoritative
+inventory supports `complete`. Fallback or secondary-source rights notes should
+flow into `rights_note` and `provenance.license_note` rather than being treated
+as a blanket relicensing of upstream text.
+
 ## Hansard Mapping
 
 Hansard mapping is governed by the sibling repository's

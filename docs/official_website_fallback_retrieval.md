@@ -51,6 +51,12 @@ HTML content hash, previous failure reason, confidence, status, output paths,
 and rights note. These fields are review evidence only and do not promote
 browser-rendered output into canonical corpus content.
 
+Every fallback-assisted record must carry its source-specific rights note into
+sync state, review reports, manifests, and public-facing metadata. The fallback
+does not relicense upstream text and does not support broader public
+completeness claims until the affected records are reconciled through the
+resolver policy in `docs/source_redundancy_resolver.md`.
+
 The full-bootstrap review report promotes browser fallback evidence through:
 
 - `browser_fallback_warning_count`

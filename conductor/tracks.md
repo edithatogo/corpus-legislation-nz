@@ -1334,7 +1334,7 @@ canonical source.
 
 ---
 
-- [~] **Track: Source redundancy resolver and provenance**
+- [x] **Track: Source redundancy resolver and provenance**
 *Link: [./tracks/track_40_source_redundancy_resolver_provenance/](./tracks/track_40_source_redundancy_resolver_provenance/)*
 
 Goal: Define the shared fallback resolver and provenance model across API,

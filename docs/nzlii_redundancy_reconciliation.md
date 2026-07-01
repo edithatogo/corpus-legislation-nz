@@ -63,6 +63,12 @@ These rows are review evidence only. `canonical_promotion_allowed` is always
 `false` for this Track 39 output, even when the candidate is classified as
 `exact`.
 
+NZLII-derived evidence must carry its source-specific rights note into sync
+state, review reports, manifests, and public-facing metadata when it is used for
+triage or rescue. It must not be treated as a blanket relicensing of upstream
+text, and it must not be used to claim corpus completeness before the official
+inventory and reconciliation evidence support that claim.
+
 ## Operational Notes
 
 - Use official metadata as the primary keying input.

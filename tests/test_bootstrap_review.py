@@ -144,6 +144,16 @@ def test_full_corpus_bootstrap_review_surfaces_browser_fallback_provenance(
             ),
         }
     ]
+    assert report["source_redundancy"]["selected_method_counts"] == {
+        "official_website_rendered_html": 1
+    }
+    assert report["source_redundancy"]["fallback_method_counts"] == {
+        "official_website_rendered_html": 1
+    }
+    assert report["source_redundancy"]["manual_review_stable_ids"] == ["act_public_1992_27"]
+    assert report["source_redundancy"]["resolver_decisions"][0]["status"] == (
+        "official_website_fallback"
+    )
 
 
 @pytest.mark.unit
