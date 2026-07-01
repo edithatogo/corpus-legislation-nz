@@ -8,6 +8,7 @@ from nz_legislation_corpus.website_fallback import (
     OfficialWebsiteFallbackPolicy,
     build_failed_record_retry_plan,
     build_fallback_attempt_provenance,
+    build_playwright_diagnostics_plan,
     plan_failed_record_retries,
 )
 
@@ -100,3 +101,24 @@ def test_retry_planner_truncates_small_failed_set() -> None:
     assert report["blocked_count"] == 0
     assert any("Skipped 1 failed record" in warning for warning in report["warnings"])
     assert report["records"][0]["record_id"] == "record-1"
+
+
+@pytest.mark.unit
+def test_playwright_diagnostics_plan_writes_script_without_running_browser(tmp_path) -> None:
+    retry_plan = plan_failed_record_retries(
+        [_failed_record(canonical_url="https://www.legislation.govt.nz/act/public/2026/1/latest/")],
+        policy=OfficialWebsiteFallbackPolicy(allow_browser_rendering=True),
+        retrieval_timestamp_utc="2026-07-01T00:00:00Z",
+    )
+
+    plan = build_playwright_diagnostics_plan(retry_plan, output_dir=tmp_path)
+
+    assert plan["execution"]["status"] == "not_run"
+    assert plan["execution"]["requires_operator_approval"] is True
+    assert plan["diagnostic_count"] == 1
+    assert plan["diagnostics"][0]["retrieval_method"] == "official_website_rendered_html"
+    assert (tmp_path / "playwright_diagnostics.mjs").exists()
+    assert (tmp_path / "playwright_diagnostics_plan.json").exists()
+    script = (tmp_path / "playwright_diagnostics.mjs").read_text(encoding="utf-8")
+    assert "page.goto(item.source_url" in script
+    assert "fullPage: true" in script

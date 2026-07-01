@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
+import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from .utils import sha256_bytes, sha256_text, utc_now_iso
+from .utils import sha256_bytes, sha256_text, slug_for_path, utc_now_iso, write_json
 
 OFFICIAL_LEGISLATION_HOSTS = ("legislation.govt.nz", "www.legislation.govt.nz")
 FALLBACK_SCHEMA_VERSION = "1.0"
@@ -320,3 +323,127 @@ def plan_failed_record_retries(
         "warnings": warnings,
         "records": plans,
     }
+
+
+def _renderable_attempts(plan: Mapping[str, Any]) -> list[dict[str, Any]]:
+    return [
+        attempt
+        for attempt in plan.get("attempts", [])
+        if isinstance(attempt, dict)
+        and attempt.get("retrieval_method") == "official_website_rendered_html"
+        and attempt.get("status") == "planned"
+        and is_public_official_url(str(attempt.get("source_url") or ""))
+    ]
+
+
+def build_playwright_diagnostics_plan(
+    retry_plan: Mapping[str, Any],
+    *,
+    output_dir: Path,
+    user_agent: str = "corpus-legislation-nz fallback diagnostics",
+    timeout_ms: int = 30_000,
+) -> dict[str, Any]:
+    """Write a bounded Playwright diagnostics plan and script without running a browser."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    diagnostics: list[dict[str, Any]] = []
+    for record in retry_plan.get("records", []):
+        if not isinstance(record, dict):
+            continue
+        record_id = str(record.get("record_id") or "unknown")
+        for attempt in _renderable_attempts(record):
+            slug = slug_for_path(record_id, max_len=80)
+            diagnostics.append(
+                {
+                    "record_id": record_id,
+                    "source_url": attempt["source_url"],
+                    "retrieval_method": attempt["retrieval_method"],
+                    "html_path": str(output_dir / f"{slug}.rendered.html"),
+                    "screenshot_path": str(output_dir / f"{slug}.png"),
+                    "status": "planned",
+                    "confidence": "low",
+                    "rights_note": (
+                        "Official website rendered diagnostics are for manual triage only; "
+                        "they are not canonical corpus content."
+                    ),
+                }
+            )
+
+    script_path = output_dir / "playwright_diagnostics.mjs"
+    script_path.write_text(
+        _playwright_script(
+            diagnostics,
+            user_agent=user_agent,
+            timeout_ms=timeout_ms,
+        ),
+        encoding="utf-8",
+    )
+    plan = {
+        "schema_version": FALLBACK_SCHEMA_VERSION,
+        "generated_at_utc": utc_now_iso(),
+        "diagnostic_count": len(diagnostics),
+        "execution": {
+            "status": "not_run",
+            "command": f"npx playwright test {script_path.as_posix()}",
+            "requires_operator_approval": True,
+        },
+        "diagnostics": diagnostics,
+        "script_path": str(script_path),
+    }
+    write_json(output_dir / "playwright_diagnostics_plan.json", plan)
+    return plan
+
+
+def run_playwright_diagnostics(
+    plan: Mapping[str, Any],
+    *,
+    timeout_seconds: int = 300,
+) -> dict[str, Any]:
+    """Run the generated diagnostics script through Playwright if explicitly requested."""
+    script_path = Path(str(plan["script_path"]))
+    command = ["npx", "playwright", "test", str(script_path)]
+    completed = subprocess.run(
+        command,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=timeout_seconds,
+    )
+    result = dict(plan)
+    result["execution"] = {
+        "status": "passed" if completed.returncode == 0 else "failed",
+        "command": " ".join(command),
+        "returncode": completed.returncode,
+        "stdout": completed.stdout[-4000:],
+        "stderr": completed.stderr[-4000:],
+    }
+    write_json(script_path.parent / "playwright_diagnostics_result.json", result)
+    return result
+
+
+def _playwright_script(
+    diagnostics: Sequence[Mapping[str, Any]],
+    *,
+    user_agent: str,
+    timeout_ms: int,
+) -> str:
+    items_json = json.dumps(list(diagnostics), indent=2, sort_keys=True)
+    return f"""import {{ test, expect }} from '@playwright/test';
+import {{ mkdir, writeFile }} from 'node:fs/promises';
+import {{ dirname }} from 'node:path';
+
+const diagnostics = {items_json};
+
+test.describe('official website fallback diagnostics', () => {{
+  for (const item of diagnostics) {{
+    test(`diagnose ${{item.record_id}}`, async ({{ page }}) => {{
+      await page.setExtraHTTPHeaders({{ 'User-Agent': {json.dumps(user_agent)} }});
+      await page.goto(item.source_url, {{ waitUntil: 'networkidle', timeout: {timeout_ms} }});
+      await expect(page.locator('body')).toBeVisible();
+      const html = await page.content();
+      await mkdir(dirname(item.html_path), {{ recursive: true }});
+      await writeFile(item.html_path, html, 'utf8');
+      await page.screenshot({{ path: item.screenshot_path, fullPage: true }});
+    }});
+  }}
+}});
+"""

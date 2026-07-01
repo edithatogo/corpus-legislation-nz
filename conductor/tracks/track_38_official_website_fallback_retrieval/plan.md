@@ -19,9 +19,9 @@
 - [x] Task: Implement a small failed-record retry planner.
     - [x] Accept a small failed-record list from caller code.
     - [x] Retry only the requested records with conservative pacing.
-- [ ] Task: Integrate Playwright diagnostics where appropriate.
-    - [ ] Keep browser setup optional and separate from normal sync.
-    - [ ] Capture artifacts for triage without broad crawling.
+- [x] Task: Integrate Playwright diagnostics where appropriate.
+    - [x] Keep browser setup optional and separate from normal sync.
+    - [x] Capture artifacts for triage without broad crawling.
 - [ ] Task: Conductor - User Manual Verification 'Focused Retrieval Tooling' (Protocol in workflow.md)
 
 ## Phase 3 - Review and Documentation

@@ -9,6 +9,21 @@ from typing import Any, Literal
 
 from .utils import write_json
 
+NZLII_SOURCE_INVENTORY = [
+    {
+        "collection": "New Zealand Acts",
+        "url_pattern": "https://www.nzlii.org/nz/legis/hist_act/",
+        "role": "secondary_coverage_check",
+        "caveat": "Historical coverage, formatting, and update cadence may differ from NZ Legislation.",
+    },
+    {
+        "collection": "New Zealand Regulations",
+        "url_pattern": "https://www.nzlii.org/nz/legis/num_reg/",
+        "role": "secondary_coverage_check",
+        "caveat": "Candidate matches require manual review before any text rescue.",
+    },
+]
+
 NZLIIMatchClassification = Literal[
     "exact",
     "probable",
@@ -310,6 +325,9 @@ def classify_official_record(
 def build_nzlii_reconciliation_report(
     official_records: Sequence[OfficialMetadataRecord | Mapping[str, Any]],
     candidate_groups: Mapping[str, Sequence[NZLIICandidateRecord | Mapping[str, Any]]],
+    *,
+    seed_work_ids: Sequence[str] | None = None,
+    bootstrap_failure_ids: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     report_rows: list[dict[str, Any]] = []
     manual_review_candidates: list[dict[str, Any]] = []
@@ -357,16 +375,37 @@ def build_nzlii_reconciliation_report(
         key=lambda item: (item["official_work_id"], item["official_version_id"] or "")
     )
 
+    seed_ids = sorted({work_id.strip() for work_id in seed_work_ids or [] if work_id.strip()})
+    failed_ids = sorted(
+        {work_id.strip() for work_id in bootstrap_failure_ids or [] if work_id.strip()}
+    )
+    exact_or_probable = {
+        str(row["official_work_id"])
+        for row in report_rows
+        if row["classification"] in {"exact", "probable"}
+    }
+    missing_seed_ids = sorted(set(seed_ids) - {str(row["official_work_id"]) for row in report_rows})
+    failed_with_candidates = sorted(set(failed_ids) & exact_or_probable)
+
     return {
         "schema_version": "1.0",
         "generated_at_utc": datetime.now(UTC).replace(microsecond=0).isoformat(),
         "source_role": "secondary_corroborating",
+        "source_inventory": NZLII_SOURCE_INVENTORY,
         "coverage_warning": (
             "NZLII is a secondary corroborating source only. "
             "Official NZ Legislation records remain canonical unless manually reconciled."
         ),
         "official_record_count": len(official_records),
         "candidate_record_count": sum(len(group) for group in candidate_groups.values()),
+        "seed_comparison": {
+            "seed_work_id_count": len(seed_ids),
+            "seed_ids_missing_from_official_records": missing_seed_ids,
+        },
+        "bootstrap_failure_comparison": {
+            "bootstrap_failure_count": len(failed_ids),
+            "failed_ids_with_exact_or_probable_nzlii_candidate": failed_with_candidates,
+        },
         "classification_counts": classification_counts,
         "records": report_rows,
         "manual_review_candidates": manual_review_candidates,
@@ -377,8 +416,16 @@ def write_nzlii_reconciliation_report(
     output_path: str | Path,
     official_records: Sequence[OfficialMetadataRecord | Mapping[str, Any]],
     candidate_groups: Mapping[str, Sequence[NZLIICandidateRecord | Mapping[str, Any]]],
+    *,
+    seed_work_ids: Sequence[str] | None = None,
+    bootstrap_failure_ids: Sequence[str] | None = None,
 ) -> dict[str, Any]:
-    report = build_nzlii_reconciliation_report(official_records, candidate_groups)
+    report = build_nzlii_reconciliation_report(
+        official_records,
+        candidate_groups,
+        seed_work_ids=seed_work_ids,
+        bootstrap_failure_ids=bootstrap_failure_ids,
+    )
     write_json(Path(output_path), report)
     return report
 

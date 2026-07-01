@@ -27,9 +27,9 @@
 
 ## Phase 3 - Workflow Integration and Evidence
 
-- [ ] Task: Add a conservative scheduled/manual workflow entry point.
+- [x] Task: Add a conservative scheduled/manual workflow entry point.
     - [x] Keep it advisory and separate from full bootstrap writes.
-    - [ ] Upload feed-state and refresh-queue artifacts.
+    - [x] Upload feed-state and refresh-queue artifacts.
 - [x] Task: Update documentation and Track 07 handoff notes.
     - [x] Explain how feed signals complement the full archive scheduler.
     - [x] Record validation commands and example artifact paths.

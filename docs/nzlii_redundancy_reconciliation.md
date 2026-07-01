@@ -36,6 +36,11 @@ The generated reconciliation report keeps NZLII in a secondary role and emits a
 manual-review queue for `probable` and `ambiguous` cases. `exact` matches are
 treated as corroboration only, not canonical promotion.
 
+The report also embeds a small NZLII source inventory and can compare candidate
+matches against a seed work-ID file plus bootstrap-failure JSONL. Failed official
+records with exact or probable NZLII candidates are surfaced for manual review;
+they are not promoted automatically.
+
 ## Operational Notes
 
 - Use official metadata as the primary keying input.
@@ -43,3 +48,5 @@ treated as corroboration only, not canonical promotion.
 - Preserve retrieval timestamp and content hash for provenance.
 - Treat `missing` and `out_of_scope` as non-review outputs unless upstream
   policy changes.
+- `nzlc nzlii-source-inventory` writes the documented source inventory and
+  caveats as JSON.

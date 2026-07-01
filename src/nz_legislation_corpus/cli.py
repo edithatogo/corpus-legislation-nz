@@ -25,7 +25,7 @@ from .manifest import build_change_report, build_manifest
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
-from .nzlii_reconcile import write_nzlii_reconciliation_report
+from .nzlii_reconcile import NZLII_SOURCE_INVENTORY, write_nzlii_reconciliation_report
 from .parquet_writer import write_partitioned_parquet
 from .period_shards import split_period_seed_files
 from .rss_feed import FEED_FILENAME, build_feed
@@ -39,7 +39,12 @@ from .utils import (
     write_jsonl_if_changed,
 )
 from .validate import validate_records
-from .website_fallback import OfficialWebsiteFallbackPolicy, plan_failed_record_retries
+from .website_fallback import (
+    OfficialWebsiteFallbackPolicy,
+    build_playwright_diagnostics_plan,
+    plan_failed_record_retries,
+    run_playwright_diagnostics,
+)
 from .zenodo import upload_archive_to_zenodo
 
 app = typer.Typer(help="NZ legislation corpus pipeline CLI")
@@ -974,12 +979,86 @@ def reconcile_nzlii_cmd(
         Path,
         typer.Option(help="Output NZLII reconciliation report JSON."),
     ] = Path("generated/nzlii-reconciliation/report.json"),
+    seed_work_ids_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional seed work-ID file to compare against official records."),
+    ] = None,
+    bootstrap_failures_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional JSONL failed bootstrap records for secondary-source triage."),
+    ] = None,
 ) -> None:
     """Build a secondary-source NZLII reconciliation report."""
     official_records = read_jsonl(official_records_path)
     candidate_groups = read_json(candidate_groups_path, default={}) or {}
-    report = write_nzlii_reconciliation_report(output_path, official_records, candidate_groups)
+    seed_work_ids = _load_seed_work_ids(seed_work_ids_path)
+    bootstrap_failure_ids = (
+        [
+            str(row.get("work_id") or row.get("record_id") or row.get("stable_id") or "").strip()
+            for row in read_jsonl(bootstrap_failures_path)
+        ]
+        if bootstrap_failures_path is not None
+        else None
+    )
+    report = write_nzlii_reconciliation_report(
+        output_path,
+        official_records,
+        candidate_groups,
+        seed_work_ids=seed_work_ids,
+        bootstrap_failure_ids=bootstrap_failure_ids,
+    )
     console.print_json(data=report)
+
+
+@app.command("nzlii-source-inventory")
+def nzlii_source_inventory_cmd(
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output NZLII source inventory and caveat JSON."),
+    ] = Path("generated/nzlii-reconciliation/source_inventory.json"),
+) -> None:
+    """Write the documented NZLII source inventory used for redundancy checks."""
+    report = {
+        "schema_version": "1.0",
+        "source_role": "secondary_corroborating",
+        "sources": NZLII_SOURCE_INVENTORY,
+        "coverage_warning": (
+            "NZLII source inventory is for redundancy planning only. "
+            "Official NZ Legislation remains canonical."
+        ),
+    }
+    write_json(output_path, report)
+    console.print_json(data=report)
+
+
+@app.command("website-fallback-diagnostics")
+def website_fallback_diagnostics_cmd(
+    retry_plan_path: Annotated[
+        Path,
+        typer.Option(help="Retry plan JSON produced by plan-website-fallbacks."),
+    ],
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory for Playwright diagnostics plan, script, and outputs."),
+    ] = Path("generated/website-fallback/playwright"),
+    run: Annotated[
+        bool,
+        typer.Option(help="Actually run Playwright diagnostics; default only writes the script."),
+    ] = False,
+    timeout_seconds: Annotated[
+        int,
+        typer.Option(help="Execution timeout when --run is used."),
+    ] = 300,
+) -> None:
+    """Generate, and optionally run, bounded official-site Playwright diagnostics."""
+    retry_plan = read_json(retry_plan_path, default={}) or {}
+    diagnostics_plan = build_playwright_diagnostics_plan(retry_plan, output_dir=output_dir)
+    if run:
+        diagnostics_plan = run_playwright_diagnostics(
+            diagnostics_plan,
+            timeout_seconds=timeout_seconds,
+        )
+    console.print_json(data=diagnostics_plan)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from nz_legislation_corpus.nzlii_reconcile import (
+    NZLII_SOURCE_INVENTORY,
     NZLIICandidateRecord,
     OfficialMetadataRecord,
     build_nzlii_reconciliation_report,
@@ -222,11 +223,27 @@ def test_build_nzlii_reconciliation_report_emits_manual_review_queue(tmp_path: P
         ],
     }
 
-    report = build_nzlii_reconciliation_report(official_records, candidate_groups)
+    report = build_nzlii_reconciliation_report(
+        official_records,
+        candidate_groups,
+        seed_work_ids=["work-1", "work-6"],
+        bootstrap_failure_ids=["work-2", "work-4"],
+    )
     output_path = tmp_path / "report.json"
-    written = write_nzlii_reconciliation_report(output_path, official_records, candidate_groups)
+    written = write_nzlii_reconciliation_report(
+        output_path,
+        official_records,
+        candidate_groups,
+        seed_work_ids=["work-1", "work-6"],
+        bootstrap_failure_ids=["work-2", "work-4"],
+    )
 
     assert report["source_role"] == "secondary_corroborating"
+    assert report["source_inventory"] == NZLII_SOURCE_INVENTORY
+    assert report["seed_comparison"]["seed_ids_missing_from_official_records"] == ["work-6"]
+    assert report["bootstrap_failure_comparison"][
+        "failed_ids_with_exact_or_probable_nzlii_candidate"
+    ] == ["work-2"]
     assert report["classification_counts"] == {
         "exact": 1,
         "probable": 1,

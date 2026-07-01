@@ -13,11 +13,13 @@ The fallback is deliberately narrow:
   ingestion path.
 
 The current tooling lives in `src/nz_legislation_corpus/website_fallback.py` and
-exposes three pieces:
+exposes these pieces:
 
 1. `OfficialWebsiteFallbackPolicy` for the allowed-host and browser policy.
 2. `build_failed_record_retry_plan(...)` for a single failed record.
 3. `plan_failed_record_retries(...)` for a small failed-record batch.
+4. `build_playwright_diagnostics_plan(...)` for an explicit, bounded browser
+   diagnostics plan.
 
 Each fallback attempt keeps provenance fields that can be surfaced in sync
 state, review output, or manual triage:
@@ -34,10 +36,10 @@ The retry planner is intentionally conservative. It only produces plans for
 eligible public official URLs, and it stops once the small configured record
 limit is reached.
 
-Planned integration hooks, not yet wired here:
+CLI entry points:
 
-- A CLI command for loading a failed-record list and emitting a retry plan.
-- Review-report plumbing that counts browser fallback records separately from
-  XML-to-HTML fallback warnings.
-- Optional Playwright-based execution for triage runs, isolated from the normal
-  API-first sync path.
+- `nzlc plan-website-fallbacks` loads a failed-record JSONL file and writes a
+  retry plan without fetching pages.
+- `nzlc website-fallback-diagnostics` writes a Playwright diagnostics plan and
+  script from a retry plan. It does not launch a browser unless `--run` is
+  passed, and rendered captures remain low-confidence manual triage artifacts.

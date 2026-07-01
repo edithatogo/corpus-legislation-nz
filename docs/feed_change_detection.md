@@ -49,6 +49,14 @@ The detector returns two downstream lists:
 
 The outputs are sorted deterministically and remain JSON-serializable.
 
+## GitHub Actions Entry Point
+
+The workflow `.github/workflows/official_feed_change_detection.yml` accepts an
+explicit search-based feed URL through `workflow_dispatch` or the
+`NZLC_OFFICIAL_FEED_URL` repository variable. It refuses non-official feed hosts,
+downloads the feed, runs `nzlc feed-change-detect`, and uploads the advisory
+feed-state, refresh-queue, review-candidate, and report artifacts.
+
 ## Caveat
 
 This layer is advisory only. It is a freshness signal for the canonical corpus
