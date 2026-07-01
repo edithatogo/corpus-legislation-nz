@@ -89,6 +89,20 @@
   `act_public_1992_27_en_1992-04-10` URL was recovered through the
   `1992-04-10A` alternate and now maps to the same content hash as the
   `act_public_1992_27_en_1992-04-10A` version.
+- 2026-07-01 batches 0029-0030 continuation evidence: run `28496717521`
+  completed successfully with `max_parallel=2`. Batch 0029 completed in
+  1h00m44s, batch 0030 completed in 1h22m45s, and the `merge_batches` job
+  completed in 53s. Local review of the downloaded merged
+  `full-corpus-bootstrap-download` artifact passed: 3,455 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  940 warnings, including 937 XML-to-HTML fallback warnings; 0 browser
+  fallback warnings; manifest SHA-256
+  `62e2bb8664404ff10abc32e8830aa9dac8a38f38e49ac3e5614a0ad89f5d21ec`.
+  Merged sync state recorded 3,397 versions checked, 3,360 records added,
+  36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
+  written. The downloaded local review report was written to ignored generated
+  evidence path `generated/full-corpus-bootstrap/review_report_28496717521_merged.json`.
+  The next quota-safe daily window is batches 0031-0032.
 
 ## Batch 0001 no-upload evidence
 

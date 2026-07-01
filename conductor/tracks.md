@@ -298,6 +298,20 @@ Current state:
   for full-bootstrap evidence, but it is not the final agent-handoff shape.
   Track 36 now owns period-sharded seed manifests, annual recent shards,
   per-period checkpoint artifacts, and period-level review/handoff status.
+- **2026-07-01 scheduler and continuation evidence**: PR #67 merged the
+  scheduled dispatcher onto `main`, with day-0 start at batch 0029 and a
+  conservative two-batch daily cadence under the 8,000 request/day target.
+  Manual run `28496717521` covered batches 0029-0030 with `max_parallel=2` and
+  completed successfully. Local review of the merged
+  `full-corpus-bootstrap-download` artifact passed: 3,455 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  940 warnings, including 937 XML-to-HTML fallback warnings; 0 browser
+  fallback warnings; manifest SHA-256
+  `62e2bb8664404ff10abc32e8830aa9dac8a38f38e49ac3e5614a0ad89f5d21ec`.
+  Merged sync state recorded 3,397 versions checked, 3,360 records added,
+  36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
+  written. Track 07 remains in progress; next quota-safe daily window is
+  batches 0031-0032.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
