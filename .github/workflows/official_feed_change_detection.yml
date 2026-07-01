@@ -1,0 +1,111 @@
+name: Official feed change detection
+
+on:
+  workflow_dispatch:
+    inputs:
+      feed_url:
+        description: "Search-based NZ Legislation RSS/Atom feed URL"
+        required: true
+        type: string
+      previous_state_path:
+        description: "Optional checked-in or restored feed_state.jsonl path"
+        required: false
+        type: string
+        default: ""
+  schedule:
+    - cron: "42 13 * * *"
+
+concurrency:
+  group: official-feed-change-detection-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FEED_URL: ${{ inputs.feed_url || vars.NZLC_OFFICIAL_FEED_URL }}
+      PREVIOUS_STATE_PATH: ${{ inputs.previous_state_path || '' }}
+      OUTPUT_DIR: generated/feed-change-detection
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check feed URL
+        run: |
+          set -euo pipefail
+          : "${FEED_URL:?Set the feed_url input or NZLC_OFFICIAL_FEED_URL repository variable}"
+          case "$FEED_URL" in
+            https://api.legislation.govt.nz/*|https://*.legislation.govt.nz/*|https://legislation.govt.nz/*) ;;
+            *)
+              echo "Refusing non-official feed URL: $FEED_URL" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Download feed
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUTPUT_DIR"
+          curl_args=(
+            --fail
+            --location
+            --retry 3
+            --retry-delay 5
+            --user-agent "corpus-legislation-nz feed change detection"
+          )
+          if [ -n "${NZ_LEGISLATION_API_KEY:-}" ]; then
+            curl_args+=(--header "X-Api-Key: ${NZ_LEGISLATION_API_KEY}")
+          fi
+          curl "${curl_args[@]}" \
+            "$FEED_URL" \
+            --output "$OUTPUT_DIR/feed.xml"
+
+      - name: Build advisory refresh queue
+        run: |
+          set -euo pipefail
+          args=(
+            --feed-path "$OUTPUT_DIR/feed.xml"
+            --output-dir "$OUTPUT_DIR"
+            --feed-url "$FEED_URL"
+          )
+          if [ -n "$PREVIOUS_STATE_PATH" ] && [ -f "$PREVIOUS_STATE_PATH" ]; then
+            args+=(--previous-state-path "$PREVIOUS_STATE_PATH")
+          fi
+          uv run nzlc feed-change-detect "${args[@]}"
+
+      - name: Upload feed change artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-feed-change-detection
+          path: generated/feed-change-detection/
+          if-no-files-found: error
+
+      - name: Feed change summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Official feed change detection" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Feed URL: $FEED_URL" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$OUTPUT_DIR/feed_change_report.json" ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$OUTPUT_DIR/feed_change_report.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -63,3 +63,18 @@ Compare consecutive history rows for:
 - ephemeral identifier records.
 
 Large unexpected movement in these metrics should be treated as a release blocker until explained.
+
+## Period quality reviews
+
+When a full-bootstrap or period-bootstrap artifact includes
+`generated/full-corpus-periods/period_context.json`,
+`nzlc review-full-corpus-bootstrap` emits a `period_quality` object in the
+review report. It repeats the period identifier, source work-ID count, produced
+record count, validation status, manifest hash, failed-version count, the same
+missing text, missing XML URL, and ephemeral identifier risk indicators used by
+full-corpus coverage, and direct `ok`/`triage_required` handoff flags.
+
+Period review artifacts are quality slices, not independent completeness
+claims. Treat any non-zero failed-version count, missing text count, missing XML
+URL count, ephemeral identifier count, or count mismatch as a triage item before
+using that period as handoff evidence.

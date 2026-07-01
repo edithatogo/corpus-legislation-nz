@@ -265,8 +265,39 @@ Current state:
 - Full corpus operations runbook is now documented in `docs/full_corpus_operations.md`.
 - Pilot run `27396415830` completed batch 0001 (500 work IDs) with full validate/manifest/coverage cycle in 5h14m at 1.0s pacing.
 - Sync is rate-limit constrained: ~37s per work ID due to NZ Legislation API quota exhaustion sleeps.
+- **2026-06-13 fix**: `rate_limit_max_sleep_seconds=60.0` added to cap `_sleep_for_low_quota`, preventing multi-hour stalls when quota is exhausted.
 - Full sync must run via GitHub Actions (no local API key; local disk ~7.5 GB free).
 - Runner disk budget: 25 GB min, 50 GB preferred (docs/runtime_capacity_runbook.md).
+- **2026-06-13 hardening**: Empty-content detection in XML->HTML fallback, seed file emptiness warning, serial-mode batch progress counters, and extended test coverage (65 tests, ruff clean).
+- **2026-06-16 test environment isolation**: `tests/conftest.py` autouse session fixture `_isolate_settings_env` clears user-shell `NZLC_*` / `NZ_LEGISLATION_*` / `HF_TOKEN` env vars before pytest. Pre-existing 34 failures (caused by developer env leaking CSV values into `pydantic_settings` list fields) are now resolved. Full suite: **122 passed** in ~8s. ruff clean on `tests/conftest.py`. Pre-existing lint findings in `embeddings.py` / `utils.py` are unrelated and tracked separately.
+- **2026-06-21 artifact review gate**: `nzlc review-full-corpus-bootstrap`
+  now reviews downloaded full-bootstrap artifacts for required files,
+  validation, manifest hash, coverage counts, sync-state failures, and
+  failed-version warnings before any completeness claim.
+- **2026-06-21 live dispatch blocker**: `gh auth status` reports the active
+  `edithatogo` keyring token is invalid, so this shell cannot trigger or
+  inspect the final GitHub Actions bootstrap run until GitHub CLI
+  authentication is refreshed.
+- **2026-06-21 final serial bootstrap dispatched**: run `27898963687`,
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27898963687`.
+  Inputs were all 68 seed batches, `merge_policy=restore_merge`,
+  `min_seconds_between_requests=0.5`, `max_parallel=1`, `serial=true`, and
+  `max_works=none`. Initial live checks passed through required secrets,
+  doctor, and Hugging Face restore; the serial sync step is in progress.
+- **2026-06-29 hosted serial failure confirmed**: run `27898963687` completed
+  with conclusion `cancelled`. The serial job was cancelled during
+  `Sync all bootstrap batches sequentially` after about six hours, so
+  validation, manifest, coverage, and artifact upload were skipped. Track 07
+  cannot rely on a single all-batch hosted serial runner.
+- **2026-06-29 sharded merge remediation**: `nzlc merge-bootstrap-artifacts`
+  and the `full_corpus_bootstrap.yml` `merge_batches` job now support hosted
+  `serial=false` runs: batch artifacts are merged into a standard
+  `full-corpus-bootstrap-download` artifact with root `data/`, manifests,
+  sync state, raw content, Parquet, and review report.
+- **2026-06-21 period handoff note**: this all-batch serial run remains valid
+  for full-bootstrap evidence, but it is not the final agent-handoff shape.
+  Track 36 now owns period-sharded seed manifests, annual recent shards,
+  per-period checkpoint artifacts, and period-level review/handoff status.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
@@ -306,6 +337,15 @@ Current blocker:
   `.github/workflows/full_corpus_hf_upload.yml`.
 - Full corpus operations runbook is now documented in
   `docs/full_corpus_operations.md`.
+- **2026-06-21 publication guard hardening**:
+  `full_corpus_hf_upload.yml` now downloads Track 07 bootstrap artifacts into
+  the workspace root to preserve the `data/` tree, fails closed when
+  `upload_confirmed=true` is requested without `bootstrap_run_id`, runs
+  `nzlc review-full-corpus-bootstrap --artifact-root data` before any confirmed
+  `nzlc hf-upload`, and includes the generated review report in the pre-upload
+  review artifact. Focused tests, Ruff, and `actionlint` passed.
+- Remaining live upload tasks still depend on Track 07 run `27898963687`
+  completing and producing a reviewed full-corpus artifact.
 
 ## Track 09 - GitHub Scheduled Hugging Face Sync
 
@@ -345,6 +385,13 @@ Current evidence and remaining blocker:
   2026-06-09 after the first post-fix scheduled event did not dispatch.
 - Full and recurring maintenance proof remains blocked until Tracks 04, 07, and
   08 establish a full seed and full validated corpus.
+- **2026-06-21 scheduled maintenance guard hardening**:
+  `hf_sync.yml` now fails closed when Hugging Face restore fails, preventing a
+  scheduled maintenance run from uploading an empty or partial local state after
+  restore errors. Routine runs also upload `hf-sync-maintenance-evidence`
+  containing `sync_state.json`, `latest_changes.json`, `latest_manifest.json`,
+  and `coverage_report.json` for post-run review. Focused tests, Ruff, and
+  `actionlint` passed.
 
 ## Track 10 - Maintenance Doctor And Alerting
 
@@ -417,7 +464,10 @@ Current blocker:
 - `docs/reconciliation_runbook.md` now documents the monthly cadence and procedure.
 - `seeds/work_ids.txt` is absent, so seed changes cannot be reviewed or applied.
 - `data/manifests/coverage_report.json` is absent, so coverage deltas cannot be compared.
-- Tracks 04, 07, 08, and 09 remain blocked, so no full corpus or scheduled maintenance loop exists yet to reconcile.
+- Track 04 has produced the search-derived `seeds/work_ids.txt` operational
+  baseline. Full reconciliation evidence still depends on Track 07 completing
+  the reviewed full bootstrap, Track 08 publishing the reviewed full corpus,
+  and Track 09 proving the recurring maintenance loop.
 - Candidate seed reconciliation is now available through `nzlc reconcile-work-ids`
   and `.github/workflows/historical_seed_reconciliation.yml`.
 - Monthly full reconciliation automation is now also present in
@@ -425,6 +475,13 @@ Current blocker:
   maintenance lane.
 - Full corpus operations runbook is now documented in
   `docs/full_corpus_operations.md`.
+- **2026-06-21 reconciliation publication guard hardening**:
+  `monthly_full_reconciliation.yml` now uses safe scheduled-run defaults for
+  baseline seed, request pacing, max works, and disk budget when manual inputs
+  are absent. Confirmed Hugging Face publication fails closed in this workflow;
+  reconciliation can produce review artifacts and optional full-sync outputs,
+  but live publication must use Track 08 after review. Focused tests, Ruff, and
+  `actionlint` passed.
 
 ## Track 12 - Zenodo Sandbox Archive
 
@@ -652,6 +709,9 @@ Current evidence:
 - Historical bootstrap publication proved the manual upload path at 500-work
   scale. Full-corpus capacity remains to be measured once the authoritative seed
   is available.
+- Period-sharded bootstrap and agent handoff is now split into Track 36. Track
+  17 remains the runtime/batching foundation; Track 36 owns period policy,
+  annual recent shards, checkpoint artifacts, and handoff status.
 
 ## Track 18 - Data Quality And Schema Governance
 
@@ -688,6 +748,11 @@ Current evidence:
 - Validation report path: `data/manifests/validation_report.json`.
 - Fixture list: `tests/fixtures/sample_legislation.xml`, `tests/fixtures/sample_legislation.html`, plus validation tests for missing text, missing XML URL, missing source format/metadata-only content, and ephemeral identifiers.
 - Coverage metrics are written to `data/manifests/coverage_report.json` and appended to `data/manifests/coverage_history.jsonl`.
+- Period checkpoint review reports now emit `period_quality` when a period
+  context file is present, carrying the period ID, source work-ID count,
+  produced record count, validation status, manifest hash, failed-version
+  count, and the same missing text/XML URL and ephemeral identifier indicators
+  used for full-corpus coverage.
 - Live coverage baseline remains blocked until Track 07/08 produce and publish the real corpus.
 
 ## Track 19 - Public Launch Decision
@@ -1121,8 +1186,13 @@ Evidence:
   down to GitHub's 10-input `workflow_dispatch` limit.
 - CodeQL, OpenSSF Scorecard, Renovate, and pre-commit adoption decisions are
   documented.
-- `zizmor` is adopted as an advisory CI job until the existing unpinned-action
-  and template-expansion findings are resolved in a workflow-hardening pass.
+- Ruff expanded from 6 to 49 rule sets, all passing cleanly.
+- pydantic v2 with `pydantic-settings.BaseSettings` adopted for all
+  configuration.
+- Template injection risks fixed across all 8 CI workflows; `zizmor` now
+  reports zero findings.
+- All 16 workflows have explicit least-privilege `permissions:` blocks.
+- `uv_build` build backend adopted for Python packaging.
 
 
 ## track 33 artifact provenance attestations
@@ -1149,3 +1219,123 @@ Evidence:
 - Consistency checker and tests:
   `scripts/check_artifact_provenance.py` and
   `tests/test_artifact_provenance.py`.
+
+
+## track 34 sota test infrastructure
+
+Status: `done`
+
+Goal: SOTA test infrastructure with hypothesis property-based tests, integration/smoke test directories, coverage baselines, and pytest markers.
+
+Link: `conductor/tracks/track_34_sota_test_infrastructure/`
+
+Evidence:
+
+- 120 tests total (89 existing unit tests + 31 new hypothesis/integration/smoke tests).
+- 8 hypothesis property-based tests for pure functions.
+- Integration test directory: `tests/integration/` (3 cross-component tests).
+- Smoke test directory: `tests/smoke/` (2 full CLI pipeline tests).
+- Coverage configured with `fail_under = 60` in `pyproject.toml`.
+- Pytest markers (unit, integration, smoke, hypothesis) registered and applied across all test files.
+
+## track 35 multi-git and multi-archive mirroring setup
+
+Status: `in_progress`
+
+Goal: Establish multi-git and multi-archive mirroring setup to prevent single-point-of-failure repository/dataset takedowns.
+
+Link: `conductor/tracks/track_35_multi_git_and_multi_archive_mirroring_setup/`
+
+Evidence:
+- Git mirror workflow configured: `.github/workflows/mirror_sync.yml`.
+- Mirror workflow locally linted with `actionlint` and hardened to skip when mirror secrets are absent.
+- Zenodo and Hugging Face pipelines hardened.
+- OSF optional mirror convenience policy mapped in `docs/osf-optional-mirror-policy.md` (inactive pending live setup).
+- OSF policy validator added: `scripts/check_osf_optional_policy.py`.
+- OSF unit tests added: `tests/test_osf_optional.py`.
+- Local Phase 2 validation command: `python scripts/check_osf_optional_policy.py`.
+- Local validation passed: OSF policy validators, `tests/test_osf_optional.py`, direct Ruff check, and `actionlint .github/workflows/mirror_sync.yml`.
+- Mirror setup runbook added: `docs/mirror-sync-setup.md`.
+- Live GitHub secret-name check on 2026-06-21 found `OSF_TOKEN` present but no
+  `GIT_MIRROR_URLS`, `GIT_MIRROR_URL`, or `GIT_MIRROR_SSH_PRIVATE_KEY`.
+- Live GitHub workflow-name check on 2026-06-21 did not show `Mirror Sync` on
+  the default branch yet.
+- Remaining Track 35 items are gated external work: push/publish
+  `.github/workflows/mirror_sync.yml` to GitHub, configure mirror secrets, and
+  verify manual/push mirror runs.
+
+## track 36 period sharded bootstrap agent handoff
+
+Status: `in_progress`
+
+Goal: Define time-period corpus shards, recent annual shards, checkpoint
+artifacts, and agent handoff rules so completed periods can be reviewed or
+triaged by other agents while later periods continue to sync.
+
+Link: `conductor/tracks/track_36_period_sharded_bootstrap_agent_handoff/`
+
+Initial policy:
+
+- Use coarse historical shards for older records:
+  `pre_1908`, `1908_1949`, `1950_1979`, `1980_1999`.
+- Use annual shards from the verified API-native/recent boundary through the
+  current year.
+- Keep `unknown_year_review` as an explicit shard for records whose year cannot
+  be derived.
+- Do not hard-code the API-native boundary from memory; verify it against repo
+  evidence, official API metadata, or generated coverage evidence. If no
+  authoritative boundary is available, use 2008 as a planning fallback only and
+  record the uncertainty.
+
+Evidence to create:
+
+- Period manifest and per-period seed SHA-256 values.
+- Per-period workflow checkpoint artifacts.
+- Period-level review reports with validation, manifest, coverage, sync state,
+  failed versions, missing text/XML URL counts, and ephemeral-ID counts.
+- Conductor handoff status for each period before assigning another agent.
+
+Implementation evidence:
+
+- Period seed/manifest generator:
+  `src/nz_legislation_corpus/period_shards.py`.
+- CLI command:
+  `nzlc split-work-id-periods`.
+- Period checkpoint workflow:
+  `.github/workflows/full_corpus_period_bootstrap.yml`.
+- Period context is included in `nzlc review-full-corpus-bootstrap` reports
+  when `generated/full-corpus-periods/period_context.json` is present.
+- Focused tests and lint passed for period sharding, review context, CLI smoke,
+  Ruff, and `actionlint`.
+
+Remaining:
+
+- Verify the API-native/recent annual-shard boundary from evidence.
+- Run period checkpoint workflows and create period-specific follow-up tracks
+  only for completed artifacts that need independent agent review.
+
+---
+
+- [x] **Track: Official website fallback retrieval**
+*Link: [./tracks/track_38_official_website_fallback_retrieval/](./tracks/track_38_official_website_fallback_retrieval/)*
+
+Goal: Add a conservative, provenance-rich official-website retrieval fallback
+for failed API/XML/HTML edge cases while avoiding stealth scraping or
+access-control bypass.
+
+---
+
+- [x] **Track: NZLII redundancy reconciliation**
+*Link: [./tracks/track_39_nzlii_redundancy_reconciliation/](./tracks/track_39_nzlii_redundancy_reconciliation/)*
+
+Goal: Use NZLII as an independent secondary source for coverage checks,
+candidate matching, and guarded text-rescue triage without treating it as the
+canonical source.
+
+---
+
+- [x] **Track: Source redundancy resolver and provenance**
+*Link: [./tracks/track_40_source_redundancy_resolver_provenance/](./tracks/track_40_source_redundancy_resolver_provenance/)*
+
+Goal: Define the shared fallback resolver and provenance model across API,
+feeds, official website fallback retrieval, and NZLII redundancy.

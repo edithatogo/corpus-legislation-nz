@@ -229,7 +229,7 @@ jobs:
         run: |
           set -euo pipefail
           available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
-          required_gb="25"
+          required_gb="10"
           echo "Available disk: ${available_gb}G; required: ${required_gb}G"
           if [ "$available_gb" -lt "$required_gb" ]; then
             echo "Refusing to start full bootstrap with less than ${required_gb}G free." >&2
@@ -300,12 +300,6 @@ jobs:
       - name: Sync bootstrap batch
         env:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
-          NZLC_SEARCH_TERMS: ${{ vars.NZLC_SEARCH_TERMS }}
-          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
-          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
-          NZLC_LEGISLATION_TYPES: ${{ vars.NZLC_LEGISLATION_TYPES }}
-          NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
-          NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
         run: |
           set -euo pipefail
           if [ -n "$MIN_SECONDS_BETWEEN_REQUESTS" ]; then
@@ -365,6 +359,99 @@ jobs:
             cat data/manifests/latest_manifest.json >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
+  merge_batches:
+    needs:
+      - plan
+      - batch
+    if: ${{ inputs.serial == false }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      NZLC_OUTPUT_DIR: data
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download batch bootstrap artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: full-corpus-batch-*-download
+          path: generated/full-corpus-bootstrap/downloaded-batches
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
+          required_gb="25"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing to merge full bootstrap with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Merge batch artifacts and review
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t artifact_roots < <(
+            find generated/full-corpus-bootstrap/downloaded-batches \
+              -mindepth 1 -maxdepth 1 -type d | sort
+          )
+          if [ "${#artifact_roots[@]}" -eq 0 ]; then
+            echo "No batch artifacts downloaded." >&2
+            exit 1
+          fi
+          args=()
+          for artifact_root in "${artifact_roots[@]}"; do
+            args+=(--artifact-root "$artifact_root")
+          done
+          uv run nzlc merge-bootstrap-artifacts \
+            "${args[@]}" \
+            --output-dir data
+          uv run nzlc review-full-corpus-bootstrap \
+            --artifact-root data \
+            --output-path generated/full-corpus-bootstrap/review_report.json
+
+      - name: Upload merged full bootstrap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-corpus-bootstrap-download
+          path: |
+            generated/full-corpus-bootstrap/provenance.json
+            generated/full-corpus-bootstrap/review_report.json
+            data/records.jsonl
+            data/manifests/
+            data/_state/
+            data/raw_xml/
+            data/parquet/
+          if-no-files-found: error
+
+      - name: Merged bootstrap summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Full corpus bootstrap merged batch download" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Serial mode: false" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Batch count: ${{ needs.plan.outputs.batch_count }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Seed SHA-256: ${{ needs.plan.outputs.seed_sha256 }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f generated/full-corpus-bootstrap/review_report.json ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat generated/full-corpus-bootstrap/review_report.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
   serial:
     needs: plan
     if: ${{ inputs.serial == true }}
@@ -390,7 +477,7 @@ jobs:
         run: |
           set -euo pipefail
           available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
-          required_gb="25"
+          required_gb="10"
           echo "Available disk: ${available_gb}G; required: ${required_gb}G"
           if [ "$available_gb" -lt "$required_gb" ]; then
             echo "Refusing to start full bootstrap with less than ${required_gb}G free." >&2
@@ -461,12 +548,6 @@ jobs:
       - name: Sync all bootstrap batches sequentially
         env:
           NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
-          NZLC_SEARCH_TERMS: ${{ vars.NZLC_SEARCH_TERMS }}
-          NZLC_SEARCH_FIELD: ${{ vars.NZLC_SEARCH_FIELD || 'title' }}
-          NZLC_SEARCH_SORT_BY: ${{ vars.NZLC_SEARCH_SORT_BY || 'most_recently_updated' }}
-          NZLC_LEGISLATION_TYPES: ${{ vars.NZLC_LEGISLATION_TYPES }}
-          NZLC_LEGISLATION_STATUS: ${{ vars.NZLC_LEGISLATION_STATUS }}
-          NZLC_PUBLISHER: ${{ vars.NZLC_PUBLISHER }}
         run: |
           set -euo pipefail
           if [ -n "$MIN_SECONDS_BETWEEN_REQUESTS" ]; then

@@ -22,9 +22,17 @@ keep the corpus complete over time, not only during the first bootstrap.
   - `docs/reconciliation_runbook.md` defines monthly reconciliation after first full bootstrap.
   - The runbook allows quarterly reconciliation only after a recorded maintainer decision.
   - `docs/maintenance_runbook.md` now points monthly maintenance to the full reconciliation procedure.
-- Local inventory/output check on 2026-06-07:
-  - `seeds/work_ids.txt`: absent.
-  - `data/manifests/coverage_report.json`: absent.
+- 2026-06-21 repo-side reconciliation guard:
+  - `.github/workflows/monthly_full_reconciliation.yml` has safe scheduled-run
+    defaults for baseline seed path, max works, request pacing, and disk budget.
+  - Confirmed Hugging Face publication fails closed in the reconciliation
+    workflow; publication must use Track 08 after reviewing reconciliation
+    artifacts.
+- Local inventory/output check updated on 2026-06-21:
+  - `seeds/work_ids.txt`: present as the Track 04 search-derived seed
+    inventory and usable as the operational baseline for reconciliation.
+  - `data/manifests/coverage_report.json`: absent locally for a reviewed full
+    corpus.
 - Current reconciliation result:
   - No reconciliation run was performed.
   - Added work IDs: none.
@@ -33,7 +41,10 @@ keep the corpus complete over time, not only during the first bootstrap.
 
 ## Blocked Items
 
-- Cannot compare seed inventory, search discovery, and coverage output until an authoritative `seeds/work_ids.txt` and full corpus coverage report exist.
-- Cannot add newly discovered work IDs with provenance until Track 04 produces or identifies an authoritative inventory source.
-- Cannot rerun full sync in staged batches until Track 07 is unblocked.
+- Cannot complete full seed, discovery, and coverage-output comparison until a
+  reviewed full corpus coverage report exists.
+- Cannot promote newly discovered work IDs into `seeds/work_ids.txt` without a
+  reviewed reconciliation artifact and provenance.
+- Cannot rerun a reviewed full sync in staged batches until Track 07 produces a
+  completed full-bootstrap artifact.
 - Cannot explain coverage deltas in `latest_changes.json` or a maintenance note until a real full reconciliation run has outputs to compare.

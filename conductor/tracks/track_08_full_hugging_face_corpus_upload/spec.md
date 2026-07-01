@@ -19,6 +19,16 @@ publish the full validated corpus to Hugging Face as the live operational datase
 
 ## Evidence Recorded
 
+- 2026-06-21 repo-side publication guard:
+  - `.github/workflows/full_corpus_hf_upload.yml` downloads the Track 07
+    `full-corpus-bootstrap-download` artifact into the workspace root when
+    `bootstrap_run_id` is supplied, preserving the artifact's `data/` tree.
+  - Confirmed full upload fails closed when `bootstrap_run_id` is empty.
+  - The workflow runs `nzlc review-full-corpus-bootstrap --artifact-root data`
+    before `uv run nzlc hf-upload`; a failed Track 07 review blocks confirmed
+    publication.
+  - The pre-publish review artifact includes
+    `generated/full-corpus-bootstrap/review_report.json`.
 - Local environment presence check on 2026-06-07:
   - `HF_TOKEN`: absent.
   - `HF_REPO_ID`: absent.

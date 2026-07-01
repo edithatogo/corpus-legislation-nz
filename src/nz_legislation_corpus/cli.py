@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -10,6 +11,8 @@ import typer
 from rich.console import Console
 
 from .archive import build_archive
+from .bootstrap_merge import build_coverage_report, merge_bootstrap_artifacts
+from .bootstrap_review import write_full_corpus_bootstrap_review
 from .config import Settings, require
 from .discovery import (
     build_work_id_batch_manifest,
@@ -17,13 +20,15 @@ from .discovery import (
     build_work_id_reconciliation_report,
     normalize_work_ids,
 )
+from .feed_change import write_feed_change_artifacts
 from .manifest import build_change_report, build_manifest
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
+from .nzlii_reconcile import NZLII_SOURCE_INVENTORY, write_nzlii_reconciliation_report
 from .parquet_writer import write_partitioned_parquet
+from .period_shards import split_period_seed_files
 from .rss_feed import FEED_FILENAME, build_feed
-from .schema import RECORD_SCHEMA_VERSION
 from .types import SyncStats
 from .utils import (
     read_json,
@@ -34,6 +39,12 @@ from .utils import (
     write_jsonl_if_changed,
 )
 from .validate import validate_records
+from .website_fallback import (
+    OfficialWebsiteFallbackPolicy,
+    build_playwright_diagnostics_plan,
+    plan_failed_record_retries,
+    run_playwright_diagnostics,
+)
 from .zenodo import upload_archive_to_zenodo
 
 app = typer.Typer(help="NZ legislation corpus pipeline CLI")
@@ -90,6 +101,14 @@ def _raw_suffix_for_content_type(content_type: str | None) -> str:
     return ".xml" if content_type == "application/xml" else ".html"
 
 
+def _alternate_letter_suffix_url(url: str) -> str | None:
+    """Return a dated legislation URL with an appended A suffix when plausible."""
+    match = re.search(r"(?P<date>\d{4}-\d{2}-\d{2})(?P<suffix>\.xml|/)$", url)
+    if not match:
+        return None
+    return f"{url[: match.start('date')]}{match.group('date')}A{match.group('suffix')}"
+
+
 def _download_first_available_format(
     client: NZLegislationClient,
     version: dict[str, Any],
@@ -98,18 +117,37 @@ def _download_first_available_format(
     warnings: list[str] = []
     candidates = [(fmt, url) for fmt in ("xml", "html") if (url := client.format_url(version, fmt))]
     for fmt, url in candidates:
-        try:
-            raw_content = client.download_url(url)
-            if not raw_content:
-                raise RuntimeError(f"Downloaded empty content from {url}")
-            return raw_content, url, _raw_content_type_for_url(url), warnings
-        except Exception as exc:
+        urls = [url]
+        alternate_url = _alternate_letter_suffix_url(url)
+        if alternate_url and alternate_url not in urls:
+            urls.append(alternate_url)
+
+        last_exc: Exception | None = None
+        for candidate_url in urls:
+            try:
+                raw_content = client.download_url(candidate_url)
+                if not raw_content:
+                    raise RuntimeError(f"Downloaded empty content from {candidate_url}")
+                if candidate_url != url:
+                    warnings.append(
+                        f"Used alternate dated URL {candidate_url} for {version.get('version_id')}"
+                    )
+                return (
+                    raw_content,
+                    candidate_url,
+                    _raw_content_type_for_url(candidate_url),
+                    warnings,
+                )
+            except Exception as exc:
+                last_exc = exc
+
+        if last_exc is not None:
             if fmt == "xml" and any(candidate_fmt == "html" for candidate_fmt, _ in candidates):
                 warnings.append(
-                    f"XML download failed for {version.get('version_id')}: {exc}; used HTML"
+                    f"XML download failed for {version.get('version_id')}: {last_exc}; used HTML"
                 )
                 continue
-            raise
+            raise last_exc
     return b"", None, None, warnings
 
 
@@ -496,6 +534,66 @@ def reconcile_work_ids_cmd(
     )
 
 
+@app.command("split-work-id-periods")
+def split_work_id_periods_cmd(
+    seed_work_ids: Annotated[
+        Path, typer.Option(help="Reviewed work-ID seed file, one work ID per line.")
+    ] = Path("seeds/work_ids.txt"),
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory for generated period seed files.")
+    ] = Path("seeds/periods"),
+    manifest_path: Annotated[Path, typer.Option(help="Period manifest path.")] = Path(
+        "seeds/periods/manifest.json"
+    ),
+    source_metadata_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional discovery provenance JSON containing works metadata."),
+    ] = Path("generated/historical-discovery-27313765016/historical-work-ids.provenance.json"),
+    api_boundary_year: Annotated[
+        int,
+        typer.Option(help="First year to shard annually for recent/API-native handoff."),
+    ] = 2008,
+    api_boundary_source: Annotated[
+        str,
+        typer.Option(help="Evidence label for the recent/API-native boundary."),
+    ] = "planning_fallback_unverified",
+    api_boundary_verified: Annotated[
+        bool,
+        typer.Option(help="Mark the recent/API-native boundary as verified evidence."),
+    ] = False,
+) -> None:
+    """Split a reviewed work-ID seed into canonical period shards."""
+    manifest = split_period_seed_files(
+        seed_work_ids,
+        output_dir=output_dir,
+        manifest_path=manifest_path,
+        source_metadata_path=source_metadata_path,
+        api_boundary_year=api_boundary_year,
+        api_boundary_source=api_boundary_source,
+        api_boundary_verified=api_boundary_verified,
+    )
+    console.print_json(
+        data={
+            "unique_work_id_count": manifest["unique_work_id_count"],
+            "period_count": manifest["period_count"],
+            "seed_sha256": manifest["seed_sha256"],
+            "api_boundary_year": manifest["api_boundary_year"],
+            "api_boundary_verified": manifest["api_boundary_verified"],
+            "output_dir": str(output_dir),
+            "manifest_path": str(manifest_path),
+            "unknown_year_count": next(
+                (
+                    period["work_id_count"]
+                    for period in manifest["periods"]
+                    if period["period_id"] == "unknown_year_review"
+                ),
+                0,
+            ),
+            "coverage_warning": manifest["coverage_warning"],
+        }
+    )
+
+
 @app.command("validate")
 def validate_cmd(
     records_path: Annotated[
@@ -712,50 +810,58 @@ def coverage_report_cmd() -> None:
     """Summarize corpus coverage and red-team risk indicators."""
     settings = Settings()
     records = read_jsonl(settings.records_jsonl_path)
-    by_type: dict[str, int] = {}
-    by_status: dict[str, int] = {}
-    by_year: dict[str, int] = {}
-    missing_text = 0
-    missing_xml = 0
-    ephemeral_ids = 0
-    for record in records:
-        by_type[str(record.get("legislation_type") or "unknown")] = (
-            by_type.get(str(record.get("legislation_type") or "unknown"), 0) + 1
-        )
-        by_status[str(record.get("legislation_status") or "unknown")] = (
-            by_status.get(str(record.get("legislation_status") or "unknown"), 0) + 1
-        )
-        by_year[str(record.get("year") or "unknown")] = (
-            by_year.get(str(record.get("year") or "unknown"), 0) + 1
-        )
-        if not str(record.get("text") or "").strip():
-            missing_text += 1
-        if not str(record.get("xml_url") or "").strip():
-            missing_xml += 1
-        if record.get("id_is_ephemeral"):
-            ephemeral_ids += 1
-    report = {
-        "schema_version": "1.0",
-        "record_schema_version": RECORD_SCHEMA_VERSION,
-        "record_count": len(records),
-        "by_type": dict(sorted(by_type.items())),
-        "by_status": dict(sorted(by_status.items())),
-        "by_year": dict(sorted(by_year.items())),
-        "risk_indicators": {
-            "missing_text_records": missing_text,
-            "missing_xml_url_records": missing_xml,
-            "ephemeral_identifier_records": ephemeral_ids,
-        },
-        "recommendation": "Use a seed work-id list or official bulk source before claiming corpus completeness."
-        if records
-        else "No records found.",
-    }
+    report = build_coverage_report(records)
     write_json(settings.manifests_dir / "coverage_report.json", report)
     history_path = settings.manifests_dir / "coverage_history.jsonl"
     history_path.parent.mkdir(parents=True, exist_ok=True)
     with history_path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(report, sort_keys=True, ensure_ascii=False) + "\n")
     console.print_json(data=report)
+
+
+@app.command("merge-bootstrap-artifacts")
+def merge_bootstrap_artifacts_cmd(
+    artifact_root: Annotated[
+        list[Path],
+        typer.Option(
+            "--artifact-root",
+            help="Downloaded full-corpus batch or period artifact root. Repeat for each shard.",
+        ),
+    ],
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory where the merged corpus artifact will be written."),
+    ] = Path("generated/full-corpus-bootstrap/merged"),
+    schema_path: Annotated[
+        Path,
+        typer.Option(help="Record JSON Schema used for validation."),
+    ] = Path("schemas/legislation_record.schema.json"),
+) -> None:
+    """Merge reviewed bootstrap shard artifacts into one validated corpus artifact."""
+    report = merge_bootstrap_artifacts(artifact_root, output_dir, schema_path=schema_path)
+    console.print_json(data=report)
+    if not report["validation_ok"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("review-full-corpus-bootstrap")
+def review_full_corpus_bootstrap_cmd(
+    artifact_root: Annotated[
+        Path,
+        typer.Option(
+            help="Downloaded workflow artifact root, or the artifact's data directory.",
+        ),
+    ] = Path(),
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Write the deterministic review report JSON."),
+    ] = Path("generated/full-corpus-bootstrap/review_report.json"),
+) -> None:
+    """Review full bootstrap artifacts before claiming completeness."""
+    report = write_full_corpus_bootstrap_review(artifact_root, output_path)
+    console.print_json(data=report)
+    if not report["ok"]:
+        raise typer.Exit(code=2)
 
 
 @app.command("rss-feed")
@@ -780,6 +886,182 @@ def rss_feed_cmd(
     console.print_json(data=result)
     if not result["ok"]:
         raise typer.Exit(code=2)
+
+
+@app.command("feed-change-detect")
+def feed_change_detect_cmd(
+    feed_path: Annotated[
+        Path,
+        typer.Option(help="RSS/Atom XML feed file to parse."),
+    ],
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory for feed_state.jsonl, refresh_queue.jsonl, and report."),
+    ] = Path("generated/feed-change-detection"),
+    feed_url: Annotated[
+        str,
+        typer.Option(help="Source feed URL recorded in the report."),
+    ] = "",
+    previous_state_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional previous feed_state.jsonl for idempotent refresh queues."),
+    ] = None,
+    retrieved_at: Annotated[
+        str | None,
+        typer.Option(help="Optional retrieval timestamp override for deterministic tests."),
+    ] = None,
+) -> None:
+    """Build advisory official-feed change-detection artifacts."""
+    previous_state = (
+        read_jsonl(previous_state_path)
+        if previous_state_path is not None and previous_state_path.exists()
+        else None
+    )
+    report = write_feed_change_artifacts(
+        output_dir,
+        feed_path,
+        feed_url=feed_url,
+        retrieved_at=retrieved_at,
+        previous_state=previous_state,
+    )
+    console.print_json(data=report)
+
+
+@app.command("plan-website-fallbacks")
+def plan_website_fallbacks_cmd(
+    failed_records_path: Annotated[
+        Path,
+        typer.Option(help="JSONL failed-record input from review/sync triage."),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output official-website fallback retry plan JSON."),
+    ] = Path("generated/website-fallback/retry_plan.json"),
+    max_records: Annotated[
+        int | None,
+        typer.Option(help="Maximum failed records to plan; defaults to policy limit."),
+    ] = None,
+    allow_browser_rendering: Annotated[
+        bool,
+        typer.Option(help="Plan optional browser-rendered fallback attempts; no browser is run."),
+    ] = False,
+    retrieved_at: Annotated[
+        str | None,
+        typer.Option(help="Optional retrieval timestamp override for deterministic tests."),
+    ] = None,
+) -> None:
+    """Plan conservative official-website fallback retries without fetching pages."""
+    failed_records = read_jsonl(failed_records_path)
+    policy = OfficialWebsiteFallbackPolicy(allow_browser_rendering=allow_browser_rendering)
+    report = plan_failed_record_retries(
+        failed_records,
+        policy=policy,
+        max_records=max_records,
+        retrieval_timestamp_utc=retrieved_at,
+    )
+    write_json(output_path, report)
+    console.print_json(data=report)
+    if report["blocked_count"] and not report["planned_count"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("reconcile-nzlii")
+def reconcile_nzlii_cmd(
+    official_records_path: Annotated[
+        Path,
+        typer.Option(help="JSONL official metadata records to reconcile."),
+    ],
+    candidate_groups_path: Annotated[
+        Path,
+        typer.Option(help="JSON mapping work/version IDs to NZLII candidate lists."),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output NZLII reconciliation report JSON."),
+    ] = Path("generated/nzlii-reconciliation/report.json"),
+    seed_work_ids_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional seed work-ID file to compare against official records."),
+    ] = None,
+    bootstrap_failures_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional JSONL failed bootstrap records for secondary-source triage."),
+    ] = None,
+    review_report_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional full-bootstrap review report JSON to compare against."),
+    ] = None,
+) -> None:
+    """Build a secondary-source NZLII reconciliation report."""
+    official_records = read_jsonl(official_records_path)
+    candidate_groups = read_json(candidate_groups_path, default={}) or {}
+    seed_work_ids = _load_seed_work_ids(seed_work_ids_path)
+    bootstrap_failure_records = (
+        read_jsonl(bootstrap_failures_path) if bootstrap_failures_path is not None else None
+    )
+    review_report = (
+        read_json(review_report_path, default={}) if review_report_path is not None else None
+    )
+    report = write_nzlii_reconciliation_report(
+        output_path,
+        official_records,
+        candidate_groups,
+        seed_work_ids=seed_work_ids,
+        bootstrap_failure_records=bootstrap_failure_records,
+        review_report=review_report,
+    )
+    console.print_json(data=report)
+
+
+@app.command("nzlii-source-inventory")
+def nzlii_source_inventory_cmd(
+    output_path: Annotated[
+        Path,
+        typer.Option(help="Output NZLII source inventory and caveat JSON."),
+    ] = Path("generated/nzlii-reconciliation/source_inventory.json"),
+) -> None:
+    """Write the documented NZLII source inventory used for redundancy checks."""
+    report = {
+        "schema_version": "1.0",
+        "source_role": "secondary_corroborating",
+        "sources": NZLII_SOURCE_INVENTORY,
+        "coverage_warning": (
+            "NZLII source inventory is for redundancy planning only. "
+            "Official NZ Legislation remains canonical."
+        ),
+    }
+    write_json(output_path, report)
+    console.print_json(data=report)
+
+
+@app.command("website-fallback-diagnostics")
+def website_fallback_diagnostics_cmd(
+    retry_plan_path: Annotated[
+        Path,
+        typer.Option(help="Retry plan JSON produced by plan-website-fallbacks."),
+    ],
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory for Playwright diagnostics plan, script, and outputs."),
+    ] = Path("generated/website-fallback/playwright"),
+    run: Annotated[
+        bool,
+        typer.Option(help="Actually run Playwright diagnostics; default only writes the script."),
+    ] = False,
+    timeout_seconds: Annotated[
+        int,
+        typer.Option(help="Execution timeout when --run is used."),
+    ] = 300,
+) -> None:
+    """Generate, and optionally run, bounded official-site Playwright diagnostics."""
+    retry_plan = read_json(retry_plan_path, default={}) or {}
+    diagnostics_plan = build_playwright_diagnostics_plan(retry_plan, output_dir=output_dir)
+    if run:
+        diagnostics_plan = run_playwright_diagnostics(
+            diagnostics_plan,
+            timeout_seconds=timeout_seconds,
+        )
+    console.print_json(data=diagnostics_plan)
 
 
 if __name__ == "__main__":

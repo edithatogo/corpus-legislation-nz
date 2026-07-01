@@ -36,7 +36,7 @@ on:
         type: boolean
         default: false
       upload_confirmed:
-        description: "Upload after full sync if run_full_sync=true"
+        description: "Deprecated safety valve; confirmed publication must use full_corpus_hf_upload.yml after review"
         required: true
         type: boolean
         default: false
@@ -59,17 +59,24 @@ jobs:
     timeout-minutes: 1440
     env:
       NZLC_OUTPUT_DIR: data
-      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests }}
-      MAX_WORKS: ${{ inputs.max_works }}
+      MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests || '1.0' }}
+      MAX_WORKS: ${{ inputs.max_works || 'none' }}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Refuse direct upload from monthly reconciliation
+        if: ${{ inputs.upload_confirmed == true }}
+        run: |
+          set -euo pipefail
+          echo "Use Track 08 full_corpus_hf_upload.yml for confirmed publication after reviewing this reconciliation artifact." >&2
+          exit 1
 
       - name: Check disk budget
         shell: bash
         run: |
           set -euo pipefail
           available_gb="$(df -BG . | awk "NR==2 {gsub(/G/, \"\", $4); print $4}")"
-          required_gb="${{ inputs.minimum_free_gb }}"
+          required_gb="${{ inputs.minimum_free_gb || '25' }}"
           echo "Available disk: ${available_gb}G; required: ${required_gb}G"
           if [ "$available_gb" -lt "$required_gb" ]; then
             echo "Refusing reconciliation with less than ${required_gb}G free." >&2
@@ -180,7 +187,7 @@ jobs:
           fi
       - name: Reconcile candidate seed
         env:
-          BASELINE_WORK_IDS_PATH: ${{ inputs.baseline_work_ids_path }}
+          BASELINE_WORK_IDS_PATH: ${{ inputs.baseline_work_ids_path || 'seeds/work_ids.txt' }}
           CANDIDATE_WORK_IDS_PATH: ${{ steps.candidate.outputs.candidate_path }}
         run: |
           set -euo pipefail
@@ -215,16 +222,6 @@ jobs:
           uv run nzlc validate
           uv run nzlc manifest
           uv run nzlc coverage-report
-
-      - name: Upload to live Hugging Face dataset after sync
-        if: ${{ inputs.run_full_sync == true && inputs.upload_confirmed == true }}
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO_ID: ${{ vars.HF_REPO_ID }}
-          HF_XET_HIGH_PERFORMANCE: "1"
-        run: |
-          set -euo pipefail
-          uv run nzlc hf-upload
 
       - name: Upload reconciliation artifact
         uses: actions/upload-artifact@v4

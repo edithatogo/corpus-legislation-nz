@@ -17,6 +17,78 @@
 - Batch 0004 no-upload triggered: run `27362894765`.
 - Full live corpus sync (68 batches) must run via GitHub Actions (no local API key or disk).
 - Expected 4-6 weeks of batched historical uploads at current pace.
+- 2026-06-21 live dispatch check: `gh auth status` reports the active
+  `edithatogo` keyring token is invalid, so this shell cannot trigger or inspect
+  the GitHub Actions run until GitHub CLI authentication is refreshed.
+- 2026-06-21 final serial bootstrap dispatched after GitHub CLI auth was
+  refreshed: run `27898963687`,
+  `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27898963687`.
+  Inputs: `seed_work_ids_path=seeds/work_ids.txt`, `batch_size=500`,
+  `start_batch=1`, `end_batch=68`, `merge_policy=restore_merge`,
+  `min_seconds_between_requests=0.5`, `max_parallel=1`, `serial=true`,
+  `max_works=none`.
+- 2026-06-21 period-sharding decision: the current serial run remains the
+  full-bootstrap evidence path, but period-level agent handoff is now split to
+  Track 36. Track 36 owns canonical time-period shards, annual recent/API-native
+  shards, per-period checkpoint artifacts, and period-level review status.
+- 2026-06-21 latest live check: run `27898963687` remains `in_progress`.
+  `plan` completed successfully, `batch` was skipped because `serial=true`,
+  and `serial` is still running `Sync all bootstrap batches sequentially`.
+- 2026-06-29 follow-up check: run `27898963687` completed with conclusion
+  `cancelled`. The `serial` job was cancelled during
+  `Sync all bootstrap batches sequentially` after about six hours, and the
+  validate/manifest/coverage/artifact steps were skipped. This confirms that a
+  single all-batch serial run is not viable on GitHub-hosted runners.
+- 2026-06-29 remediation: added `nzlc merge-bootstrap-artifacts` and a
+  `merge_batches` job to `.github/workflows/full_corpus_bootstrap.yml`.
+  Hosted runs should now use `serial=false`; each batch uploads a shard
+  artifact, and the merge job assembles a standard
+  `full-corpus-bootstrap-download` artifact with root `data/`, manifests,
+  sync state, Parquet, raw content, and review report.
+- 2026-06-30 quota-safe continuation: cancelled replacement full-range run
+  `28409376276` and added
+  `.github/workflows/scheduled_full_corpus_bootstrap_batches.yml` to resume at
+  batch 0024. The dispatcher uses the NZ Legislation API daily key limit of
+  10,000 requests and schedules at 80% utilisation (8,000 requests/day).
+- 2026-06-30 batch 0024 continuation evidence: run `28410878072`
+  completed successfully and `nzlc review-full-corpus-bootstrap` passed against
+  the downloaded `full-corpus-bootstrap-download` artifact. Review counts:
+  969 records in `records.jsonl`, manifest, and coverage; validation OK; 0
+  records failed; 483 XML-to-HTML fallback warnings; manifest SHA-256
+  `0c41ca5a4c793247e0c94ca612992c4d2a675f80917eee1796410b9f38df4cb6`.
+  Sync state recorded 500 works checked, 874 versions checked, 874 records
+  added, and 12 Parquet files written. This supports a two-batch daily window:
+  approximate upper-bound API requests were 2,731, so two similar batches stay
+  under the 8,000 request/day target while three fallback-heavy batches could
+  approach the cap. Next daily window is batches 0025-0026 with
+  `max_parallel=2`.
+- 2026-06-30 batches 0025-0026 continuation evidence: run `28418448745`
+  completed successfully with `max_parallel=2`, and
+  `nzlc review-full-corpus-bootstrap` passed against the downloaded
+  `full-corpus-bootstrap-download` artifact. Review counts: 1,677 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  966 XML-to-HTML fallback warnings; manifest SHA-256
+  `98899d1e183898240f4eb83a78e9397cd757f91f79fa9ed71a4957dc9ed975dd`.
+  Merged sync state recorded 1,000 works checked, 1,582 versions checked,
+  1,582 records added, and 22 Parquet files written. Next daily window is
+  batches 0027-0028 with `max_parallel=2`.
+- 2026-07-01 scheduler utilisation update: the automatic dispatcher now starts
+  at batch 0029 with schedule day 0 on 2026-07-01, after manual continuation
+  covered batches 0024-0028. It keeps the maximum conservative daily cadence:
+  10,000 API requests/day, 80% utilisation (8,000 usable requests/day), 500
+  work IDs/batch, 8 requests/work ID budget, and `max_parallel=2`, which yields
+  two fresh batches/day without duplicating already-consumed quota.
+- 2026-07-01 batch 0028 repair evidence: run `28464210390` completed
+  successfully after the dated-URL fallback patch. Local review of the
+  downloaded `full-corpus-bootstrap-download` artifact passed: 1,389 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  474 warnings, including 473 XML-to-HTML fallback warnings; manifest SHA-256
+  `6622c7e7c1256cfe73096cc31f3c72576ff9ffa5855d378e64b241003779c073`.
+  Sync state recorded 1,294 versions checked, 1,294 records added, 0 failed,
+  and 10 Parquet files written. The stale
+  `act_public_1992_27_en_1992-04-10` URL was recovered through the
+  `1992-04-10A` alternate and now maps to the same content hash as the
+  `act_public_1992_27_en_1992-04-10A` version.
 
 ## Batch 0001 no-upload evidence
 
@@ -107,12 +179,113 @@ continuing, causing the exponential slowdown.
    (`historical_hf_upload.yml`) which has been proven at 500-work scale with
    batches 0001-0003
 
+## Code improvements applied 2026-06-13
+
+The following production-hardening changes were made to support reliable 68-batch processing:
+
+### Critical: quota sleep cap (`config.py`, `nz_api.py`)
+
+Added `rate_limit_max_sleep_seconds=60.0` to cap `_sleep_for_low_quota`. Previously,
+a quota-exhausted API key with `remaining=1` and `reset=3600s` could sleep 30+ minutes
+per work ID (~1800s). The cap limits the maximum individual sleep to 60s, preventing
+multi-hour stalls while still respecting the API quota system.
+
+### Logging guard: `_download_first_available_format` (`cli.py`)
+
+Added empty-content detection: if `download_url` returns zero bytes, the code now
+raises an exception, triggering the XML->HTML fallback path instead of silently
+returning empty content.
+
+### Seed file warning: `_load_seed_work_ids` (`cli.py`)
+
+Added a log warning when the seed work-IDs file exists but contains zero usable
+(non-comment, non-empty) lines, preventing silent batch processing of empty batches.
+
+### Serial mode progress tracking (`.github/workflows/full_corpus_bootstrap.yml`)
+
+Added batch-level progress counters (`Processing batch 17/68`) to the serial batch
+loop, providing real-time monitoring for the ~8-15 hour cumulative run.
+
+### Extended test coverage
+
+- **Rate limit tests** (`test_nz_api.py`): 9 new tests covering capped quota sleep,
+  `_retry_after_seconds` invalid header fallback, `download_url` retries on 429/403/5xx,
+  quota pause in download path, missing/expired header edge cases.
+- **Download fallback tests** (`test_cli_download.py`): 5 new tests for
+  `_download_first_available_format` covering XML success, XML->HTML fallback, both fail,
+  HTML-only, and no formats available.
+- **Coverage report tests** (`test_cli_coverage.py`): 3 new tests for empty corpus,
+  multi-type records with risk indicators, and history append.
+- **HF sync test** (`test_hf_sync.py`): prune stale paths test added.
+
+All 65 tests pass; ruff lint clean.
+
+## Test environment isolation applied 2026-06-16
+
+After merging the 2026-06-13 hardening, the full pytest run on a developer
+workstation exposed 34 pre-existing failures caused by user-shell `NZLC_*`
+environment variables leaking into the test process and tripping
+`pydantic_settings` list-field validation. These failures were independent of
+the hardening work and surfaced only when the developer's shell exported
+`NZLC_SEARCH_TERMS=law,act,...` style CSV values.
+
+### Fix: tests/conftest.py autouse session fixture
+
+Added a session-scoped autouse fixture (`_isolate_settings_env`) that pops the
+known `NZLC_*`, `NZ_LEGISLATION_*`, `HF_TOKEN`, and `HF_HUB_TOKEN` env vars
+before any test runs, so `Settings()` resolves to its declared defaults.
+
+### Result
+
+- `uv run pytest -q -p no:cacheprovider tests` reports **122 passed** in ~8s.
+- `uv run ruff check tests/conftest.py` reports **All checks passed**.
+- 5 pre-existing ruff findings in `embeddings.py` (D205/D212/D400/D415) and
+  `utils.py` (I001) are unrelated to this track and remain on `main`; they are
+  tracked separately.
+
+## Artifact review gate added 2026-06-21
+
+- Added `nzlc review-full-corpus-bootstrap` to review a downloaded
+  `full_corpus_bootstrap.yml` artifact before any completeness claim.
+- The review gate checks for `records.jsonl`, validation, manifest, coverage,
+  and sync-state artifacts; records failed; failed-version warnings; manifest
+  hash presence; manifest and coverage record-count agreement with
+  `records.jsonl`; and missing text, missing XML URL, and ephemeral identifier
+  risk indicators.
+- The command writes `generated/full-corpus-bootstrap/review_report.json` by
+  default and exits non-zero when required evidence is missing or failed.
+- 2026-06-21 review fix: non-zero risk indicators and manifest/count
+  mismatches now fail the review and require triage before Track 07 completion.
+- Focused validation passed:
+  `.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider tests\test_bootstrap_review.py tests\smoke\test_cli_smoke.py -q`
+  reported 20 passed.
+- Lint passed:
+  `.venv\Scripts\python.exe -m ruff check --no-cache src\nz_legislation_corpus\bootstrap_review.py src\nz_legislation_corpus\cli.py tests\test_bootstrap_review.py tests\smoke\test_cli_smoke.py tests\conftest.py`.
+- Test fixture hardening: `tests/conftest.py` now falls back from locked
+  `test-tmp/` to `.tmp/test-tmp/` after a writability probe, preserving
+  repo-local test temp directories on OneDrive-backed worktrees.
+
+
 ## Remaining operator tasks
 
-1. Trigger `full_corpus_bootstrap.yml` with `serial=true` for the final cumulative run
-2. After completion, download artifacts: `data/records.jsonl`, `data/manifests/`, `data/_state/`
-3. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings
-4. Run `nzlc validate`, `nzlc manifest`, `nzlc coverage-report` against the output
-5. Update tracks.md with final evidence (run URL, manifest SHA, record counts)
-6. Mark Task 3 [x] and Task 7 [x] after review
+1. Monitor dispatched run `27898963687` until the `serial` job completes.
+2. Dispatch a hosted `serial=false` full bootstrap run for all 68 batches, or
+   run `serial=true` only on a local/self-hosted runner with runtime above the
+   hosted six-hour ceiling.
+3. After the hosted batch run completes, download
+   `full-corpus-bootstrap-download`: `data/records.jsonl`,
+   `data/manifests/`, `data/_state/`, `data/parquet/`, and `data/raw_xml/`.
+4. Run `nzlc review-full-corpus-bootstrap --artifact-root <downloaded-artifact>`
+   and review `generated/full-corpus-bootstrap/review_report.json`.
+5. Review `sync_state.json` for failed versions and XML-to-HTML fallback warnings.
+6. Update tracks.md with final evidence (run URL, manifest SHA, record counts).
+7. Mark Task 3 [x] and Task 7 [x] after review.
+
+## Deferred to Track 36
+
+- Generate period-specific seed files and a period manifest.
+- Verify the API-native/recent boundary year before making recent shards annual.
+- Add per-period checkpoint artifacts so another agent can start work as soon
+  as a period completes.
+- Add or extend the review gate for single-period artifacts.
 
