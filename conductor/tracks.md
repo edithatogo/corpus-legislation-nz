@@ -1313,3 +1313,38 @@ Remaining:
 - Verify the API-native/recent annual-shard boundary from evidence.
 - Run period checkpoint workflows and create period-specific follow-up tracks
   only for completed artifacts that need independent agent review.
+
+---
+
+- [ ] **Track: Official feed change detection**
+*Link: [./tracks/track_37_official_feed_change_detection/](./tracks/track_37_official_feed_change_detection/)*
+
+Goal: Use official NZ Legislation feeds and API/search metadata as a redundant
+freshness signal for new or changed legislation, producing targeted refresh
+queues without replacing the canonical full bootstrap.
+
+---
+
+- [ ] **Track: Official website fallback retrieval**
+*Link: [./tracks/track_38_official_website_fallback_retrieval/](./tracks/track_38_official_website_fallback_retrieval/)*
+
+Goal: Add a conservative, provenance-rich official-website retrieval fallback
+for failed API/XML/HTML edge cases while avoiding stealth scraping or
+access-control bypass.
+
+---
+
+- [ ] **Track: NZLII redundancy reconciliation**
+*Link: [./tracks/track_39_nzlii_redundancy_reconciliation/](./tracks/track_39_nzlii_redundancy_reconciliation/)*
+
+Goal: Use NZLII as an independent secondary source for coverage checks,
+candidate matching, and guarded text-rescue triage without treating it as the
+canonical source.
+
+---
+
+- [ ] **Track: Source redundancy resolver and provenance**
+*Link: [./tracks/track_40_source_redundancy_resolver_provenance/](./tracks/track_40_source_redundancy_resolver_provenance/)*
+
+Goal: Define the shared fallback resolver and provenance model across API,
+feeds, official website fallback retrieval, and NZLII redundancy.
