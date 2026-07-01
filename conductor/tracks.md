@@ -1316,15 +1316,6 @@ Remaining:
 
 ---
 
-- [x] **Track: Official feed change detection**
-*Link: [./tracks/track_37_official_feed_change_detection/](./tracks/track_37_official_feed_change_detection/)*
-
-Goal: Use official NZ Legislation feeds and API/search metadata as a redundant
-freshness signal for new or changed legislation, producing targeted refresh
-queues without replacing the canonical full bootstrap.
-
----
-
 - [~] **Track: Official website fallback retrieval**
 *Link: [./tracks/track_38_official_website_fallback_retrieval/](./tracks/track_38_official_website_fallback_retrieval/)*
 
