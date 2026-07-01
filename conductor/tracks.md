@@ -299,10 +299,14 @@ Current state:
   Track 36 now owns period-sharded seed manifests, annual recent shards,
   per-period checkpoint artifacts, and period-level review/handoff status.
 - **2026-07-01 scheduler and continuation evidence**: PR #67 merged the
-  scheduled dispatcher onto `main`, with day-0 start at batch 0029 and a
-  conservative two-batch daily cadence under the 8,000 request/day target.
-  Manual run `28496717521` covered batches 0029-0030 with `max_parallel=2` and
-  completed successfully. Local review of the merged
+  scheduled dispatcher onto `main`. It initially used a conservative two-batch
+  daily cadence under the 8,000 request/day target. Manual run `28496717521`
+  covered batches 0029-0030 with `max_parallel=2` and completed successfully.
+  After that success, the scheduler was retargeted to start at batch 0031 on
+  2026-07-02 with `target_batches_per_day=3` and `max_parallel=3`: two batches
+  are within the conservative request budget, and the third is an opportunistic
+  catch-up batch to resume or rerun in the next daily window if unsuccessful.
+  Local review of the merged
   `full-corpus-bootstrap-download` artifact passed: 3,455 records in
   `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
   940 warnings, including 937 XML-to-HTML fallback warnings; 0 browser
@@ -310,8 +314,8 @@ Current state:
   `62e2bb8664404ff10abc32e8830aa9dac8a38f38e49ac3e5614a0ad89f5d21ec`.
   Merged sync state recorded 3,397 versions checked, 3,360 records added,
   36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
-  written. Track 07 remains in progress; next quota-safe daily window is
-  batches 0031-0032.
+  written. Track 07 remains in progress; next scheduled daily window is
+  batches 0031-0033, with batch 0033 treated as the opportunistic third batch.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
