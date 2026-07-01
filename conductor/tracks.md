@@ -1325,7 +1325,7 @@ access-control bypass.
 
 ---
 
-- [~] **Track: NZLII redundancy reconciliation**
+- [x] **Track: NZLII redundancy reconciliation**
 *Link: [./tracks/track_39_nzlii_redundancy_reconciliation/](./tracks/track_39_nzlii_redundancy_reconciliation/)*
 
 Goal: Use NZLII as an independent secondary source for coverage checks,

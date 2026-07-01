@@ -16,6 +16,13 @@ NZLII candidate match records carry:
 - `confidence`
 - `classification`
 
+The source inventory emitted by `nzlc nzlii-source-inventory` includes
+`schema_version`, `source_role`, `coverage_warning`, and `sources[]` entries with
+`collection`, `url_pattern`, `role`, `access_policy`, `canonical_status`, and
+`caveat`. The initial inventory is deliberately limited to the NZLII New Zealand
+Acts and New Zealand Regulations entry points used for Track 39 redundancy
+planning.
+
 ## Matching Rules
 
 The reconciliation helpers in `src/nz_legislation_corpus/nzlii_reconcile.py`
@@ -41,6 +48,21 @@ matches against a seed work-ID file plus bootstrap-failure JSONL. Failed officia
 records with exact or probable NZLII candidates are surfaced for manual review;
 they are not promoted automatically.
 
+When `--bootstrap-failures-path` is supplied, the report adds
+`text_rescue_triage_candidates` for failed official records that have an exact or
+probable NZLII candidate. Each triage row records:
+
+- `fallback_status`
+- `source_role`
+- `retrieval_method`
+- `canonical_promotion_allowed`
+- `review_required`
+- the selected NZLII candidate provenance
+
+These rows are review evidence only. `canonical_promotion_allowed` is always
+`false` for this Track 39 output, even when the candidate is classified as
+`exact`.
+
 ## Operational Notes
 
 - Use official metadata as the primary keying input.
@@ -50,3 +72,5 @@ they are not promoted automatically.
   policy changes.
 - `nzlc nzlii-source-inventory` writes the documented source inventory and
   caveats as JSON.
+- `nzlc reconcile-nzlii --bootstrap-failures-path ...` writes text-rescue
+  triage candidates without fetching NZLII pages or modifying canonical records.

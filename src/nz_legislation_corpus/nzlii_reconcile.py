@@ -14,12 +14,16 @@ NZLII_SOURCE_INVENTORY = [
         "collection": "New Zealand Acts",
         "url_pattern": "https://www.nzlii.org/nz/legis/hist_act/",
         "role": "secondary_coverage_check",
+        "access_policy": "conservative_manual_or_supplied_metadata_only",
+        "canonical_status": "not_canonical",
         "caveat": "Historical coverage, formatting, and update cadence may differ from NZ Legislation.",
     },
     {
         "collection": "New Zealand Regulations",
         "url_pattern": "https://www.nzlii.org/nz/legis/num_reg/",
         "role": "secondary_coverage_check",
+        "access_policy": "conservative_manual_or_supplied_metadata_only",
+        "canonical_status": "not_canonical",
         "caveat": "Candidate matches require manual review before any text rescue.",
     },
 ]
@@ -328,6 +332,8 @@ def build_nzlii_reconciliation_report(
     *,
     seed_work_ids: Sequence[str] | None = None,
     bootstrap_failure_ids: Sequence[str] | None = None,
+    bootstrap_failure_records: Sequence[Mapping[str, Any]] | None = None,
+    review_report: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     report_rows: list[dict[str, Any]] = []
     manual_review_candidates: list[dict[str, Any]] = []
@@ -376,8 +382,16 @@ def build_nzlii_reconciliation_report(
     )
 
     seed_ids = sorted({work_id.strip() for work_id in seed_work_ids or [] if work_id.strip()})
+    failure_records_by_id = _failure_records_by_id(bootstrap_failure_records or [])
     failed_ids = sorted(
-        {work_id.strip() for work_id in bootstrap_failure_ids or [] if work_id.strip()}
+        {
+            work_id.strip()
+            for work_id in [
+                *(bootstrap_failure_ids or []),
+                *failure_records_by_id,
+            ]
+            if work_id.strip()
+        }
     )
     exact_or_probable = {
         str(row["official_work_id"])
@@ -386,6 +400,21 @@ def build_nzlii_reconciliation_report(
     }
     missing_seed_ids = sorted(set(seed_ids) - {str(row["official_work_id"]) for row in report_rows})
     failed_with_candidates = sorted(set(failed_ids) & exact_or_probable)
+    text_rescue_triage_candidates = [
+        _text_rescue_triage_candidate(
+            row,
+            bootstrap_failure=failure_records_by_id.get(str(row["official_work_id"])),
+        )
+        for row in report_rows
+        if row["official_work_id"] in failed_with_candidates
+        and row["classification"] in {"exact", "probable"}
+        and row["selected_candidate"] is not None
+    ]
+    review_report_ids = _extract_review_report_work_ids(review_report)
+    review_report_ids_with_candidates = sorted(set(review_report_ids) & exact_or_probable)
+    review_report_ids_missing = sorted(
+        set(review_report_ids) - {str(row["official_work_id"]) for row in report_rows}
+    )
 
     return {
         "schema_version": "1.0",
@@ -405,7 +434,21 @@ def build_nzlii_reconciliation_report(
         "bootstrap_failure_comparison": {
             "bootstrap_failure_count": len(failed_ids),
             "failed_ids_with_exact_or_probable_nzlii_candidate": failed_with_candidates,
+            "bootstrap_failure_records": [
+                failure_records_by_id[work_id]
+                for work_id in failed_ids
+                if work_id in failure_records_by_id
+            ],
         },
+        "review_report_comparison": {
+            "review_report_supplied": review_report is not None,
+            "review_report_work_id_count": len(review_report_ids),
+            "review_report_ids_with_exact_or_probable_nzlii_candidate": (
+                review_report_ids_with_candidates
+            ),
+            "review_report_ids_missing_from_official_records": review_report_ids_missing,
+        },
+        "text_rescue_triage_candidates": text_rescue_triage_candidates,
         "classification_counts": classification_counts,
         "records": report_rows,
         "manual_review_candidates": manual_review_candidates,
@@ -419,12 +462,16 @@ def write_nzlii_reconciliation_report(
     *,
     seed_work_ids: Sequence[str] | None = None,
     bootstrap_failure_ids: Sequence[str] | None = None,
+    bootstrap_failure_records: Sequence[Mapping[str, Any]] | None = None,
+    review_report: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = build_nzlii_reconciliation_report(
         official_records,
         candidate_groups,
         seed_work_ids=seed_work_ids,
         bootstrap_failure_ids=bootstrap_failure_ids,
+        bootstrap_failure_records=bootstrap_failure_records,
+        review_report=review_report,
     )
     write_json(Path(output_path), report)
     return report
@@ -446,3 +493,80 @@ def _candidate_to_dict(
         "confidence": round(candidate.confidence, 3),
         "classification": classification or candidate.classification,
     }
+
+
+def _text_rescue_triage_candidate(
+    row: Mapping[str, Any],
+    *,
+    bootstrap_failure: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    candidate = row["selected_candidate"]
+    triage_row = {
+        "official_work_id": row["official_work_id"],
+        "official_version_id": row["official_version_id"],
+        "official_title": row["official_title"],
+        "official_date": row["official_date"],
+        "classification": row["classification"],
+        "confidence": row["confidence"],
+        "fallback_status": "secondary_text_rescue_candidate_review_required",
+        "source_role": "secondary_corroborating",
+        "retrieval_method": "nzlii_text_rescue_candidate",
+        "canonical_promotion_allowed": False,
+        "review_required": True,
+        "reason": (
+            "Official bootstrap retrieval failed and NZLII has an exact/probable "
+            "candidate. Treat as non-canonical review evidence only."
+        ),
+        "selected_candidate": candidate,
+    }
+    if bootstrap_failure is not None:
+        triage_row["bootstrap_failure"] = dict(bootstrap_failure)
+    return triage_row
+
+
+def _extract_record_id(row: Mapping[str, Any]) -> str:
+    return str(
+        row.get("work_id")
+        or row.get("record_id")
+        or row.get("stable_id")
+        or row.get("official_work_id")
+        or ""
+    ).strip()
+
+
+def _failure_records_by_id(records: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+    failures: dict[str, dict[str, Any]] = {}
+    for record in records:
+        work_id = _extract_record_id(record)
+        if work_id:
+            failures[work_id] = dict(record)
+    return failures
+
+
+def _extract_review_report_work_ids(review_report: Mapping[str, Any] | None) -> list[str]:
+    if review_report is None:
+        return []
+    work_ids: set[str] = set()
+
+    def visit(value: Any) -> None:
+        if isinstance(value, Mapping):
+            work_id = _extract_record_id(value)
+            if work_id:
+                work_ids.add(work_id)
+            for nested in value.values():
+                visit(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                visit(nested)
+
+    for key in (
+        "failed_records",
+        "missing_records",
+        "manual_review_candidates",
+        "records",
+        "sync_failures",
+        "validation_failures",
+    ):
+        if key in review_report:
+            visit(review_report[key])
+    return sorted(work_ids)

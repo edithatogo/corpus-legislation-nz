@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from nz_legislation_corpus.cli import app
 from nz_legislation_corpus.nzlii_reconcile import (
     NZLII_SOURCE_INVENTORY,
     NZLIICandidateRecord,
@@ -12,6 +15,8 @@ from nz_legislation_corpus.nzlii_reconcile import (
     classify_official_record,
     write_nzlii_reconciliation_report,
 )
+
+runner = CliRunner()
 
 
 def _candidate(
@@ -244,6 +249,34 @@ def test_build_nzlii_reconciliation_report_emits_manual_review_queue(tmp_path: P
     assert report["bootstrap_failure_comparison"][
         "failed_ids_with_exact_or_probable_nzlii_candidate"
     ] == ["work-2"]
+    assert report["text_rescue_triage_candidates"] == [
+        {
+            "official_work_id": "work-2",
+            "official_version_id": None,
+            "official_title": "Test Regulation 2026",
+            "official_date": "2026-07-01",
+            "classification": "probable",
+            "confidence": 0.75,
+            "fallback_status": "secondary_text_rescue_candidate_review_required",
+            "source_role": "secondary_corroborating",
+            "retrieval_method": "nzlii_text_rescue_candidate",
+            "canonical_promotion_allowed": False,
+            "review_required": True,
+            "reason": (
+                "Official bootstrap retrieval failed and NZLII has an exact/probable "
+                "candidate. Treat as non-canonical review evidence only."
+            ),
+            "selected_candidate": {
+                "url": "https://nzlii.example/reg/test-regulation-2026",
+                "title": "Test Regulation 2026",
+                "date": "2026-07-04",
+                "retrieved_at": "2026-07-01T00:00:00Z",
+                "content_hash": "def456",
+                "confidence": 0.72,
+                "classification": "probable",
+            },
+        }
+    ]
     assert report["classification_counts"] == {
         "exact": 1,
         "probable": 1,
@@ -268,3 +301,142 @@ def test_build_nzlii_reconciliation_report_emits_manual_review_queue(tmp_path: P
     assert report["records"][4]["classification"] == "out_of_scope"
     assert output_path.exists()
     assert written["official_record_count"] == 5
+
+
+@pytest.mark.unit
+def test_build_nzlii_reconciliation_report_preserves_failure_and_review_context() -> None:
+    official_records = [
+        OfficialMetadataRecord(
+            work_id="work-2",
+            title="Test Regulation 2026",
+            date="2026-07-01",
+        )
+    ]
+    candidate_groups = {
+        "work-2": [
+            _candidate(
+                url="https://nzlii.example/reg/test-regulation-2026",
+                title="Test Regulation 2026",
+                date="2026-07-04",
+                content_hash="def456",
+                confidence=0.72,
+            )
+        ]
+    }
+    failure_record = {
+        "work_id": "work-2",
+        "source_url": "https://www.legislation.govt.nz/example",
+        "failure_reason": "official_xml_404",
+        "failed_at": "2026-07-01T01:00:00Z",
+    }
+
+    report = build_nzlii_reconciliation_report(
+        official_records,
+        candidate_groups,
+        bootstrap_failure_records=[failure_record],
+        review_report={
+            "failed_records": [failure_record],
+            "missing_records": [{"work_id": "work-9"}],
+        },
+    )
+
+    assert report["bootstrap_failure_comparison"]["bootstrap_failure_records"] == [failure_record]
+    assert report["review_report_comparison"] == {
+        "review_report_supplied": True,
+        "review_report_work_id_count": 2,
+        "review_report_ids_with_exact_or_probable_nzlii_candidate": ["work-2"],
+        "review_report_ids_missing_from_official_records": ["work-9"],
+    }
+    assert report["text_rescue_triage_candidates"][0]["bootstrap_failure"] == failure_record
+    assert (
+        report["text_rescue_triage_candidates"][0]["fallback_status"]
+        == "secondary_text_rescue_candidate_review_required"
+    )
+    assert report["text_rescue_triage_candidates"][0]["canonical_promotion_allowed"] is False
+
+
+@pytest.mark.unit
+def test_reconcile_nzlii_cli_writes_report_with_rescue_provenance(tmp_path: Path) -> None:
+    official_path = tmp_path / "official.jsonl"
+    candidates_path = tmp_path / "candidates.json"
+    failures_path = tmp_path / "failures.jsonl"
+    review_path = tmp_path / "review.json"
+    output_path = tmp_path / "report.json"
+
+    official_path.write_text(
+        json.dumps(
+            {
+                "work_id": "work-2",
+                "title": "Test Regulation 2026",
+                "date": "2026-07-01",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    candidates_path.write_text(
+        json.dumps(
+            {
+                "work-2": [
+                    {
+                        "url": "https://nzlii.example/reg/test-regulation-2026",
+                        "title": "Test Regulation 2026",
+                        "date": "2026-07-04",
+                        "retrieved_at": "2026-07-01T00:00:00Z",
+                        "content_hash": "def456",
+                        "confidence": 0.72,
+                        "classification": "missing",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    failure_record = {"work_id": "work-2", "failure_reason": "official_xml_404"}
+    failures_path.write_text(json.dumps(failure_record) + "\n", encoding="utf-8")
+    review_path.write_text(
+        json.dumps({"failed_records": [failure_record]}),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "reconcile-nzlii",
+            "--official-records-path",
+            str(official_path),
+            "--candidate-groups-path",
+            str(candidates_path),
+            "--bootstrap-failures-path",
+            str(failures_path),
+            "--review-report-path",
+            str(review_path),
+            "--output-path",
+            str(output_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report["review_report_comparison"]["review_report_supplied"] is True
+    assert report["text_rescue_triage_candidates"][0]["bootstrap_failure"] == failure_record
+    assert report["text_rescue_triage_candidates"][0]["review_required"] is True
+
+
+@pytest.mark.unit
+def test_nzlii_source_inventory_cli_writes_machine_readable_policy(tmp_path: Path) -> None:
+    output_path = tmp_path / "source_inventory.json"
+
+    result = runner.invoke(
+        app,
+        ["nzlii-source-inventory", "--output-path", str(output_path)],
+    )
+
+    assert result.exit_code == 0, result.output
+    inventory = json.loads(output_path.read_text(encoding="utf-8"))
+    assert inventory["source_role"] == "secondary_corroborating"
+    assert inventory["sources"] == NZLII_SOURCE_INVENTORY
+    assert inventory["sources"][0]["canonical_status"] == "not_canonical"
+    assert (
+        inventory["sources"][0]["access_policy"] == "conservative_manual_or_supplied_metadata_only"
+    )

@@ -987,25 +987,28 @@ def reconcile_nzlii_cmd(
         Path | None,
         typer.Option(help="Optional JSONL failed bootstrap records for secondary-source triage."),
     ] = None,
+    review_report_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional full-bootstrap review report JSON to compare against."),
+    ] = None,
 ) -> None:
     """Build a secondary-source NZLII reconciliation report."""
     official_records = read_jsonl(official_records_path)
     candidate_groups = read_json(candidate_groups_path, default={}) or {}
     seed_work_ids = _load_seed_work_ids(seed_work_ids_path)
-    bootstrap_failure_ids = (
-        [
-            str(row.get("work_id") or row.get("record_id") or row.get("stable_id") or "").strip()
-            for row in read_jsonl(bootstrap_failures_path)
-        ]
-        if bootstrap_failures_path is not None
-        else None
+    bootstrap_failure_records = (
+        read_jsonl(bootstrap_failures_path) if bootstrap_failures_path is not None else None
+    )
+    review_report = (
+        read_json(review_report_path, default={}) if review_report_path is not None else None
     )
     report = write_nzlii_reconciliation_report(
         output_path,
         official_records,
         candidate_groups,
         seed_work_ids=seed_work_ids,
-        bootstrap_failure_ids=bootstrap_failure_ids,
+        bootstrap_failure_records=bootstrap_failure_records,
+        review_report=review_report,
     )
     console.print_json(data=report)
 
