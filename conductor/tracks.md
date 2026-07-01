@@ -329,6 +329,18 @@ Current state:
   duplicating the manually completed batches. Track 07 remains in progress;
   next scheduled daily window is batches 0033-0035, with batch 0035 treated as
   the opportunistic third batch.
+- **2026-07-02 daily maximum probe**: manual continuation advanced batches
+  0033-0042. Runs `28510037176`, `28511889179`, `28513240315`,
+  `28514259299`, `28515266056`, `28516266938`, and `28517300595` completed
+  batches 0033-0039 individually. Run `28518390359` attempted batches
+  0040-0044 with `max_parallel=3`; batches 0040-0042 validated and uploaded
+  batch artifacts, while batches 0043-0044 failed after sync during
+  `Validate, manifest, and coverage-report` with `missing_xml_url` and
+  `ephemeral_identifier` records for agency-drafted secondary legislation.
+  This was not an observed API quota failure. The current operational maximum
+  for fully validated daily progress is recorded as six batches in the new NZ
+  quota window, and the scheduler now resumes at batch 0043 on 2026-07-03
+  NZ time with `target_batches_per_day=6` and `max_parallel=3`.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
