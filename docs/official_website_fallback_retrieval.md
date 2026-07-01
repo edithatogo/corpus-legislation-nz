@@ -43,3 +43,17 @@ CLI entry points:
 - `nzlc website-fallback-diagnostics` writes a Playwright diagnostics plan and
   script from a retry plan. It does not launch a browser unless `--run` is
   passed, and rendered captures remain low-confidence manual triage artifacts.
+
+When `--run` is used, the diagnostics runner revalidates every source URL
+against the official-site policy before launching Playwright. It also writes
+`capture_provenance` entries with the source URL, method, retrieval timestamp,
+HTML content hash, previous failure reason, confidence, status, output paths,
+and rights note. These fields are review evidence only and do not promote
+browser-rendered output into canonical corpus content.
+
+The full-bootstrap review report promotes browser fallback evidence through:
+
+- `browser_fallback_warning_count`
+- `browser_fallback_warnings`
+- `browser_fallback_provenance_count`
+- `browser_fallback_provenance`

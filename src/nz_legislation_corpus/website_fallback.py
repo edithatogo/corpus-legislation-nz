@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from .utils import sha256_bytes, sha256_text, slug_for_path, utc_now_iso, write_json
+from .utils import sha256_bytes, sha256_file, sha256_text, slug_for_path, utc_now_iso, write_json
 
 OFFICIAL_LEGISLATION_HOSTS = ("legislation.govt.nz", "www.legislation.govt.nz")
 FALLBACK_SCHEMA_VERSION = "1.0"
@@ -318,7 +318,7 @@ def plan_failed_record_retries(
             "require_https": effective_policy.require_https,
         },
         "record_count": len(failed_records),
-        "planned_count": len(plans),
+        "planned_count": sum(1 for plan in plans if plan.get("status") == "queued"),
         "blocked_count": sum(1 for plan in plans if plan.get("status") == "blocked"),
         "warnings": warnings,
         "records": plans,
@@ -359,6 +359,7 @@ def build_playwright_diagnostics_plan(
                     "retrieval_method": attempt["retrieval_method"],
                     "html_path": str(output_dir / f"{slug}.rendered.html"),
                     "screenshot_path": str(output_dir / f"{slug}.png"),
+                    "previous_failure_reason": attempt.get("previous_failure_reason"),
                     "status": "planned",
                     "confidence": "low",
                     "rights_note": (
@@ -400,6 +401,12 @@ def run_playwright_diagnostics(
 ) -> dict[str, Any]:
     """Run the generated diagnostics script through Playwright if explicitly requested."""
     script_path = Path(str(plan["script_path"]))
+    diagnostics = list(plan.get("diagnostics") or [])
+    for diagnostic in diagnostics:
+        if not isinstance(diagnostic, dict) or not is_public_official_url(
+            str(diagnostic.get("source_url") or "")
+        ):
+            raise ValueError("Playwright diagnostics plan contains a non-official source URL")
     command = ["npx", "playwright", "test", str(script_path)]
     completed = subprocess.run(
         command,
@@ -409,6 +416,7 @@ def run_playwright_diagnostics(
         timeout=timeout_seconds,
     )
     result = dict(plan)
+    capture_provenance = _diagnostic_capture_provenance(diagnostics)
     result["execution"] = {
         "status": "passed" if completed.returncode == 0 else "failed",
         "command": " ".join(command),
@@ -416,8 +424,38 @@ def run_playwright_diagnostics(
         "stdout": completed.stdout[-4000:],
         "stderr": completed.stderr[-4000:],
     }
+    result["capture_provenance_count"] = len(capture_provenance)
+    result["capture_provenance"] = capture_provenance
     write_json(script_path.parent / "playwright_diagnostics_result.json", result)
     return result
+
+
+def _diagnostic_capture_provenance(
+    diagnostics: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    captured_at = utc_now_iso()
+    provenance: list[dict[str, Any]] = []
+    for diagnostic in diagnostics:
+        html_path = Path(str(diagnostic.get("html_path") or ""))
+        screenshot_path = Path(str(diagnostic.get("screenshot_path") or ""))
+        html_exists = html_path.exists() and html_path.is_file()
+        provenance.append(
+            {
+                "record_id": diagnostic.get("record_id"),
+                "source_url": diagnostic.get("source_url"),
+                "retrieval_method": diagnostic.get("retrieval_method"),
+                "retrieval_timestamp_utc": captured_at,
+                "content_hash": sha256_file(html_path) if html_exists else None,
+                "html_path": str(html_path),
+                "screenshot_path": str(screenshot_path),
+                "screenshot_exists": screenshot_path.exists() and screenshot_path.is_file(),
+                "previous_failure_reason": diagnostic.get("previous_failure_reason"),
+                "confidence": diagnostic.get("confidence"),
+                "status": "captured" if html_exists else "missing",
+                "rights_note": diagnostic.get("rights_note"),
+            }
+        )
+    return provenance
 
 
 def _playwright_script(

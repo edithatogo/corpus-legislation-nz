@@ -19,9 +19,11 @@ def _write_artifact(
     validation_ok: bool = True,
     manifest_record_count: int | None = None,
     risk_indicators: dict[str, int] | None = None,
+    records: list[dict[str, object]] | None = None,
+    warnings: list[str] | None = None,
 ) -> None:
     data = root / "data"
-    records = [
+    records = records or [
         {
             "stable_id": "act_public_2026_26",
             "title": "Test Act 2026",
@@ -52,7 +54,7 @@ def _write_artifact(
             },
         },
     )
-    warnings = []
+    warnings = list(warnings or [])
     if records_failed:
         warnings.append("version 123 failed: HTTP 404")
     write_json(
@@ -86,6 +88,62 @@ def test_full_corpus_bootstrap_review_flags_failures(tmp_path: Path) -> None:
     assert report["records_failed"] == 1
     assert report["failed_version_warnings"] == ["version 123 failed: HTTP 404"]
     assert report["triage_required"] is True
+
+
+@pytest.mark.unit
+def test_full_corpus_bootstrap_review_surfaces_browser_fallback_provenance(
+    tmp_path: Path,
+) -> None:
+    _write_artifact(
+        tmp_path,
+        records=[
+            {
+                "stable_id": "act_public_1992_27",
+                "title": "Fallback Act",
+                "text": "text",
+                "xml_url": "https://www.legislation.govt.nz/act/public/1992/27/latest.xml",
+                "source_redundancy": {
+                    "attempts": [
+                        {
+                            "source_name": "NZ Legislation",
+                            "source_url": "https://www.legislation.govt.nz/act/public/1992/27/latest/",
+                            "retrieval_method": "official_website_rendered_html",
+                            "retrieval_timestamp_utc": "2026-07-01T00:00:00Z",
+                            "content_hash": "abc123",
+                            "previous_failure_reason": "API XML returned 404",
+                            "confidence": "low",
+                            "status": "success",
+                        }
+                    ]
+                },
+            }
+        ],
+        warnings=["browser fallback queued for act_public_1992_27 after API XML returned 404"],
+    )
+
+    report = build_full_corpus_bootstrap_review(tmp_path)
+
+    assert report["browser_fallback_warning_count"] == 1
+    assert report["browser_fallback_warnings"] == [
+        "browser fallback queued for act_public_1992_27 after API XML returned 404"
+    ]
+    assert report["browser_fallback_provenance_count"] == 1
+    assert report["browser_fallback_provenance"] == [
+        {
+            "stable_id": "act_public_1992_27",
+            "source_url": "https://www.legislation.govt.nz/act/public/1992/27/latest/",
+            "retrieval_method": "official_website_rendered_html",
+            "retrieval_timestamp_utc": "2026-07-01T00:00:00Z",
+            "content_hash": "abc123",
+            "previous_failure_reason": "API XML returned 404",
+            "confidence": "low",
+            "status": "success",
+            "rights_note": (
+                "Official website rendered diagnostics are for manual triage only; "
+                "they are not canonical corpus content."
+            ),
+        }
+    ]
 
 
 @pytest.mark.unit

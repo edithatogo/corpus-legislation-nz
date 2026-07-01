@@ -33,6 +33,58 @@ def _records_failed(sync_state: dict[str, Any]) -> int:
     return int(value)
 
 
+def _browser_fallback_warnings(warnings: list[str]) -> list[str]:
+    return [
+        warning
+        for warning in warnings
+        if (
+            "browser" in warning.lower()
+            or "rendered" in warning.lower()
+            or "official_website_rendered_html" in warning
+        )
+        and ("fallback" in warning.lower() or "official_website" in warning)
+    ]
+
+
+def _browser_fallback_provenance(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    provenance_records: list[dict[str, Any]] = []
+    for record in records:
+        stable_id = str(record.get("stable_id") or record.get("version_id") or "")
+        source_redundancy = record.get("source_redundancy")
+        if not isinstance(source_redundancy, dict):
+            continue
+        attempts = source_redundancy.get("attempts") or []
+        if not isinstance(attempts, list):
+            continue
+        for attempt in attempts:
+            if not isinstance(attempt, dict):
+                continue
+            retrieval_method = str(attempt.get("retrieval_method") or attempt.get("method") or "")
+            if retrieval_method != "official_website_rendered_html":
+                continue
+            provenance_records.append(
+                {
+                    "stable_id": stable_id,
+                    "source_url": attempt.get("source_url") or attempt.get("url"),
+                    "retrieval_method": retrieval_method,
+                    "retrieval_timestamp_utc": attempt.get("retrieval_timestamp_utc")
+                    or attempt.get("retrieved_at"),
+                    "content_hash": attempt.get("content_hash") or attempt.get("content_sha256"),
+                    "previous_failure_reason": attempt.get("previous_failure_reason")
+                    or attempt.get("warning")
+                    or attempt.get("error"),
+                    "confidence": attempt.get("confidence"),
+                    "status": attempt.get("status"),
+                    "rights_note": attempt.get("rights_note")
+                    or (
+                        "Official website rendered diagnostics are for manual triage only; "
+                        "they are not canonical corpus content."
+                    ),
+                }
+            )
+    return provenance_records
+
+
 def _period_work_id_count(period_context: dict[str, Any]) -> Any:
     period = period_context.get("period")
     if isinstance(period, dict) and "work_id_count" in period:
@@ -58,6 +110,8 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
         for warning in warnings
         if "xml" in warning.lower() and ("html" in warning.lower() or "fallback" in warning.lower())
     ]
+    browser_fallback_warnings = _browser_fallback_warnings(warnings)
+    browser_fallback_provenance = _browser_fallback_provenance(records)
     risk_indicators = coverage.get("risk_indicators") or {}
     period_context = read_json(
         root / "generated" / "full-corpus-periods" / "period_context.json",
@@ -119,6 +173,10 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
         "failed_version_warnings": failed_warnings,
         "warning_count": len(warnings),
         "xml_to_html_fallback_warning_count": len(xml_fallback_warnings),
+        "browser_fallback_warning_count": len(browser_fallback_warnings),
+        "browser_fallback_warnings": browser_fallback_warnings,
+        "browser_fallback_provenance_count": len(browser_fallback_provenance),
+        "browser_fallback_provenance": browser_fallback_provenance,
         "risk_indicators": risk_counts,
         "source_redundancy": source_redundancy,
         "period_context": period_context,

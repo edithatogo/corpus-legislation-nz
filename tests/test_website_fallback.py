@@ -4,12 +4,14 @@ from typing import Any
 
 import pytest
 
+from nz_legislation_corpus import website_fallback
 from nz_legislation_corpus.website_fallback import (
     OfficialWebsiteFallbackPolicy,
     build_failed_record_retry_plan,
     build_fallback_attempt_provenance,
     build_playwright_diagnostics_plan,
     plan_failed_record_retries,
+    run_playwright_diagnostics,
 )
 
 
@@ -104,6 +106,26 @@ def test_retry_planner_truncates_small_failed_set() -> None:
 
 
 @pytest.mark.unit
+def test_retry_planner_counts_only_queued_records_as_planned() -> None:
+    report = plan_failed_record_retries(
+        [
+            _failed_record(record_id="queued-record"),
+            _failed_record(
+                record_id="blocked-record",
+                source_url="https://example.invalid/not-official",
+                html_url="https://example.invalid/not-official",
+            ),
+        ],
+        policy=OfficialWebsiteFallbackPolicy(),
+        retrieval_timestamp_utc="2026-07-01T00:00:00Z",
+    )
+
+    assert report["record_count"] == 2
+    assert report["planned_count"] == 1
+    assert report["blocked_count"] == 1
+
+
+@pytest.mark.unit
 def test_playwright_diagnostics_plan_writes_script_without_running_browser(tmp_path) -> None:
     retry_plan = plan_failed_record_retries(
         [_failed_record(canonical_url="https://www.legislation.govt.nz/act/public/2026/1/latest/")],
@@ -122,3 +144,56 @@ def test_playwright_diagnostics_plan_writes_script_without_running_browser(tmp_p
     script = (tmp_path / "playwright_diagnostics.mjs").read_text(encoding="utf-8")
     assert "page.goto(item.source_url" in script
     assert "fullPage: true" in script
+
+
+@pytest.mark.unit
+def test_playwright_diagnostics_runner_fails_closed_for_non_official_url(tmp_path) -> None:
+    script_path = tmp_path / "playwright_diagnostics.mjs"
+    script_path.write_text("", encoding="utf-8")
+    plan = {
+        "script_path": str(script_path),
+        "diagnostics": [
+            {
+                "record_id": "bad-record",
+                "source_url": "https://example.invalid/not-official",
+                "retrieval_method": "official_website_rendered_html",
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="non-official source URL"):
+        run_playwright_diagnostics(plan)
+
+
+@pytest.mark.unit
+def test_playwright_diagnostics_runner_writes_capture_provenance(monkeypatch, tmp_path) -> None:
+    retry_plan = plan_failed_record_retries(
+        [_failed_record(canonical_url="https://www.legislation.govt.nz/act/public/2026/1/latest/")],
+        policy=OfficialWebsiteFallbackPolicy(allow_browser_rendering=True),
+        retrieval_timestamp_utc="2026-07-01T00:00:00Z",
+    )
+    plan = build_playwright_diagnostics_plan(retry_plan, output_dir=tmp_path)
+    diagnostic = plan["diagnostics"][0]
+    html_path = tmp_path / "act_public_1992_27_en_1992-04-10.rendered.html"
+    screenshot_path = tmp_path / "act_public_1992_27_en_1992-04-10.png"
+    html_path.write_text("<html><body>captured</body></html>", encoding="utf-8")
+    screenshot_path.write_bytes(b"png")
+    diagnostic["html_path"] = str(html_path)
+    diagnostic["screenshot_path"] = str(screenshot_path)
+
+    class Completed:
+        returncode = 0
+        stdout = "ok"
+        stderr = ""
+
+    monkeypatch.setattr(website_fallback.subprocess, "run", lambda *args, **kwargs: Completed())
+
+    result = run_playwright_diagnostics(plan)
+
+    assert result["execution"]["status"] == "passed"
+    assert result["capture_provenance_count"] == 1
+    assert result["capture_provenance"][0]["status"] == "captured"
+    assert result["capture_provenance"][0]["content_hash"]
+    assert result["capture_provenance"][0]["previous_failure_reason"] == (
+        "API XML and advertised HTML were unavailable"
+    )

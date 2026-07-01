@@ -1316,7 +1316,7 @@ Remaining:
 
 ---
 
-- [~] **Track: Official website fallback retrieval**
+- [x] **Track: Official website fallback retrieval**
 *Link: [./tracks/track_38_official_website_fallback_retrieval/](./tracks/track_38_official_website_fallback_retrieval/)*
 
 Goal: Add a conservative, provenance-rich official-website retrieval fallback
