@@ -118,6 +118,30 @@ def test_build_feed_change_detection_reports_unmapped_items_as_review_candidates
 
 
 @pytest.mark.unit
+def test_build_feed_change_detection_rejects_suffix_lookalike_hosts() -> None:
+    feed_xml = """<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Lookalike Act</title>
+      <link>https://evillegislation.govt.nz/act/public/2026/26/en/2026-06-01/</link>
+      <guid>lookalike-act</guid>
+      <pubDate>Tue, 01 Jul 2026 01:00:00 GMT</pubDate>
+      <description>Should not map</description>
+    </item>
+  </channel>
+</rss>
+"""
+
+    report = build_feed_change_detection(feed_xml, retrieved_at="2026-07-01T02:03:04Z")
+
+    assert report["mapped_item_count"] == 0
+    assert report["unmapped_item_count"] == 1
+    assert report["refresh_queue"] == []
+    assert report["review_candidates"][0]["reason"] == "could_not_map_legislation_url"
+
+
+@pytest.mark.unit
 def test_build_feed_change_detection_deduplicates_duplicate_feed_entries() -> None:
     feed_xml = """<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0">

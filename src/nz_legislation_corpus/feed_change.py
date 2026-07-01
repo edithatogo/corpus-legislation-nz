@@ -199,8 +199,8 @@ def _item_source_text(
 
 def _split_legislation_path(url: str) -> list[str]:
     parsed = urlparse(url)
-    host = parsed.netloc.lower()
-    if not host.endswith(LEGISLATION_HOST_SUFFIX):
+    host = (parsed.hostname or "").lower()
+    if host != LEGISLATION_HOST_SUFFIX and not host.endswith(f".{LEGISLATION_HOST_SUFFIX}"):
         return []
     path = _strip_format_suffix(parsed.path.strip("/"))
     parts = [part for part in path.split("/") if part]

@@ -50,3 +50,13 @@
   `uv run ruff check --no-cache src\nz_legislation_corpus\feed_change.py src\nz_legislation_corpus\cli.py tests\test_feed_change.py tests\test_official_feed_change_detection_workflow.py`;
   `uv run ruff format --check src\nz_legislation_corpus\feed_change.py src\nz_legislation_corpus\cli.py tests\test_feed_change.py tests\test_official_feed_change_detection_workflow.py`;
   `uv run ty check src tests`; `git diff --check`.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions.
+    - [x] Tightened feed URL host mapping so suffix-lookalike hosts do not map
+      as official legislation URLs.
+    - [x] Made `api.legislation.govt.nz` explicit in the workflow allowlist.
+    - [x] Added optional `X-Api-Key` header support for official API RSS feeds.
+    - [x] Added regression tests for lookalike hosts and API RSS workflow
+      support.

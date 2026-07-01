@@ -24,16 +24,21 @@ def test_feed_workflow_fails_closed_to_official_urls() -> None:
     guard = _step_block(text, "Check feed URL")
 
     assert "NZLC_OFFICIAL_FEED_URL" in guard
-    assert "https://*.legislation.govt.nz/*|https://legislation.govt.nz/*" in guard
+    assert "https://api.legislation.govt.nz/*" in guard
+    assert "https://*.legislation.govt.nz/*" in guard
+    assert "https://legislation.govt.nz/*" in guard
     assert "Refusing non-official feed URL" in guard
 
 
 @pytest.mark.unit
 def test_feed_workflow_uploads_advisory_artifacts() -> None:
     text = _workflow_text()
+    download = _step_block(text, "Download feed")
     build = _step_block(text, "Build advisory refresh queue")
     upload = _step_block(text, "Upload feed change artifacts")
 
+    assert "NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}" in download
+    assert '--header "X-Api-Key: ${NZ_LEGISLATION_API_KEY}"' in download
     assert "uv run nzlc feed-change-detect" in build
     assert "--previous-state-path" in build
     assert "name: official-feed-change-detection" in upload

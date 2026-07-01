@@ -82,7 +82,10 @@ The workflow `.github/workflows/official_feed_change_detection.yml` accepts an
 explicit search-based feed URL through `workflow_dispatch` or the
 `NZLC_OFFICIAL_FEED_URL` repository variable. It refuses non-official feed hosts,
 downloads the feed, runs `nzlc feed-change-detect`, and uploads the advisory
-feed-state, refresh-queue, review-candidate, and report artifacts.
+feed-state, refresh-queue, review-candidate, and report artifacts. If the
+`NZ_LEGISLATION_API_KEY` secret is configured, the workflow sends it as an
+`X-Api-Key` header so the official API RSS endpoint can be used without placing
+the key in the URL.
 
 ## Manual Verification Evidence
 
@@ -96,6 +99,11 @@ Track 37 was manually verified on 2026-07-01 with:
 - `uv run ruff format --check src\nz_legislation_corpus\feed_change.py src\nz_legislation_corpus\cli.py tests\test_feed_change.py tests\test_official_feed_change_detection_workflow.py`
 - `uv run ty check src tests`
 - `git diff --check`
+
+The Conductor review pass also checked that official-host matching rejects
+suffix lookalikes such as `evillegislation.govt.nz`, and that the Actions
+workflow explicitly allows `api.legislation.govt.nz` for the documented API RSS
+endpoint.
 
 ## Caveat
 
