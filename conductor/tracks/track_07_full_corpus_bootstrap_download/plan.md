@@ -72,12 +72,16 @@
   Merged sync state recorded 1,000 works checked, 1,582 versions checked,
   1,582 records added, and 22 Parquet files written. Next daily window is
   batches 0027-0028 with `max_parallel=2`.
-- 2026-07-01 scheduler utilisation update: the automatic dispatcher now starts
-  at batch 0029 with schedule day 0 on 2026-07-01, after manual continuation
-  covered batches 0024-0028. It keeps the maximum conservative daily cadence:
+- 2026-07-01 scheduler utilisation update: the automatic dispatcher initially
+  started at batch 0029 with schedule day 0 on 2026-07-01, after manual
+  continuation covered batches 0024-0028. The conservative budget remains
   10,000 API requests/day, 80% utilisation (8,000 usable requests/day), 500
-  work IDs/batch, 8 requests/work ID budget, and `max_parallel=2`, which yields
-  two fresh batches/day without duplicating already-consumed quota.
+  work IDs/batch, and 8 requests/work ID budget, which yields two guaranteed
+  batches/day. After batches 0029-0030 succeeded, the scheduler was retargeted
+  to start at batch 0031 on 2026-07-02 with `target_batches_per_day=3` and
+  `max_parallel=3`: two batches are within the conservative budget and the
+  third is an opportunistic catch-up batch. If the third batch fails or exceeds
+  quota, resume or rerun that batch in the next daily window before advancing.
 - 2026-07-01 batch 0028 repair evidence: run `28464210390` completed
   successfully after the dated-URL fallback patch. Local review of the
   downloaded `full-corpus-bootstrap-download` artifact passed: 1,389 records in
@@ -102,7 +106,8 @@
   36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
   written. The downloaded local review report was written to ignored generated
   evidence path `generated/full-corpus-bootstrap/review_report_28496717521_merged.json`.
-  The next quota-safe daily window is batches 0031-0032.
+  The next scheduled window is batches 0031-0033, with batch 0033 treated as
+  the opportunistic third batch.
 
 ## Batch 0001 no-upload evidence
 

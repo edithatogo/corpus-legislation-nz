@@ -10,7 +10,7 @@ on:
         description: "First remaining batch number"
         required: true
         type: string
-        default: "29"
+        default: "31"
       end_batch:
         description: "Last remaining batch number"
         required: true
@@ -20,7 +20,7 @@ on:
         description: "Pacific/Auckland date for day 0 of the daily schedule"
         required: true
         type: string
-        default: "2026-07-01"
+        default: "2026-07-02"
       batch_size:
         description: "Work IDs per bootstrap batch"
         required: true
@@ -41,6 +41,11 @@ on:
         required: true
         type: string
         default: "8"
+      target_batches_per_day:
+        description: "Daily batch target; set above the conservative request budget for opportunistic catch-up"
+        required: true
+        type: string
+        default: "3"
       min_seconds_between_requests:
         description: "NZ Legislation API pacing override in seconds"
         required: true
@@ -50,7 +55,7 @@ on:
         description: "Maximum parallel batch jobs in dispatched bootstrap runs"
         required: true
         type: string
-        default: "2"
+        default: "3"
       max_works:
         description: "Optional per-batch sync limit; use none for no limit"
         required: true
@@ -70,15 +75,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      START_BATCH: ${{ inputs.start_batch || '29' }}
+      START_BATCH: ${{ inputs.start_batch || '31' }}
       END_BATCH: ${{ inputs.end_batch || '68' }}
-      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-07-01' }}
+      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-07-02' }}
       BATCH_SIZE: ${{ inputs.batch_size || '500' }}
       DAILY_REQUEST_LIMIT: ${{ inputs.daily_request_limit || '10000' }}
       UTILIZATION_PERCENT: ${{ inputs.utilization_percent || '80' }}
       REQUESTS_PER_WORK_ID_BUDGET: ${{ inputs.requests_per_work_id_budget || '8' }}
+      TARGET_BATCHES_PER_DAY: ${{ inputs.target_batches_per_day || '3' }}
       MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests || '1.0' }}
-      MAX_PARALLEL: ${{ inputs.max_parallel || '2' }}
+      MAX_PARALLEL: ${{ inputs.max_parallel || '3' }}
       MAX_WORKS: ${{ inputs.max_works || 'none' }}
     steps:
       - name: Plan daily batch window
@@ -101,6 +107,7 @@ jobs:
           daily_request_limit = int(os.environ["DAILY_REQUEST_LIMIT"])
           utilization_percent = int(os.environ["UTILIZATION_PERCENT"])
           requests_per_work_id_budget = int(os.environ["REQUESTS_PER_WORK_ID_BUDGET"])
+          target_batches_per_day = int(os.environ["TARGET_BATCHES_PER_DAY"])
 
           if start_batch < 1 or end_batch < start_batch:
               raise SystemExit("start_batch/end_batch are invalid")
@@ -110,10 +117,14 @@ jobs:
               raise SystemExit("utilization_percent must be 1..100")
           if requests_per_work_id_budget < 1:
               raise SystemExit("requests_per_work_id_budget must be at least 1")
+          if target_batches_per_day < 1:
+              raise SystemExit("target_batches_per_day must be at least 1")
 
           usable_requests = math.floor(daily_request_limit * utilization_percent / 100)
           requests_per_batch_budget = batch_size * requests_per_work_id_budget
-          batches_per_day = max(1, usable_requests // requests_per_batch_budget)
+          conservative_batches_per_day = max(1, usable_requests // requests_per_batch_budget)
+          batches_per_day = target_batches_per_day
+          opportunistic_extra_batches = max(0, batches_per_day - conservative_batches_per_day)
           today = datetime.now(ZoneInfo("Pacific/Auckland")).date()
           days_elapsed = max(0, (today - schedule_start).days)
           current_start = start_batch + days_elapsed * batches_per_day
@@ -123,7 +134,9 @@ jobs:
           values = {
               "usable_requests": usable_requests,
               "requests_per_batch_budget": requests_per_batch_budget,
+              "conservative_batches_per_day": conservative_batches_per_day,
               "batches_per_day": batches_per_day,
+              "opportunistic_extra_batches": opportunistic_extra_batches,
               "current_start": current_start,
               "current_end": current_end,
               "should_dispatch": str(should_dispatch).lower(),
@@ -164,7 +177,9 @@ jobs:
             echo "- Scheduled utilization: ${UTILIZATION_PERCENT}%"
             echo "- Usable requests/day: ${{ steps.plan.outputs.usable_requests }}"
             echo "- Request budget per batch: ${{ steps.plan.outputs.requests_per_batch_budget }}"
-            echo "- Batches/day: ${{ steps.plan.outputs.batches_per_day }}"
+            echo "- Conservative batches/day: ${{ steps.plan.outputs.conservative_batches_per_day }}"
+            echo "- Target batches/day: ${{ steps.plan.outputs.batches_per_day }}"
+            echo "- Opportunistic extra batches/day: ${{ steps.plan.outputs.opportunistic_extra_batches }}"
             echo "- Remaining schedule range: ${START_BATCH}-${END_BATCH}"
             echo "- Today's batch window: ${{ steps.plan.outputs.current_start }}-${{ steps.plan.outputs.current_end }}"
             echo "- Dispatch attempted: ${{ steps.plan.outputs.should_dispatch }}"
