@@ -314,8 +314,21 @@ Current state:
   `62e2bb8664404ff10abc32e8830aa9dac8a38f38e49ac3e5614a0ad89f5d21ec`.
   Merged sync state recorded 3,397 versions checked, 3,360 records added,
   36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
-  written. Track 07 remains in progress; next scheduled daily window is
-  batches 0031-0033, with batch 0033 treated as the opportunistic third batch.
+  written.
+- **2026-07-01 manual third/fourth batch evidence**: batch 0031 run
+  `28502342645` completed successfully on `main`; local review passed with
+  1,702 records in `records.jsonl`, manifest, and coverage, validation OK,
+  0 records failed, 78 warnings including 77 XML-to-HTML fallback warnings,
+  and manifest SHA-256
+  `203559ef1425477f761a16e22b99c435b2ba52038fc122e4f495ed5cecc71568`.
+  Batch 0032 run `28505079812` also completed successfully on `main`; local
+  review passed with 1,541 records in `records.jsonl`, manifest, and coverage,
+  validation OK, 0 records failed, 0 warnings, and manifest SHA-256
+  `88579cb57d688b3db3ea114734a3538229ec33824de74e1fb8f67af8255e45a1`.
+  The scheduler was retargeted to start at batch 0033 on 2026-07-02 to avoid
+  duplicating the manually completed batches. Track 07 remains in progress;
+  next scheduled daily window is batches 0033-0035, with batch 0035 treated as
+  the opportunistic third batch.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
