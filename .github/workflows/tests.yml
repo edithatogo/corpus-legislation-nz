@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  tests:
+  python-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -53,3 +53,20 @@ jobs:
           uv run nzlc validate
           uv run nzlc manifest
           uv run nzlc coverage-report
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    needs: python-tests
+    if: ${{ always() }}
+    steps:
+      - name: Verify Python test matrix
+        env:
+          PYTHON_TESTS_RESULT: ${{ needs.python-tests.result }}
+        run: |
+          set -euo pipefail
+          if [ "$PYTHON_TESTS_RESULT" != "success" ]; then
+            echo "Python test matrix result: $PYTHON_TESTS_RESULT" >&2
+            exit 1
+          fi
+          echo "Python test matrix passed."
