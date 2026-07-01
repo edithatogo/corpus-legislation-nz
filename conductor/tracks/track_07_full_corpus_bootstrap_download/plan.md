@@ -129,6 +129,23 @@
   1,446 records added, 0 records unchanged, 0 failed, and 13 Parquet files
   written. The next scheduled window is batches 0033-0035, with batch 0035
   treated as the opportunistic third batch.
+- 2026-07-02 daily maximum probe: manual continuation runs covered batches
+  0033-0042 successfully before the next scheduled dispatcher could take over.
+  Runs `28510037176`, `28511889179`, `28513240315`, `28514259299`,
+  `28515266056`, `28516266938`, and `28517300595` covered batches 0033-0039
+  individually on `main`. Run `28518390359` then attempted batches 0040-0044
+  with `max_parallel=3`; batches 0040, 0041, and 0042 validated and uploaded
+  their batch artifacts, while batches 0043 and 0044 completed sync but failed
+  the `Validate, manifest, and coverage-report` step. The failed reports
+  surfaced `missing_xml_url` and `ephemeral_identifier` records for
+  `secondary-legislation_agency-drafted_~...` stable IDs, not an API quota
+  or runner-timeout failure. The current observed fully validated daily maximum
+  is therefore six batches for the new NZ quota window: boundary batch 0037
+  plus batches 0038-0042. Scheduler defaults now resume at batch 0043 on
+  2026-07-03 NZ time with `target_batches_per_day=6` and `max_parallel=3`.
+  Batch 0043 should be retried first; if the validation failure persists,
+  classify or remediate the agency-drafted secondary-legislation records before
+  advancing the schedule.
 
 ## Batch 0001 no-upload evidence
 

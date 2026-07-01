@@ -10,7 +10,7 @@ on:
         description: "First remaining batch number"
         required: true
         type: string
-        default: "33"
+        default: "43"
       end_batch:
         description: "Last remaining batch number"
         required: true
@@ -20,7 +20,7 @@ on:
         description: "Pacific/Auckland date for day 0 of the daily schedule"
         required: true
         type: string
-        default: "2026-07-02"
+        default: "2026-07-03"
       batch_size:
         description: "Work IDs per bootstrap batch"
         required: true
@@ -45,7 +45,7 @@ on:
         description: "Daily batch target; set above the conservative request budget for opportunistic catch-up"
         required: true
         type: string
-        default: "3"
+        default: "6"
       min_seconds_between_requests:
         description: "NZ Legislation API pacing override in seconds"
         required: true
@@ -75,14 +75,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      START_BATCH: ${{ inputs.start_batch || '33' }}
+      START_BATCH: ${{ inputs.start_batch || '43' }}
       END_BATCH: ${{ inputs.end_batch || '68' }}
-      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-07-02' }}
+      SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-07-03' }}
       BATCH_SIZE: ${{ inputs.batch_size || '500' }}
       DAILY_REQUEST_LIMIT: ${{ inputs.daily_request_limit || '10000' }}
       UTILIZATION_PERCENT: ${{ inputs.utilization_percent || '80' }}
       REQUESTS_PER_WORK_ID_BUDGET: ${{ inputs.requests_per_work_id_budget || '8' }}
-      TARGET_BATCHES_PER_DAY: ${{ inputs.target_batches_per_day || '3' }}
+      TARGET_BATCHES_PER_DAY: ${{ inputs.target_batches_per_day || '6' }}
       MIN_SECONDS_BETWEEN_REQUESTS: ${{ inputs.min_seconds_between_requests || '1.0' }}
       MAX_PARALLEL: ${{ inputs.max_parallel || '3' }}
       MAX_WORKS: ${{ inputs.max_works || 'none' }}
