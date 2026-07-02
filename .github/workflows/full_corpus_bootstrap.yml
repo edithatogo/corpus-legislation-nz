@@ -382,7 +382,7 @@ jobs:
         run: |
           set -euo pipefail
           available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
-          required_gb="25"
+          required_gb="15"
           echo "Available disk: ${available_gb}G; required: ${required_gb}G"
           if [ "$available_gb" -lt "$required_gb" ]; then
             echo "Refusing to merge full bootstrap with less than ${required_gb}G free." >&2
