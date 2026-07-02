@@ -17,6 +17,10 @@ conflict-aware; it must never replace or mutate raw source archives.
   confidence, normalization version, selected fields, and provenance links.
 - Preserve source disagreements as reviewable conflict records rather than
   silently choosing one source.
+- Maintain a durable conflict adjudication queue and reviewed override file,
+  such as `gazette_conflict_decisions.jsonl`, with decision ID, affected
+  canonical/source IDs, reviewer, timestamp, rationale, selected value, and
+  supporting evidence.
 - Allow historical-only canonical records only when source-tier and rights
   caveats are explicit.
 - Emit comparison reports with matched, unmatched, conflicting, historical-only,
@@ -37,6 +41,8 @@ conflict-aware; it must never replace or mutate raw source archives.
   source files, low-confidence matches, and historical-only records.
 - Canonical review fails on missing provenance, missing rights, unstable IDs,
   or unacknowledged conflicts.
+- Reviewed conflict decisions are reproducible from the decision queue and
+  override file rather than one-off notes.
 - Comparison output links every canonical record back to at least one source
   archive record.
 - The builder can rerun without changing outputs when inputs are unchanged.

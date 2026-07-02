@@ -7,6 +7,11 @@
       Gazette`.
     - [ ] Decide whether anonymous public API support or `DIGITALNZ_API_KEY`
       is required for regular harvesting.
+- [ ] Task: Create or link the `dnz` dependency track.
+    - [ ] Track Gazette export mode, deterministic paging, JSONL/page
+      manifests, and validation evidence in the `dnz` repo.
+    - [ ] Record the `dnz` issue, PR, or track link in this track before
+      relying on cross-repo behavior.
 - [ ] Task: Define the DigitalNZ source manifest.
     - [ ] Include query parameters, page state, API metadata, timestamps,
       hashes, and output paths.

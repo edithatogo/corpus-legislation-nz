@@ -11,6 +11,10 @@
     - [ ] Set conservative request pacing and bounded smoke-run rules.
     - [ ] State that stealth scraping and access-control bypass are not
       permitted archive mechanisms.
+- [ ] Task: Define the source coverage matrix.
+    - [ ] Track coverage by source ID, year, issue ID, notice ID, page range,
+      and artifact type.
+    - [ ] Define gap, overlap, partial-coverage, and blocked-source states.
 - [ ] Task: Conductor - User Manual Verification 'Source Registry And Rights Boundary' (Protocol in workflow.md)
 
 ## Phase 2 - Shared Schemas
@@ -19,6 +23,7 @@
     - [ ] Require stable ID, source URL, retrieval method, timestamp, hash,
       artifact path, rights note, and source-local identifiers.
     - [ ] Include HTTP metadata where available.
+    - [ ] Include web-archive-quality capture fields where practical.
 - [ ] Task: Define the canonical Gazette schema.
     - [ ] Require canonical source, supporting sources, conflicts, confidence,
       normalization version, and provenance links.
@@ -32,6 +37,7 @@
     - [ ] Cover complete raw source records and canonical records.
     - [ ] Cover missing provenance, missing rights, unstable IDs, and conflict
       fields.
+    - [ ] Cover coverage-matrix gap and overlap reporting.
 - [ ] Task: Document the implementation contract for Tracks 42-47.
     - [ ] Explain that raw archives remain independent evidence layers.
     - [ ] Explain that canonical records are derived and reproducible.

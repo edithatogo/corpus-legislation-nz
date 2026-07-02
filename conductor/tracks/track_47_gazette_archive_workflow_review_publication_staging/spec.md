@@ -17,6 +17,12 @@ review gates pass.
   re-harvesting sources.
 - Produce comparison reports, review reports, manifests, checksums, and
   provenance evidence for every run.
+- Define storage and retention gates for raw PDFs, raw HTML, API JSON pages,
+  normalized records, canonical records, manifests, and workflow artifacts,
+  including compression, deduplication, content-addressed paths, and artifact
+  expiry policy.
+- Preserve web-archive-quality capture evidence for public web resources where
+  practical so source captures can be audited beyond extracted text.
 - Keep public release or external publication disabled until comparison,
   rights, provenance, and conflict gates pass.
 - Retain compatibility with existing corpus-family metadata and publication
@@ -28,6 +34,8 @@ review gates pass.
   source explicitly requires them.
 - External publication must remain protected and review-gated.
 - Artifacts must be deterministic, checksummed, and auditable.
+- Storage growth must be measurable and bounded by documented retention and
+  deduplication policy.
 - Failed or blocked sources must produce evidence artifacts rather than silent
   omissions.
 
@@ -39,6 +47,8 @@ review gates pass.
   unacknowledged conflicts.
 - Artifacts include raw source archives, canonical archive, manifests,
   checksums, comparison report, and review report.
+- Storage/retention review reports expected artifact sizes, dedupe rates, and
+  retained-versus-expired artifact classes.
 - Documentation states that final public promotion requires explicit approval.
 
 ## Out of Scope
