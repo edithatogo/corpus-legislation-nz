@@ -44,6 +44,7 @@ def _merge_sync_states(states: list[dict[str, Any]]) -> dict[str, Any]:
         "records_changed": 0,
         "records_unchanged": 0,
         "records_failed": 0,
+        "records_deferred": 0,
         "parquet_files_written": 0,
     }
     for state in states:
@@ -117,6 +118,7 @@ def merge_bootstrap_artifacts(
         raise ValueError("At least one artifact root is required")
 
     records_by_id: dict[str, dict[str, Any]] = {}
+    deferred_by_id: dict[str, dict[str, Any]] = {}
     sync_states: list[dict[str, Any]] = []
     artifact_summaries: list[dict[str, Any]] = []
     raw_file_count = 0
@@ -134,17 +136,27 @@ def merge_bootstrap_artifacts(
         state = read_json(data_root / "_state" / "sync_state.json", default={}) or {}
         if state:
             sync_states.append(state)
+        deferred_rows = read_jsonl(data_root / "_state" / "metadata_only_deferred.jsonl")
+        for row in deferred_rows:
+            stable_id = str(row.get("stable_id") or "")
+            if stable_id:
+                deferred_by_id[stable_id] = row
         raw_file_count += _copy_tree_contents(data_root / "raw_xml", output_dir / "raw_xml")
         artifact_summaries.append(
             {
                 "artifact_root": artifact_root.as_posix(),
                 "records_jsonl_count": len(records),
                 "sync_state_present": bool(state),
+                "deferred_metadata_count": len(deferred_rows),
             }
         )
 
     merged_records = sorted(records_by_id.values(), key=lambda r: str(r.get("stable_id", "")))
     write_jsonl(output_dir / "records.jsonl", merged_records)
+    write_jsonl(
+        output_dir / "_state" / "metadata_only_deferred.jsonl",
+        sorted(deferred_by_id.values(), key=lambda r: str(r.get("stable_id", ""))),
+    )
     write_partitioned_parquet(merged_records, output_dir / "parquet")
     write_json(output_dir / "_state" / "sync_state.json", _merge_sync_states(sync_states))
 
