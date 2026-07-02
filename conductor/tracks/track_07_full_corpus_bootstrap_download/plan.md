@@ -162,6 +162,13 @@
   `_state/metadata_only_deferred.jsonl`. Together with prior batch 0048, Track
   07 is now validated through batch 0048. The scheduled dispatcher should resume
   at batch 0049 on the next NZ quota window.
+- 2026-07-02 batch 0049 probe: at the user's request, manual run `28559818771`
+  processed batch 0049 on `main` with `max_parallel=1`. The batch and
+  `merge_batches` jobs succeeded. The downloaded `full-corpus-bootstrap-download`
+  review reported `ok=true`, 1,177 validated records, 0 failed records, 0
+  deferred records, 0 missing text/XML risk indicators, 500 works checked, 1,082
+  versions checked, and 21 Parquet files written. Track 07 is now validated
+  through batch 0049, so the scheduled dispatcher should resume at batch 0050.
 
 ## Batch 0001 no-upload evidence
 

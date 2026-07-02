@@ -60,8 +60,8 @@ validation continues to mean the corpus records present have usable text and
 source provenance. Treat deferred rows as explicit gap evidence for official
 website fallback and NZLII redundancy triage before claiming final completeness.
 
-As of run `28558440077`, batches 0043-0048 have validated with this deferral
-path. The scheduled continuation should start at batch 0049 to avoid repeating
+As of run `28559818771`, batches 0043-0049 have validated with this deferral
+path. The scheduled continuation should start at batch 0050 to avoid repeating
 the repaired window.
 
 ```text
