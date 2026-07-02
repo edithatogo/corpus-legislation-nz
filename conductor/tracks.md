@@ -352,6 +352,11 @@ Current state:
   873 validated records, 0 failed records, 0 missing text/XML risk indicators,
   and 1,981 deferred metadata-only records. Track 07 is validated through batch
   0048, and the scheduler is retargeted to start at batch 0049.
+- **2026-07-02 batch 0049 probe**: run `28559818771` succeeded for batch 0049.
+  The merged review was `ok=true` with 1,177 validated records, 0 failed
+  records, 0 deferred records, and 0 missing text/XML risk indicators. Track 07
+  is validated through batch 0049, and the scheduler is retargeted to start at
+  batch 0050.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
