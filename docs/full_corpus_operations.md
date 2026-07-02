@@ -60,11 +60,11 @@ validation continues to mean the corpus records present have usable text and
 source provenance. Treat deferred rows as explicit gap evidence for official
 website fallback and NZLII redundancy triage before claiming final completeness.
 
-As of run `28571640868`, batches 0043-0054 have validated with this deferral
+As of run `28574778367`, batches 0043-0055 have validated with this deferral
 path. Batch 0051 preserved one deterministic not-found retrieval gap for
 `secondary-legislation_pco-drafted_2001_007_en_2007-09-03` in
 `metadata_only_deferred.jsonl` with reason `download_source_not_found`. The
-scheduled continuation should start at batch 0055 to avoid repeating the
+scheduled continuation should start at batch 0056 to avoid repeating the
 repaired window.
 
 ```text
