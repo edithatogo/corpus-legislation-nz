@@ -253,6 +253,13 @@
   0 warnings, 0 missing text/XML risk indicators, 500 works checked, 939
   versions checked, and 9 Parquet files written. Track 07 is now validated
   through batch 0061, so the scheduled dispatcher should resume at batch 0062.
+- 2026-07-03 batch 0062 probe: manual run `28598279801` processed batch 0062
+  on `main` with `max_parallel=1`. The batch and `merge_batches` jobs
+  succeeded. The downloaded `full-corpus-bootstrap-download` review reported
+  `ok=true`, 1,061 validated records, 0 failed records, 0 deferred records,
+  0 warnings, 0 missing text/XML risk indicators, 500 works checked, 966
+  versions checked, and 10 Parquet files written. Track 07 is now validated
+  through batch 0062, so the scheduled dispatcher should resume at batch 0063.
 
 ## Batch 0001 no-upload evidence
 
