@@ -1519,3 +1519,12 @@ by comparing independent source archives without replacing raw source evidence.
 Goal: Stage workflows and review gates for source-specific Gazette archives and
 the derived canonical Gazette archive, keeping publication artifact-first and
 approval-gated.
+
+---
+
+- [ ] **Track: Gazette freshness and change detection**
+*Link: [./tracks/track_48_gazette_freshness_change_detection/](./tracks/track_48_gazette_freshness_change_detection/)*
+
+Goal: Detect new and changed NZ Gazette material across official and DigitalNZ
+sources, persist freshness state, and enqueue targeted source refreshes and
+canonical rebuilds.

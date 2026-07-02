@@ -12,6 +12,9 @@ direct replacement for official Gazette artifacts.
 - Reuse or harden `C:\Users\60217257\OneDrive - Flinders\repos\legal-nz\dnz`
   for DigitalNZ search/export rather than adding a duplicate DigitalNZ client
   inside this repository.
+- Create or link a `dnz` repo issue/track for Gazette export mode, public API
+  credential behavior, deterministic paging, JSONL/page manifest output, and
+  validation evidence.
 - Query DigitalNZ for `primary_collection=New Zealand Gazette` with resumable,
   deterministic paging and stable JSONL output.
 - Preserve complete DigitalNZ records, including IDs, titles, dates,
@@ -38,6 +41,8 @@ direct replacement for official Gazette artifacts.
   preservation.
 - The track records whether changes are required in `dnz` and how they are
   validated.
+- Any required `dnz` work is tracked in the `dnz` repository and referenced
+  from this track before this repository depends on it.
 - DigitalNZ records can feed Track 46 comparison without mutating raw official
   source archives.
 
