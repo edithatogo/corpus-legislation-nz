@@ -347,6 +347,11 @@ Current state:
   defers these metadata-only versions into `_state/metadata_only_deferred.jsonl`
   with `records_deferred`, keeping invalid empty rows out of the validated
   corpus while preserving evidence for redundancy triage.
+- **2026-07-02 repair run**: PR #75 merged as `63418d9`; run `28558440077`
+  reran batches 0043-0047 and succeeded. The merged review was `ok=true` with
+  873 validated records, 0 failed records, 0 missing text/XML risk indicators,
+  and 1,981 deferred metadata-only records. Track 07 is validated through batch
+  0048, and the scheduler is retargeted to start at batch 0049.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
