@@ -33,6 +33,14 @@ def _records_failed(sync_state: dict[str, Any]) -> int:
     return int(value)
 
 
+def _records_deferred(sync_state: dict[str, Any], data_root: Path) -> int:
+    stats = sync_state.get("last_stats") or {}
+    value = stats.get("records_deferred")
+    if value is not None:
+        return int(value or 0)
+    return len(read_jsonl(data_root / "_state" / "metadata_only_deferred.jsonl"))
+
+
 def _browser_fallback_warnings(warnings: list[str]) -> list[str]:
     return [
         warning
@@ -102,6 +110,7 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
     sync_state = read_json(data_root / "_state" / "sync_state.json", default={}) or {}
     records = read_jsonl(data_root / "records.jsonl")
     source_redundancy = summarize_source_redundancy(records)
+    deferred_metadata = read_jsonl(data_root / "_state" / "metadata_only_deferred.jsonl")
 
     warnings = _warning_texts(sync_state)
     failed_warnings = [warning for warning in warnings if "failed" in warning.lower()]
@@ -118,6 +127,7 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
         default=None,
     )
     records_failed = _records_failed(sync_state)
+    records_deferred = _records_deferred(sync_state, data_root)
     validation_ok = bool(validation.get("ok")) if validation else False
     manifest_sha256 = manifest.get("manifest_sha256")
     records_count = len(records)
@@ -143,6 +153,7 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
             "validation_ok": validation_ok,
             "manifest_sha256": manifest_sha256,
             "records_failed": records_failed,
+            "records_deferred": records_deferred,
             "risk_indicators": risk_counts,
             "api_boundary_decision": period_context.get("api_boundary_decision"),
         }
@@ -170,6 +181,11 @@ def build_full_corpus_bootstrap_review(root: Path) -> dict[str, Any]:
         "manifest_record_count": manifest_record_count,
         "coverage_record_count": coverage_record_count,
         "records_failed": records_failed,
+        "records_deferred": records_deferred,
+        "deferred_metadata_count": len(deferred_metadata),
+        "deferred_metadata_stable_ids": [
+            str(row.get("stable_id") or "") for row in deferred_metadata[:50]
+        ],
         "failed_version_warnings": failed_warnings,
         "warning_count": len(warnings),
         "xml_to_html_fallback_warning_count": len(xml_fallback_warnings),

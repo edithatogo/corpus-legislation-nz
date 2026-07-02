@@ -341,6 +341,12 @@ Current state:
   for fully validated daily progress is recorded as six batches in the new NZ
   quota window, and the scheduler now resumes at batch 0043 on 2026-07-03
   NZ time with `target_batches_per_day=6` and `max_parallel=3`.
+- **2026-07-02 metadata-only remediation**: run `28528178088` confirmed the
+  blocking validation errors were empty text and missing `text`/`source_url`
+  fields for API-visible agency-drafted secondary-legislation records. Sync now
+  defers these metadata-only versions into `_state/metadata_only_deferred.jsonl`
+  with `records_deferred`, keeping invalid empty rows out of the validated
+  corpus while preserving evidence for redundancy triage.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 

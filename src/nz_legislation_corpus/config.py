@@ -137,6 +137,10 @@ class Settings(BaseSettings):
     def sync_state_path(self) -> Path:
         return self.state_dir / "sync_state.json"
 
+    @property
+    def deferred_metadata_path(self) -> Path:
+        return self.state_dir / "metadata_only_deferred.jsonl"
+
 
 def require(value: str | None, name: str) -> str:
     if not value:

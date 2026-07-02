@@ -146,6 +146,13 @@
   Batch 0043 should be retried first; if the validation failure persists,
   classify or remediate the agency-drafted secondary-legislation records before
   advancing the schedule.
+- 2026-07-02 remediation: validation logs for run `28528178088` showed the
+  blocking errors were `empty_text` and missing required `text`/`source_url`
+  fields on agency-drafted secondary-legislation records. The pipeline now
+  defers metadata-only versions with no downloadable XML/HTML body into
+  `data/_state/metadata_only_deferred.jsonl`, records `records_deferred`, and
+  keeps those rows out of `records.jsonl` so batch artifacts can validate while
+  preserving explicit gap evidence for official website/NZLII redundancy triage.
 
 ## Batch 0001 no-upload evidence
 

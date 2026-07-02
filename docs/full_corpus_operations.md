@@ -52,6 +52,14 @@ which gives an approximate upper-bound of 2,731 API requests. Two similar
 batches remain comfortably under 8,000 requests/day; three fallback-heavy
 batches could be close to the cap.
 
+If a batch discovers API-visible records with no downloadable XML/HTML body,
+`nzlc sync` defers those metadata-only versions into
+`data/_state/metadata_only_deferred.jsonl` and reports `records_deferred` in
+sync state. These deferred rows are not written to `records.jsonl`, so
+validation continues to mean the corpus records present have usable text and
+source provenance. Treat deferred rows as explicit gap evidence for official
+website fallback and NZLII redundancy triage before claiming final completeness.
+
 ```text
 start_batch=24
 end_batch=68
