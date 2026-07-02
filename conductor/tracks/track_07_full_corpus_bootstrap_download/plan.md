@@ -169,6 +169,20 @@
   deferred records, 0 missing text/XML risk indicators, 500 works checked, 1,082
   versions checked, and 21 Parquet files written. Track 07 is now validated
   through batch 0049, so the scheduled dispatcher should resume at batch 0050.
+- 2026-07-02 batches 0050-0051 probes: manual run `28561731954` processed
+  batch 0050 on `main` and completed successfully, including batch validation,
+  `merge_batches`, and `full-corpus-bootstrap-download` upload. Manual run
+  `28563126811` first processed batch 0051 and validated 1,181 records, but
+  merge review failed because
+  `secondary-legislation_pco-drafted_2001_007_en_2007-09-03` returned 404 at
+  its official exposed content URL. PR #78 merged the repair that defers
+  deterministic not-found content downloads with reason `download_source_not_found`.
+  Repair rerun `28564452205` then completed successfully. The downloaded
+  `full-corpus-bootstrap-download` review reported `ok=true`, 1,181 validated
+  records, 1 deferred metadata retrieval gap, 0 failed records, 0 missing
+  text/XML risk indicators, 500 works checked, 1,087 versions checked, and 11
+  Parquet files written. Track 07 is now validated through batch 0051, so the
+  scheduled dispatcher should resume at batch 0052.
 
 ## Batch 0001 no-upload evidence
 
