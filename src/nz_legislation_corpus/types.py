@@ -18,6 +18,7 @@ class SyncStats:
     records_changed: int = 0
     records_unchanged: int = 0
     records_failed: int = 0
+    records_deferred: int = 0
     parquet_files_written: int = 0
     warnings: list[str] = field(default_factory=list)
 
@@ -29,6 +30,7 @@ class SyncStats:
             "records_changed": self.records_changed,
             "records_unchanged": self.records_unchanged,
             "records_failed": self.records_failed,
+            "records_deferred": self.records_deferred,
             "parquet_files_written": self.parquet_files_written,
             "warnings": self.warnings,
         }

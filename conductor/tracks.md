@@ -298,6 +298,92 @@ Current state:
   for full-bootstrap evidence, but it is not the final agent-handoff shape.
   Track 36 now owns period-sharded seed manifests, annual recent shards,
   per-period checkpoint artifacts, and period-level review/handoff status.
+- **2026-07-01 scheduler and continuation evidence**: PR #67 merged the
+  scheduled dispatcher onto `main`. It initially used a conservative two-batch
+  daily cadence under the 8,000 request/day target. Manual run `28496717521`
+  covered batches 0029-0030 with `max_parallel=2` and completed successfully.
+  After that success, the scheduler was retargeted to start at batch 0031 on
+  2026-07-02 with `target_batches_per_day=3` and `max_parallel=3`: two batches
+  are within the conservative request budget, and the third is an opportunistic
+  catch-up batch to resume or rerun in the next daily window if unsuccessful.
+  Local review of the merged
+  `full-corpus-bootstrap-download` artifact passed: 3,455 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  940 warnings, including 937 XML-to-HTML fallback warnings; 0 browser
+  fallback warnings; manifest SHA-256
+  `62e2bb8664404ff10abc32e8830aa9dac8a38f38e49ac3e5614a0ad89f5d21ec`.
+  Merged sync state recorded 3,397 versions checked, 3,360 records added,
+  36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
+  written.
+- **2026-07-01 manual third/fourth batch evidence**: batch 0031 run
+  `28502342645` completed successfully on `main`; local review passed with
+  1,702 records in `records.jsonl`, manifest, and coverage, validation OK,
+  0 records failed, 78 warnings including 77 XML-to-HTML fallback warnings,
+  and manifest SHA-256
+  `203559ef1425477f761a16e22b99c435b2ba52038fc122e4f495ed5cecc71568`.
+  Batch 0032 run `28505079812` also completed successfully on `main`; local
+  review passed with 1,541 records in `records.jsonl`, manifest, and coverage,
+  validation OK, 0 records failed, 0 warnings, and manifest SHA-256
+  `88579cb57d688b3db3ea114734a3538229ec33824de74e1fb8f67af8255e45a1`.
+  The scheduler was retargeted to start at batch 0033 on 2026-07-02 to avoid
+  duplicating the manually completed batches. Track 07 remains in progress;
+  next scheduled daily window is batches 0033-0035, with batch 0035 treated as
+  the opportunistic third batch.
+- **2026-07-02 daily maximum probe**: manual continuation advanced batches
+  0033-0042. Runs `28510037176`, `28511889179`, `28513240315`,
+  `28514259299`, `28515266056`, `28516266938`, and `28517300595` completed
+  batches 0033-0039 individually. Run `28518390359` attempted batches
+  0040-0044 with `max_parallel=3`; batches 0040-0042 validated and uploaded
+  batch artifacts, while batches 0043-0044 failed after sync during
+  `Validate, manifest, and coverage-report` with `missing_xml_url` and
+  `ephemeral_identifier` records for agency-drafted secondary legislation.
+  This was not an observed API quota failure. The current operational maximum
+  for fully validated daily progress is recorded as six batches in the new NZ
+  quota window, and the scheduler now resumes at batch 0043 on 2026-07-03
+  NZ time with `target_batches_per_day=6` and `max_parallel=3`.
+- **2026-07-02 metadata-only remediation**: run `28528178088` confirmed the
+  blocking validation errors were empty text and missing `text`/`source_url`
+  fields for API-visible agency-drafted secondary-legislation records. Sync now
+  defers these metadata-only versions into `_state/metadata_only_deferred.jsonl`
+  with `records_deferred`, keeping invalid empty rows out of the validated
+  corpus while preserving evidence for redundancy triage.
+- **2026-07-02 repair run**: PR #75 merged as `63418d9`; run `28558440077`
+  reran batches 0043-0047 and succeeded. The merged review was `ok=true` with
+  873 validated records, 0 failed records, 0 missing text/XML risk indicators,
+  and 1,981 deferred metadata-only records. Track 07 is validated through batch
+  0048, and the scheduler is retargeted to start at batch 0049.
+- **2026-07-02 batch 0049 probe**: run `28559818771` succeeded for batch 0049.
+  The merged review was `ok=true` with 1,177 validated records, 0 failed
+  records, 0 deferred records, and 0 missing text/XML risk indicators. Track 07
+  is validated through batch 0049, and the scheduler is retargeted to start at
+  batch 0050.
+- **2026-07-02 batches 0050-0051 probes**: run `28561731954` succeeded for
+  batch 0050. Run `28563126811` first validated batch 0051 records but failed
+  merge review on one deterministic 404 retrieval gap for
+  `secondary-legislation_pco-drafted_2001_007_en_2007-09-03`. PR #78 merged the
+  `download_source_not_found` deferral repair, and repair rerun `28564452205`
+  succeeded. The merged review was `ok=true` with 1,181 validated records,
+  1 deferred metadata retrieval gap, 0 failed records, and 0 missing text/XML
+  risk indicators. Track 07 is validated through batch 0051, and the scheduler
+  is retargeted to start at batch 0052.
+- **2026-07-02 batch 0052 probe**: run `28566570973` succeeded for batch 0052.
+  The merged review was `ok=true` with 1,170 validated records, 0 failed
+  records, 0 deferred records, 0 warnings, and 0 missing text/XML risk
+  indicators. Sync state recorded 500 works checked, 1,075 versions checked,
+  1,075 records added, and 10 Parquet files written. Track 07 is validated
+  through batch 0052, and the scheduler is retargeted to start at batch 0053.
+- **2026-07-02 batch 0053 probe**: run `28568946847` succeeded for batch 0053.
+  The merged review was `ok=true` with 1,213 validated records, 0 failed
+  records, 0 deferred records, 0 warnings, and 0 missing text/XML risk
+  indicators. Sync state recorded 500 works checked, 1,118 versions checked,
+  1,118 records added, and 10 Parquet files written. Track 07 is validated
+  through batch 0053, and the scheduler is retargeted to start at batch 0054.
+- **2026-07-02 batch 0054 probe**: run `28571640868` succeeded for batch 0054.
+  The merged review was `ok=true` with 1,180 validated records, 0 failed
+  records, 0 deferred records, 0 warnings, and 0 missing text/XML risk
+  indicators. Sync state recorded 500 works checked, 1,085 versions checked,
+  1,085 records added, and 9 Parquet files written. Track 07 is validated
+  through batch 0054, and the scheduler is retargeted to start at batch 0055.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 

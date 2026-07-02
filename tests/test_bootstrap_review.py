@@ -16,6 +16,7 @@ def _write_artifact(
     root: Path,
     *,
     records_failed: int = 0,
+    records_deferred: int = 0,
     validation_ok: bool = True,
     manifest_record_count: int | None = None,
     risk_indicators: dict[str, int] | None = None,
@@ -57,9 +58,26 @@ def _write_artifact(
     warnings = list(warnings or [])
     if records_failed:
         warnings.append("version 123 failed: HTTP 404")
+    if records_deferred:
+        write_jsonl(
+            data / "_state" / "metadata_only_deferred.jsonl",
+            [
+                {
+                    "schema_version": "1.0",
+                    "stable_id": "secondary-legislation_agency-drafted_2026_~123",
+                    "reason": "metadata_only_no_downloadable_format",
+                }
+            ],
+        )
     write_json(
         data / "_state" / "sync_state.json",
-        {"last_stats": {"records_failed": records_failed, "warnings": warnings}},
+        {
+            "last_stats": {
+                "records_failed": records_failed,
+                "records_deferred": records_deferred,
+                "warnings": warnings,
+            }
+        },
     )
 
 
@@ -88,6 +106,23 @@ def test_full_corpus_bootstrap_review_flags_failures(tmp_path: Path) -> None:
     assert report["records_failed"] == 1
     assert report["failed_version_warnings"] == ["version 123 failed: HTTP 404"]
     assert report["triage_required"] is True
+
+
+@pytest.mark.unit
+def test_full_corpus_bootstrap_review_surfaces_deferred_metadata(
+    tmp_path: Path,
+) -> None:
+    _write_artifact(tmp_path, records_deferred=1)
+
+    report = build_full_corpus_bootstrap_review(tmp_path)
+
+    assert report["ok"] is True
+    assert report["records_deferred"] == 1
+    assert report["deferred_metadata_count"] == 1
+    assert report["deferred_metadata_stable_ids"] == [
+        "secondary-legislation_agency-drafted_2026_~123"
+    ]
+    assert report["triage_required"] is False
 
 
 @pytest.mark.unit
@@ -221,6 +256,7 @@ def test_full_corpus_bootstrap_review_includes_period_context(tmp_path: Path) ->
         "validation_ok": True,
         "manifest_sha256": "abc123",
         "records_failed": 0,
+        "records_deferred": 0,
         "risk_indicators": {
             "missing_text_records": 0,
             "missing_xml_url_records": 0,

@@ -72,12 +72,19 @@
   Merged sync state recorded 1,000 works checked, 1,582 versions checked,
   1,582 records added, and 22 Parquet files written. Next daily window is
   batches 0027-0028 with `max_parallel=2`.
-- 2026-07-01 scheduler utilisation update: the automatic dispatcher now starts
-  at batch 0029 with schedule day 0 on 2026-07-01, after manual continuation
-  covered batches 0024-0028. It keeps the maximum conservative daily cadence:
+- 2026-07-01 scheduler utilisation update: the automatic dispatcher initially
+  started at batch 0029 with schedule day 0 on 2026-07-01, after manual
+  continuation covered batches 0024-0028. The conservative budget remains
   10,000 API requests/day, 80% utilisation (8,000 usable requests/day), 500
-  work IDs/batch, 8 requests/work ID budget, and `max_parallel=2`, which yields
-  two fresh batches/day without duplicating already-consumed quota.
+  work IDs/batch, and 8 requests/work ID budget, which yields two guaranteed
+  batches/day. After batches 0029-0030 succeeded, the scheduler was retargeted
+  to start at batch 0031 on 2026-07-02 with `target_batches_per_day=3` and
+  `max_parallel=3`: two batches are within the conservative budget and the
+  third is an opportunistic catch-up batch. Batches 0031 and 0032 were then
+  run manually in the same NZ quota window, so the scheduler was retargeted
+  again to start at batch 0033 on 2026-07-02 to avoid duplicate dispatches.
+  If an opportunistic batch fails or exceeds quota, resume or rerun that batch
+  in the next daily window before advancing.
 - 2026-07-01 batch 0028 repair evidence: run `28464210390` completed
   successfully after the dated-URL fallback patch. Local review of the
   downloaded `full-corpus-bootstrap-download` artifact passed: 1,389 records in
@@ -89,6 +96,114 @@
   `act_public_1992_27_en_1992-04-10` URL was recovered through the
   `1992-04-10A` alternate and now maps to the same content hash as the
   `act_public_1992_27_en_1992-04-10A` version.
+- 2026-07-01 batches 0029-0030 continuation evidence: run `28496717521`
+  completed successfully with `max_parallel=2`. Batch 0029 completed in
+  1h00m44s, batch 0030 completed in 1h22m45s, and the `merge_batches` job
+  completed in 53s. Local review of the downloaded merged
+  `full-corpus-bootstrap-download` artifact passed: 3,455 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  940 warnings, including 937 XML-to-HTML fallback warnings; 0 browser
+  fallback warnings; manifest SHA-256
+  `62e2bb8664404ff10abc32e8830aa9dac8a38f38e49ac3e5614a0ad89f5d21ec`.
+  Merged sync state recorded 3,397 versions checked, 3,360 records added,
+  36 records unchanged, 1 record changed, 0 failed, and 23 Parquet files
+  written. The downloaded local review report was written to ignored generated
+  evidence path `generated/full-corpus-bootstrap/review_report_28496717521_merged.json`.
+- 2026-07-01 manual third-batch evidence: run `28502342645` covered batch
+  0031 on `main` and completed successfully. Batch 0031 completed in 49m14s,
+  and the `merge_batches` job completed in 38s. Local review of the downloaded
+  merged `full-corpus-bootstrap-download` artifact passed: 1,702 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  78 warnings, including 77 XML-to-HTML fallback warnings; 0 browser fallback
+  warnings; manifest SHA-256
+  `203559ef1425477f761a16e22b99c435b2ba52038fc122e4f495ed5cecc71568`.
+  Merged sync state recorded 1,627 versions checked, 1,607 records added,
+  20 records unchanged, 0 failed, and 12 Parquet files written.
+- 2026-07-01 manual fourth-batch evidence: run `28505079812` covered batch
+  0032 on `main` and completed successfully. Local review of the downloaded
+  merged `full-corpus-bootstrap-download` artifact passed: 1,541 records in
+  `records.jsonl`, manifest, and coverage; validation OK; 0 records failed;
+  0 warnings; manifest SHA-256
+  `88579cb57d688b3db3ea114734a3538229ec33824de74e1fb8f67af8255e45a1`.
+  Merged sync state recorded 500 works checked, 1,446 versions checked,
+  1,446 records added, 0 records unchanged, 0 failed, and 13 Parquet files
+  written. The next scheduled window is batches 0033-0035, with batch 0035
+  treated as the opportunistic third batch.
+- 2026-07-02 daily maximum probe: manual continuation runs covered batches
+  0033-0042 successfully before the next scheduled dispatcher could take over.
+  Runs `28510037176`, `28511889179`, `28513240315`, `28514259299`,
+  `28515266056`, `28516266938`, and `28517300595` covered batches 0033-0039
+  individually on `main`. Run `28518390359` then attempted batches 0040-0044
+  with `max_parallel=3`; batches 0040, 0041, and 0042 validated and uploaded
+  their batch artifacts, while batches 0043 and 0044 completed sync but failed
+  the `Validate, manifest, and coverage-report` step. The failed reports
+  surfaced `missing_xml_url` and `ephemeral_identifier` records for
+  `secondary-legislation_agency-drafted_~...` stable IDs, not an API quota
+  or runner-timeout failure. The current observed fully validated daily maximum
+  is therefore six batches for the new NZ quota window: boundary batch 0037
+  plus batches 0038-0042. Scheduler defaults now resume at batch 0043 on
+  2026-07-03 NZ time with `target_batches_per_day=6` and `max_parallel=3`.
+  Batch 0043 should be retried first; if the validation failure persists,
+  classify or remediate the agency-drafted secondary-legislation records before
+  advancing the schedule.
+- 2026-07-02 remediation: validation logs for run `28528178088` showed the
+  blocking errors were `empty_text` and missing required `text`/`source_url`
+  fields on agency-drafted secondary-legislation records. The pipeline now
+  defers metadata-only versions with no downloadable XML/HTML body into
+  `data/_state/metadata_only_deferred.jsonl`, records `records_deferred`, and
+  keeps those rows out of `records.jsonl` so batch artifacts can validate while
+  preserving explicit gap evidence for official website/NZLII redundancy triage.
+- 2026-07-02 repair validation: PR #75 merged as `63418d9`, and manual run
+  `28558440077` reran batches 0043-0047 on `main` with `max_parallel=3`.
+  All five batch jobs validated and uploaded artifacts, the `merge_batches`
+  job succeeded, and the merged `full-corpus-bootstrap-download` review reported
+  `ok=true`, 873 validated records, 0 failed records, 0 missing text/XML risk
+  indicators, and 1,981 deferred metadata-only records preserved in
+  `_state/metadata_only_deferred.jsonl`. Together with prior batch 0048, Track
+  07 is now validated through batch 0048. The scheduled dispatcher should resume
+  at batch 0049 on the next NZ quota window.
+- 2026-07-02 batch 0049 probe: at the user's request, manual run `28559818771`
+  processed batch 0049 on `main` with `max_parallel=1`. The batch and
+  `merge_batches` jobs succeeded. The downloaded `full-corpus-bootstrap-download`
+  review reported `ok=true`, 1,177 validated records, 0 failed records, 0
+  deferred records, 0 missing text/XML risk indicators, 500 works checked, 1,082
+  versions checked, and 21 Parquet files written. Track 07 is now validated
+  through batch 0049, so the scheduled dispatcher should resume at batch 0050.
+- 2026-07-02 batches 0050-0051 probes: manual run `28561731954` processed
+  batch 0050 on `main` and completed successfully, including batch validation,
+  `merge_batches`, and `full-corpus-bootstrap-download` upload. Manual run
+  `28563126811` first processed batch 0051 and validated 1,181 records, but
+  merge review failed because
+  `secondary-legislation_pco-drafted_2001_007_en_2007-09-03` returned 404 at
+  its official exposed content URL. PR #78 merged the repair that defers
+  deterministic not-found content downloads with reason `download_source_not_found`.
+  Repair rerun `28564452205` then completed successfully. The downloaded
+  `full-corpus-bootstrap-download` review reported `ok=true`, 1,181 validated
+  records, 1 deferred metadata retrieval gap, 0 failed records, 0 missing
+  text/XML risk indicators, 500 works checked, 1,087 versions checked, and 11
+  Parquet files written. Track 07 is now validated through batch 0051, so the
+  scheduled dispatcher should resume at batch 0052.
+- 2026-07-02 batch 0052 probe: manual run `28566570973` processed batch 0052
+  on `main` with `max_parallel=1`. The batch and `merge_batches` jobs
+  succeeded. The downloaded `full-corpus-bootstrap-download` review reported
+  `ok=true`, 1,170 validated records, 0 failed records, 0 deferred records,
+  0 warnings, 0 missing text/XML risk indicators, 500 works checked, 1,075
+  versions checked, and 10 Parquet files written. Track 07 is now validated
+  through batch 0052, so the scheduled dispatcher should resume at batch 0053.
+- 2026-07-02 batch 0053 probe: manual run `28568946847` processed batch 0053
+  on `main` with `max_parallel=1`. The batch and `merge_batches` jobs
+  succeeded. The downloaded `full-corpus-bootstrap-download` review reported
+  `ok=true`, 1,213 validated records, 0 failed records, 0 deferred records,
+  0 warnings, 0 missing text/XML risk indicators, 500 works checked, 1,118
+  versions checked, and 10 Parquet files written. Track 07 is now validated
+  through batch 0053, so the scheduled dispatcher should resume at batch 0054.
+- 2026-07-02 batch 0054 probe: manual run `28571640868` processed batch 0054
+  on `main` with `max_parallel=1`. The batch and `merge_batches` jobs
+  succeeded. The downloaded `full-corpus-bootstrap-download` review reported
+  `ok=true`, 1,180 validated records, 0 failed records, 0 deferred records,
+  0 warnings, 0 missing text/XML risk indicators, 500 works checked, 1,085
+  versions checked, and 9 Parquet files written. Track 07 is now validated
+  through batch 0054, so the scheduled dispatcher should resume at batch 0055.
 
 ## Batch 0001 no-upload evidence
 

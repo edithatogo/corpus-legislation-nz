@@ -116,6 +116,12 @@ def _download_first_available_format(
     """Download XML when available, falling back to HTML for older works without XML."""
     warnings: list[str] = []
     candidates = [(fmt, url) for fmt in ("xml", "html") if (url := client.format_url(version, fmt))]
+    if not candidates:
+        warnings.append(
+            "No downloadable XML/HTML format for "
+            f"{version.get('version_id') or version.get('work_id') or '<unknown>'}"
+        )
+        return b"", None, None, warnings
     for fmt, url in candidates:
         urls = [url]
         alternate_url = _alternate_letter_suffix_url(url)
@@ -149,6 +155,37 @@ def _download_first_available_format(
                 continue
             raise last_exc
     return b"", None, None, warnings
+
+
+def _is_not_found_download_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return "404" in text and "not found" in text
+
+
+def _deferred_metadata_record(
+    *,
+    record: dict[str, Any],
+    version: dict[str, Any],
+    reason: str,
+    warnings: list[str],
+) -> dict[str, Any]:
+    return {
+        "schema_version": "1.0",
+        "stable_id": record.get("stable_id") or "",
+        "work_id": record.get("work_id") or version.get("work_id") or "",
+        "version_id": record.get("version_id") or version.get("version_id") or "",
+        "title": record.get("title") or version.get("title") or "",
+        "legislation_type": record.get("legislation_type") or "",
+        "version_date": record.get("version_date") or "",
+        "reason": reason,
+        "warnings": warnings,
+        "api_url": record.get("api_url") or "",
+        "xml_url": record.get("xml_url") or "",
+        "html_url": record.get("html_url") or "",
+        "pdf_url": record.get("pdf_url") or "",
+        "id_is_ephemeral": bool(record.get("id_is_ephemeral")),
+        "raw_version_metadata": version,
+    }
 
 
 @app.command()
@@ -252,6 +289,15 @@ def sync(
     existing_records = (
         {} if replace else {str(r.get("stable_id")): r for r in existing_rows if r.get("stable_id")}
     )
+    deferred_metadata = (
+        {}
+        if replace
+        else {
+            str(r.get("stable_id")): r
+            for r in read_jsonl(settings.deferred_metadata_path)
+            if r.get("stable_id")
+        }
+    )
     records: list[dict[str, Any]] = []
     seen_work_ids_for_stats: set[str] = set()
 
@@ -274,10 +320,20 @@ def sync(
                 if version_id and "administering_agencies" not in version_stub
                 else version_stub
             )
-            raw_content, raw_url, raw_type, download_warnings = _download_first_available_format(
-                client,
-                version,
-            )
+            try:
+                raw_content, raw_url, raw_type, download_warnings = (
+                    _download_first_available_format(
+                        client,
+                        version,
+                    )
+                )
+            except Exception as download_exc:
+                if not _is_not_found_download_error(download_exc):
+                    raise
+                raw_content = b""
+                raw_url = None
+                raw_type = None
+                download_warnings = [f"Download source not found: {download_exc}"]
             stats.warnings.extend(download_warnings)
             record = normalize_version_record(
                 version,
@@ -286,6 +342,24 @@ def sync(
                 raw_content_type=raw_type,
                 pipeline_version=settings.pipeline_version,
             )
+            if not raw_content and (
+                not str(record.get("text") or "").strip()
+                or not str(record.get("source_url") or "").strip()
+            ):
+                stats.records_deferred += 1
+                reason = (
+                    "download_source_not_found"
+                    if any("not found" in warning.lower() for warning in download_warnings)
+                    else "metadata_only_no_downloadable_format"
+                )
+                deferred_metadata[str(record["stable_id"])] = _deferred_metadata_record(
+                    record=record,
+                    version=version,
+                    reason=reason,
+                    warnings=download_warnings,
+                )
+                stats.warnings.append(f"Deferred {record['stable_id']}: {reason}")
+                continue
             if raw_content:
                 suffix = _raw_suffix_for_content_type(raw_type)
                 raw_path = _safe_write_raw(
@@ -337,6 +411,10 @@ def sync(
         )
     merged_records = sorted(existing_records.values(), key=lambda r: str(r.get("stable_id", "")))
     records_changed_on_disk = write_jsonl_if_changed(settings.records_jsonl_path, merged_records)
+    write_jsonl_if_changed(
+        settings.deferred_metadata_path,
+        sorted(deferred_metadata.values(), key=lambda r: str(r.get("stable_id", ""))),
+    )
     parquet_missing = not settings.parquet_dir.exists() or not any(
         settings.parquet_dir.rglob("*.parquet")
     )
