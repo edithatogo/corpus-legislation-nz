@@ -41,9 +41,16 @@ def _record(stable_id: str, *, title: str) -> dict[str, object]:
     }
 
 
-def _write_artifact(root: Path, records: list[dict[str, object]]) -> None:
+def _write_artifact(
+    root: Path,
+    records: list[dict[str, object]],
+    *,
+    deferred: list[dict[str, object]] | None = None,
+) -> None:
     data = root / "data"
     write_jsonl(data / "records.jsonl", records)
+    if deferred:
+        write_jsonl(data / "_state" / "metadata_only_deferred.jsonl", deferred)
     write_json(
         data / "_state" / "sync_state.json",
         {
@@ -55,6 +62,7 @@ def _write_artifact(root: Path, records: list[dict[str, object]]) -> None:
                 "records_changed": 0,
                 "records_unchanged": 0,
                 "records_failed": 0,
+                "records_deferred": len(deferred or []),
                 "warnings": [],
                 "parquet_files_written": 1,
             },
@@ -95,6 +103,39 @@ def test_merge_bootstrap_artifacts_dedupes_and_reviews(tmp_path: Path) -> None:
     assert (output / "manifests" / "coverage_report.json").exists()
     assert (output / "_state" / "sync_state.json").exists()
     assert build_full_corpus_bootstrap_review(output)["ok"] is True
+
+
+@pytest.mark.unit
+def test_merge_bootstrap_artifacts_preserves_deferred_metadata(tmp_path: Path) -> None:
+    artifact_a = tmp_path / "artifact-a"
+    output = tmp_path / "merged"
+    deferred: list[dict[str, object]] = [
+        {
+            "schema_version": "1.0",
+            "stable_id": "secondary-legislation_agency-drafted_2026_~123",
+            "reason": "metadata_only_no_downloadable_format",
+        }
+    ]
+    _write_artifact(
+        artifact_a,
+        [_record("act_public_2026_1", title="One")],
+        deferred=deferred,
+    )
+
+    merge_bootstrap_artifacts([artifact_a], output)
+
+    merged_deferred = [
+        json.loads(line)
+        for line in (output / "_state" / "metadata_only_deferred.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    review = build_full_corpus_bootstrap_review(output)
+    assert merged_deferred == deferred
+    assert review["records_deferred"] == 1
+    assert review["deferred_metadata_stable_ids"] == [
+        "secondary-legislation_agency-drafted_2026_~123"
+    ]
 
 
 @pytest.mark.unit

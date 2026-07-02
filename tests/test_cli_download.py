@@ -195,4 +195,4 @@ def test_download_neither_available() -> None:
     assert raw_content == b""
     assert url is None
     assert content_type is None
-    assert warnings == []
+    assert warnings == ["No downloadable XML/HTML format for test-act-2026/latest"]
