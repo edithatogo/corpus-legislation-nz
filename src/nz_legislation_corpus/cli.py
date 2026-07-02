@@ -157,6 +157,11 @@ def _download_first_available_format(
     return b"", None, None, warnings
 
 
+def _is_not_found_download_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return "404" in text and "not found" in text
+
+
 def _deferred_metadata_record(
     *,
     record: dict[str, Any],
@@ -315,10 +320,20 @@ def sync(
                 if version_id and "administering_agencies" not in version_stub
                 else version_stub
             )
-            raw_content, raw_url, raw_type, download_warnings = _download_first_available_format(
-                client,
-                version,
-            )
+            try:
+                raw_content, raw_url, raw_type, download_warnings = (
+                    _download_first_available_format(
+                        client,
+                        version,
+                    )
+                )
+            except Exception as download_exc:
+                if not _is_not_found_download_error(download_exc):
+                    raise
+                raw_content = b""
+                raw_url = None
+                raw_type = None
+                download_warnings = [f"Download source not found: {download_exc}"]
             stats.warnings.extend(download_warnings)
             record = normalize_version_record(
                 version,
@@ -332,7 +347,11 @@ def sync(
                 or not str(record.get("source_url") or "").strip()
             ):
                 stats.records_deferred += 1
-                reason = "metadata_only_no_downloadable_format"
+                reason = (
+                    "download_source_not_found"
+                    if any("not found" in warning.lower() for warning in download_warnings)
+                    else "metadata_only_no_downloadable_format"
+                )
                 deferred_metadata[str(record["stable_id"])] = _deferred_metadata_record(
                     record=record,
                     version=version,
