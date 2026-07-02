@@ -357,6 +357,15 @@ Current state:
   records, 0 deferred records, and 0 missing text/XML risk indicators. Track 07
   is validated through batch 0049, and the scheduler is retargeted to start at
   batch 0050.
+- **2026-07-02 batches 0050-0051 probes**: run `28561731954` succeeded for
+  batch 0050. Run `28563126811` first validated batch 0051 records but failed
+  merge review on one deterministic 404 retrieval gap for
+  `secondary-legislation_pco-drafted_2001_007_en_2007-09-03`. PR #78 merged the
+  `download_source_not_found` deferral repair, and repair rerun `28564452205`
+  succeeded. The merged review was `ok=true` with 1,181 validated records,
+  1 deferred metadata retrieval gap, 0 failed records, and 0 missing text/XML
+  risk indicators. Track 07 is validated through batch 0051, and the scheduler
+  is retargeted to start at batch 0052.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
