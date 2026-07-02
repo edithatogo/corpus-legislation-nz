@@ -396,6 +396,12 @@ Current state:
   indicators. Sync state recorded 500 works checked, 1,105 versions checked,
   1,105 records added, and 9 Parquet files written. Track 07 is validated
   through batch 0056, and the scheduler is retargeted to start at batch 0057.
+- **2026-07-02 batch 0057 probe**: run `28581048704` succeeded for batch 0057.
+  The merged review was `ok=true` with 1,191 validated records, 0 failed
+  records, 0 deferred records, 0 warnings, and 0 missing text/XML risk
+  indicators. Sync state recorded 500 works checked, 1,096 versions checked,
+  1,096 records added, and 9 Parquet files written. Track 07 is validated
+  through batch 0057, and the scheduler is retargeted to start at batch 0058.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
