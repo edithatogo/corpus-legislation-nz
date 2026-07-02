@@ -1338,7 +1338,7 @@ Evidence:
 
 ## track 35 multi-git and multi-archive mirroring setup
 
-Status: `in_progress`
+Status: `blocked`
 
 Goal: Establish multi-git and multi-archive mirroring setup to prevent single-point-of-failure repository/dataset takedowns.
 
@@ -1361,6 +1361,12 @@ Evidence:
 - Remaining Track 35 items are gated external work: push/publish
   `.github/workflows/mirror_sync.yml` to GitHub, configure mirror secrets, and
   verify manual/push mirror runs.
+- 2026-07-02 live proof: `Mirror Sync` is now active on the default branch.
+  Manual run `28581284768` completed successfully and took the expected guarded
+  skip path because `GIT_MIRROR_URLS/GIT_MIRROR_URL` is not configured.
+  `gh secret list` still shows no `GIT_MIRROR_URLS`, `GIT_MIRROR_URL`, or
+  `GIT_MIRROR_SSH_PRIVATE_KEY`, so real mirror-push verification is externally
+  blocked on mirror remote and SSH-key secret setup.
 
 ## track 36 period sharded bootstrap agent handoff
 
@@ -1405,6 +1411,10 @@ Implementation evidence:
   when `generated/full-corpus-periods/period_context.json` is present.
 - Focused tests and lint passed for period sharding, review context, CLI smoke,
   Ruff, and `actionlint`.
+- 2026-07-02 local manifest generation passed with the unverified 2008 planning
+  fallback boundary: all 33,693 reviewed work IDs were assigned across 24
+  periods, with seed SHA-256
+  `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`.
 
 Remaining:
 

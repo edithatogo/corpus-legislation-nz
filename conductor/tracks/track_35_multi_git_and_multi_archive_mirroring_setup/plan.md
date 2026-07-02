@@ -71,3 +71,17 @@
   - `.venv\Scripts\python.exe scripts\check_osf_optional_policy.py`
   - `.venv\Scripts\python.exe -m ruff check --no-cache tests\test_mirror_sync_workflow.py tests\test_osf_optional.py scripts\check_osf_optional_policy.py src\nz_legislation_corpus\osf_optional.py`
   - `actionlint .github\workflows\mirror_sync.yml`
+
+## Live Evidence - 2026-07-02
+
+- `Mirror Sync` is now visible and active on the default branch.
+- GitHub secret-name check still shows no `GIT_MIRROR_URLS`,
+  `GIT_MIRROR_URL`, or `GIT_MIRROR_SSH_PRIVATE_KEY`; only unrelated publication
+  secrets such as `HF_TOKEN`, `NZ_LEGISLATION_API_KEY`, `OSF_TOKEN`, and Zenodo
+  tokens are configured.
+- Manual run `28581284768` completed successfully on `main` and exercised the
+  intended no-secret guard path. The job log reported:
+  `GIT_MIRROR_URLS/GIT_MIRROR_URL is not set, skipping mirror.`
+- Track 35 is therefore implementation-complete through workflow publication
+  and guarded manual-run proof, but remains blocked on external mirror remote
+  and SSH-key secret configuration before a real mirror push can be verified.
