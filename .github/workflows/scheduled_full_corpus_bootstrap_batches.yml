@@ -10,7 +10,7 @@ on:
         description: "First remaining batch number"
         required: true
         type: string
-        default: "52"
+        default: "53"
       end_batch:
         description: "Last remaining batch number"
         required: true
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      START_BATCH: ${{ inputs.start_batch || '52' }}
+      START_BATCH: ${{ inputs.start_batch || '53' }}
       END_BATCH: ${{ inputs.end_batch || '68' }}
       SCHEDULE_START_DATE: ${{ inputs.schedule_start_date || '2026-07-03' }}
       BATCH_SIZE: ${{ inputs.batch_size || '500' }}

@@ -366,6 +366,12 @@ Current state:
   1 deferred metadata retrieval gap, 0 failed records, and 0 missing text/XML
   risk indicators. Track 07 is validated through batch 0051, and the scheduler
   is retargeted to start at batch 0052.
+- **2026-07-02 batch 0052 probe**: run `28566570973` succeeded for batch 0052.
+  The merged review was `ok=true` with 1,170 validated records, 0 failed
+  records, 0 deferred records, 0 warnings, and 0 missing text/XML risk
+  indicators. Sync state recorded 500 works checked, 1,075 versions checked,
+  1,075 records added, and 10 Parquet files written. Track 07 is validated
+  through batch 0052, and the scheduler is retargeted to start at batch 0053.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
