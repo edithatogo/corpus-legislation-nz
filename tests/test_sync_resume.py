@@ -121,6 +121,41 @@ class FakeFallbackNZLegislationClient:
         return b"<html><body><h1>Old Local Act 1841</h1><p>Fallback text.</p></body></html>"
 
 
+class FakeNotFoundDownloadNZLegislationClient:
+    def __init__(self, settings):
+        self.settings = settings
+
+    def discover_versions(self, **kwargs):
+        yield {
+            "title": "Unavailable Historical Regulations 2001",
+            "version_id": "secondary-legislation_pco-drafted_2001_007_en_2007-09-03",
+            "work_id": "secondary-legislation_pco-drafted_2001_007",
+            "legislation_status": "not_in_force",
+            "legislation_type": "secondary_legislation",
+            "administering_agencies": ["Example Agency"],
+            "formats": [
+                {
+                    "type": "html",
+                    "url": (
+                        "https://www.legislation.govt.nz/secondary-legislation/"
+                        "pco-drafted/2001/007/en/latest/"
+                    ),
+                },
+            ],
+            "is_latest_version": False,
+        }
+
+    @staticmethod
+    def format_url(version, fmt):
+        for item in version.get("formats", []):
+            if item["type"] == fmt:
+                return item["url"]
+        return None
+
+    def download_url(self, url):
+        raise RuntimeError(f"404 Client Error: Not Found for url: {url}")
+
+
 @pytest.mark.unit
 def test_sync_preserves_state_between_batches(tmp_path: Path, monkeypatch):
     output_dir = tmp_path / "data"
@@ -246,3 +281,39 @@ def test_sync_falls_back_to_html_when_xml_404s(tmp_path: Path, monkeypatch):
     assert state["last_stats"]["records_added"] == 1
     assert state["last_stats"]["records_failed"] == 0
     assert "used HTML" in state["last_stats"]["warnings"][0]
+
+
+@pytest.mark.unit
+def test_sync_defers_not_found_downloads_outside_validated_corpus(tmp_path: Path, monkeypatch):
+    output_dir = tmp_path / "data"
+    seed_path = tmp_path / "seed.txt"
+    seed_path.write_text("secondary-legislation_pco-drafted_2001_007\n", encoding="utf-8")
+    monkeypatch.setenv("NZ_LEGISLATION_API_KEY", "test-key")
+    monkeypatch.setenv("NZLC_OUTPUT_DIR", str(output_dir))
+    monkeypatch.setenv("NZLC_SEARCH_TERMS", "")
+    monkeypatch.setattr(cli, "NZLegislationClient", FakeNotFoundDownloadNZLegislationClient)
+    monkeypatch.setattr(cli, "write_partitioned_parquet", lambda records, output_dir: [])
+
+    cli.sync(
+        seed_work_ids=seed_path,
+        latest_only=False,
+        max_works=None,
+        allow_no_search_terms=True,
+        replace=False,
+        embeddings=False,
+    )
+
+    assert (output_dir / "records.jsonl").read_text(encoding="utf-8") == ""
+    deferred = [
+        json.loads(line)
+        for line in (output_dir / "_state" / "metadata_only_deferred.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    state = json.loads((output_dir / "_state" / "sync_state.json").read_text(encoding="utf-8"))
+
+    assert len(deferred) == 1
+    assert deferred[0]["stable_id"] == ("secondary-legislation_pco-drafted_2001_007_en_2007-09-03")
+    assert deferred[0]["reason"] == "download_source_not_found"
+    assert state["last_stats"]["records_deferred"] == 1
+    assert state["last_stats"]["records_failed"] == 0
