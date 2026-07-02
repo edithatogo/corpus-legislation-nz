@@ -82,6 +82,18 @@ downstream research slices, and faster agent handoff.
   `.venv\Scripts\python.exe -m ruff check --no-cache src\nz_legislation_corpus\period_shards.py src\nz_legislation_corpus\bootstrap_review.py src\nz_legislation_corpus\cli.py tests\test_period_shards.py tests\test_bootstrap_review.py tests\smoke\test_cli_smoke.py`.
 - Workflow lint passed:
   `actionlint .github\workflows\full_corpus_period_bootstrap.yml`.
+- 2026-07-02 local period manifest generation passed:
+  `uv run nzlc split-work-id-periods --seed-work-ids seeds\work_ids.txt
+  --source-metadata-path generated\historical-discovery-27313765016\historical-work-ids.provenance.json
+  --output-dir generated\full-corpus-periods\seeds
+  --manifest-path generated\full-corpus-periods\manifest.json
+  --api-boundary-year 2008 --api-boundary-source planning_fallback_unverified
+  --no-api-boundary-verified`.
+- The generated manifest assigned all 33,693 reviewed work IDs to exactly one
+  of 24 periods, with seed SHA-256
+  `6f70fa9b596be2baa77bd885df1857e9b89c04013361c9ad80af722b0cc8493b`.
+  The API boundary remains explicitly unverified and recorded as the 2008
+  planning fallback.
 
 ## Handoff Table
 
@@ -94,6 +106,35 @@ downstream research slices, and faster agent handoff.
 | `2000_2007` | pending checkpoint | pending | unassigned | unknown | pending | Generated when using the unverified 2008 fallback boundary. |
 | `year_2008+` | pending checkpoint | pending | unassigned | unknown | pending | Annual shards are allowed for handoff planning, but the manifest warning blocks API-native boundary claims until verified. |
 | `unknown_year_review` | pending manifest generation | pending | unassigned | unknown | pending | Review after `split-work-id-periods` identifies unknown-year work IDs. |
+
+Generated 2026-07-02 manifest counts:
+
+| Period | Work IDs |
+| --- | ---: |
+| `pre_1908` | 4,136 |
+| `1908_1949` | 3,036 |
+| `1950_1979` | 4,822 |
+| `1980_1999` | 4,317 |
+| `2000_2007` | 2,941 |
+| `year_2008` | 728 |
+| `year_2009` | 660 |
+| `year_2010` | 871 |
+| `year_2011` | 654 |
+| `year_2012` | 815 |
+| `year_2013` | 958 |
+| `year_2014` | 629 |
+| `year_2015` | 645 |
+| `year_2016` | 575 |
+| `year_2017` | 503 |
+| `year_2018` | 602 |
+| `year_2019` | 696 |
+| `year_2020` | 593 |
+| `year_2021` | 707 |
+| `year_2022` | 730 |
+| `year_2023` | 566 |
+| `year_2024` | 1,612 |
+| `year_2025` | 1,300 |
+| `year_2026` | 597 |
 
 ## Open Questions
 
