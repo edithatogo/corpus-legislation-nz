@@ -1459,3 +1459,63 @@ canonical source.
 
 Goal: Define the shared fallback resolver and provenance model across API,
 feeds, official website fallback retrieval, and NZLII redundancy.
+
+---
+
+- [ ] **Track: Gazette source registry, rights, and shared schema**
+*Link: [./tracks/track_41_gazette_source_registry_rights_shared_schema/](./tracks/track_41_gazette_source_registry_rights_shared_schema/)*
+
+Goal: Define the NZ Gazette source registry, rights boundary, retrieval limits,
+and shared raw/canonical schema for independent source archives and derived
+canonical records.
+
+---
+
+- [ ] **Track: Official Gazette source archive**
+*Link: [./tracks/track_42_official_gazette_source_archive/](./tracks/track_42_official_gazette_source_archive/)*
+
+Goal: Archive official NZ Gazette issue PDFs and notice pages as their own
+source evidence layer with raw artifacts, HTTP metadata, hashes, extraction
+outputs, and provenance.
+
+---
+
+- [ ] **Track: DigitalNZ Gazette source archive**
+*Link: [./tracks/track_43_digitalnz_gazette_source_archive/](./tracks/track_43_digitalnz_gazette_source_archive/)*
+
+Goal: Archive DigitalNZ New Zealand Gazette records through the local `dnz`
+CLI/resource repo as a separate source evidence layer for comparison and
+corroboration.
+
+---
+
+- [ ] **Track: Victoria/LexisNexis historical Gazette archive**
+*Link: [./tracks/track_44_victoria_lexisnexis_historical_gazette_archive/](./tracks/track_44_victoria_lexisnexis_historical_gazette_archive/)*
+
+Goal: Archive Victoria/LexisNexis historical NZ Gazette index and content as a
+separate rights-caveated source layer after access and rights checks.
+
+---
+
+- [ ] **Track: NZLII Gazette redundancy archive**
+*Link: [./tracks/track_45_nzlii_gazette_redundancy_archive/](./tracks/track_45_nzlii_gazette_redundancy_archive/)*
+
+Goal: Evaluate and archive NZLII Gazette material as a separate secondary
+redundancy source if access, rights, and coverage checks permit it.
+
+---
+
+- [ ] **Track: Cross-source comparison and canonical Gazette builder**
+*Link: [./tracks/track_46_cross_source_comparison_canonical_gazette_builder/](./tracks/track_46_cross_source_comparison_canonical_gazette_builder/)*
+
+Goal: Build a derived, reproducible, conflict-aware canonical NZ Gazette layer
+by comparing independent source archives without replacing raw source evidence.
+
+---
+
+- [ ] **Track: Gazette archive workflow, review, and publication staging**
+*Link: [./tracks/track_47_gazette_archive_workflow_review_publication_staging/](./tracks/track_47_gazette_archive_workflow_review_publication_staging/)*
+
+Goal: Stage workflows and review gates for source-specific Gazette archives and
+the derived canonical Gazette archive, keeping publication artifact-first and
+approval-gated.
