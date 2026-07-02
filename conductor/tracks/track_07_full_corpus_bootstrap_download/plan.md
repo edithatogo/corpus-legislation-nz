@@ -153,6 +153,15 @@
   `data/_state/metadata_only_deferred.jsonl`, records `records_deferred`, and
   keeps those rows out of `records.jsonl` so batch artifacts can validate while
   preserving explicit gap evidence for official website/NZLII redundancy triage.
+- 2026-07-02 repair validation: PR #75 merged as `63418d9`, and manual run
+  `28558440077` reran batches 0043-0047 on `main` with `max_parallel=3`.
+  All five batch jobs validated and uploaded artifacts, the `merge_batches`
+  job succeeded, and the merged `full-corpus-bootstrap-download` review reported
+  `ok=true`, 873 validated records, 0 failed records, 0 missing text/XML risk
+  indicators, and 1,981 deferred metadata-only records preserved in
+  `_state/metadata_only_deferred.jsonl`. Together with prior batch 0048, Track
+  07 is now validated through batch 0048. The scheduled dispatcher should resume
+  at batch 0049 on the next NZ quota window.
 
 ## Batch 0001 no-upload evidence
 
