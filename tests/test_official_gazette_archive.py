@@ -175,6 +175,8 @@ def test_official_gazette_archive_cli_writes_bundle_and_manifest(tmp_path: Path)
         for path in output_dir.iterdir()
     )
     assert (output_dir / "corpus-legislation-nz-gazette-official-2026.manifest.json").exists()
+    assert (output_dir / "corpus-legislation-nz-gazette-official-2026.validation_report.json").exists()
+    assert (output_dir / "corpus-legislation-nz-gazette-official-2026.coverage_report.json").exists()
     assert (
         output_dir / "corpus-legislation-nz-gazette-official-2026.official-manifest.json"
     ).exists()
@@ -182,6 +184,12 @@ def test_official_gazette_archive_cli_writes_bundle_and_manifest(tmp_path: Path)
         output_dir / "corpus-legislation-nz-gazette-official-2026.official-evidence.json"
     ).exists()
     assert (output_dir / "corpus-legislation-nz-gazette-official-2026.SHA256SUMS.txt").exists()
+    review = json.loads(
+        (output_dir / "corpus-legislation-nz-gazette-official-2026.validation_report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert review["ok"] is True
 
 
 @pytest.mark.unit

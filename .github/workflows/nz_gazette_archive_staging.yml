@@ -1,0 +1,283 @@
+name: NZ Gazette archive staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage_mode:
+        description: "Stage source archives, canonical archives, or both"
+        required: true
+        type: choice
+        options:
+          - source
+          - canonical
+          - full
+        default: full
+      source_scope:
+        description: "Which source archive(s) to stage"
+        required: true
+        type: choice
+        options:
+          - all
+          - official_gazette
+          - digitalnz_gazette
+          - victoria_lexisnexis_gazette
+          - nzlii_gazette
+        default: all
+      year:
+        description: "Archive year for the bundled artifacts"
+        required: true
+        type: string
+        default: "2026"
+      comparison_run_id:
+        description: "Comparison run ID recorded in the canonical comparison report"
+        required: true
+        type: string
+        default: "gazette-compare-manual"
+      decisions_path:
+        description: "Optional canonical conflict-decision JSONL path"
+        required: false
+        type: string
+        default: ""
+      minimum_free_gb:
+        description: "Minimum free disk space required before staging starts"
+        required: true
+        type: string
+        default: "25"
+      publish_confirmed:
+        description: "Disable publication in this staging workflow; must remain false"
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: nz-gazette-archive-staging-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      STAGING_ROOT: generated/nz-gazette-staging
+      OFFICIAL_SOURCE_DIR: data/official-gazette/raw
+      OFFICIAL_RECORDS_JSONL: data/official-gazette/records.jsonl
+      DIGITALNZ_SOURCE_DIR: data/digitalnz-gazette
+      HISTORICAL_SOURCE_DIR: data/victoria-lexisnexis-gazette
+      HISTORICAL_RECORDS_JSONL: data/victoria-lexisnexis-gazette/records.jsonl
+      NZLII_SOURCE_DIR: data/nzlii-gazette
+      CANONICAL_OUTPUT_DIR: data/nz-gazette-canonical
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check disk budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          available_gb="$(df -BG . | awk 'NR==2 {gsub(/G/, "", $4); print $4}')"
+          required_gb="${{ inputs.minimum_free_gb }}"
+          echo "Available disk: ${available_gb}G; required: ${required_gb}G"
+          if [ "$available_gb" -lt "$required_gb" ]; then
+            echo "Refusing staging with less than ${required_gb}G free." >&2
+            exit 1
+          fi
+
+      - name: Reject publication in staging workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.publish_confirmed }}" = "true" ]; then
+            echo "This workflow only stages review artifacts. External publication remains disabled." >&2
+            exit 1
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Stage official Gazette archive
+        if: ${{ inputs.stage_mode != 'canonical' && (inputs.source_scope == 'all' || inputs.source_scope == 'official_gazette') }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$STAGING_ROOT"
+          uv run nzlc official-gazette-archive \
+            --records-jsonl "$OFFICIAL_RECORDS_JSONL" \
+            --source-dir "$OFFICIAL_SOURCE_DIR" \
+            --output-dir dist/official-gazette \
+            --year "${{ inputs.year }}"
+
+      - name: Stage DigitalNZ Gazette archive
+        if: ${{ inputs.stage_mode != 'canonical' && (inputs.source_scope == 'all' || inputs.source_scope == 'digitalnz_gazette') }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$STAGING_ROOT"
+          uv run nzlc digitalnz-gazette-archive \
+            --source-dir "$DIGITALNZ_SOURCE_DIR" \
+            --output-dir dist/digitalnz-gazette \
+            --year "${{ inputs.year }}"
+
+      - name: Stage historical Gazette archive
+        if: ${{ inputs.stage_mode != 'canonical' && (inputs.source_scope == 'all' || inputs.source_scope == 'victoria_lexisnexis_gazette') }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$STAGING_ROOT"
+          uv run nzlc historical-gazette-archive \
+            --records-jsonl "$HISTORICAL_RECORDS_JSONL" \
+            --source-dir "$HISTORICAL_SOURCE_DIR" \
+            --output-dir dist/victoria-lexisnexis-gazette \
+            --year "${{ inputs.year }}"
+
+      - name: Stage NZLII Gazette archive
+        if: ${{ inputs.stage_mode != 'canonical' && (inputs.source_scope == 'all' || inputs.source_scope == 'nzlii_gazette') }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$STAGING_ROOT"
+          uv run nzlc nzlii-gazette-archive \
+            --source-dir "$NZLII_SOURCE_DIR" \
+            --output-dir dist/nzlii-gazette \
+            --year "${{ inputs.year }}"
+
+      - name: Stage canonical Gazette archive
+        if: ${{ inputs.stage_mode != 'source' }}
+        env:
+          GAZETTE_DECISIONS_PATH: ${{ inputs.decisions_path }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$STAGING_ROOT"
+          args=(
+            --official-source-dir "$OFFICIAL_SOURCE_DIR"
+            --digitalnz-source-dir "$DIGITALNZ_SOURCE_DIR"
+            --historical-source-dir "$HISTORICAL_SOURCE_DIR"
+            --nzlii-source-dir "$NZLII_SOURCE_DIR"
+            --output-dir "$CANONICAL_OUTPUT_DIR"
+            --year "${{ inputs.year }}"
+            --comparison-run-id "${{ inputs.comparison_run_id }}"
+          )
+          if [ -n "$GAZETTE_DECISIONS_PATH" ]; then
+            args+=(--decisions-path "$GAZETTE_DECISIONS_PATH")
+          fi
+          uv run nzlc nz-gazette-canonical-archive "${args[@]}"
+
+      - name: Build staging report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STAGING_ROOT"
+          uv run python - <<'PY'
+          import json
+          import hashlib
+          import os
+          from pathlib import Path
+
+          def dir_size(path: Path) -> int:
+              if not path.exists():
+                  return 0
+              total = 0
+              for item in path.rglob("*"):
+                  if item.is_file():
+                      total += item.stat().st_size
+              return total
+
+          def file_hashes(path: Path) -> list[str]:
+              hashes: list[str] = []
+              if not path.exists():
+                  return hashes
+              for item in path.rglob("*"):
+                  if not item.is_file():
+                      continue
+                  digest = hashlib.sha256()
+                  with item.open("rb") as handle:
+                      for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                          digest.update(chunk)
+                  hashes.append(digest.hexdigest())
+              return hashes
+
+          root = Path(os.environ["STAGING_ROOT"])
+          paths = {
+              "official": Path("dist/official-gazette"),
+              "digitalnz": Path("dist/digitalnz-gazette"),
+              "historical": Path("dist/victoria-lexisnexis-gazette"),
+              "nzlii": Path("dist/nzlii-gazette"),
+              "canonical": Path(os.environ["CANONICAL_OUTPUT_DIR"]),
+          }
+          all_hashes: list[str] = []
+          for path in paths.values():
+              all_hashes.extend(file_hashes(path))
+          unique_hashes = len(set(all_hashes))
+          duplicate_hashes = len(all_hashes) - unique_hashes
+          report = {
+              "schema_version": "1.0",
+              "stage_mode": "${{ inputs.stage_mode }}",
+              "source_scope": "${{ inputs.source_scope }}",
+              "comparison_run_id": "${{ inputs.comparison_run_id }}",
+              "year": "${{ inputs.year }}",
+              "artifacts": {
+                  name: {
+                      "path": path.as_posix(),
+                      "exists": path.exists(),
+                      "file_count": sum(1 for item in path.rglob("*") if item.is_file()) if path.exists() else 0,
+                      "size_bytes": dir_size(path),
+                  }
+                  for name, path in paths.items()
+              },
+              "publication_enabled": False,
+              "publication_warning": (
+                  "External publication is intentionally disabled in this staging workflow. "
+                  "Promotion must use the downstream protected publication tracks after review."
+              ),
+              "file_count": len(all_hashes),
+              "unique_content_hash_count": unique_hashes,
+              "duplicate_content_hash_count": duplicate_hashes,
+              "dedupe_ratio": round((duplicate_hashes / len(all_hashes)) if all_hashes else 0.0, 4),
+          }
+          report["total_size_bytes"] = sum(item["size_bytes"] for item in report["artifacts"].values())
+          report["content_sha256"] = __import__("hashlib").sha256(
+              json.dumps(report, sort_keys=True, ensure_ascii=False).encode("utf-8")
+          ).hexdigest()
+          report["manifest_sha256"] = __import__("hashlib").sha256(
+              json.dumps({k: v for k, v in report.items() if k != "manifest_sha256"}, sort_keys=True, ensure_ascii=False).encode("utf-8")
+          ).hexdigest()
+          output_path = root / "staging_report.json"
+          output_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+          print(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload staging artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nz-gazette-archive-staging
+          path: |
+            generated/nz-gazette-staging/
+            dist/official-gazette/
+            dist/digitalnz-gazette/
+            dist/victoria-lexisnexis-gazette/
+            dist/nzlii-gazette/
+            data/nz-gazette-canonical/
+          if-no-files-found: error
+
+      - name: Staging summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## NZ Gazette archive staging" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Stage mode: ${{ inputs.stage_mode }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Source scope: ${{ inputs.source_scope }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Year: ${{ inputs.year }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Comparison run ID: ${{ inputs.comparison_run_id }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$STAGING_ROOT/staging_report.json" ]; then
+            echo '' >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$STAGING_ROOT/staging_report.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

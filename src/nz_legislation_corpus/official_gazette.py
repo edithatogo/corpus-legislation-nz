@@ -199,6 +199,130 @@ def build_official_gazette_manifest(
     return payload
 
 
+def build_official_gazette_review(
+    *,
+    records: Iterable[Mapping[str, Any]],
+    manifest: Mapping[str, Any],
+    source_records_path: Path,
+    raw_artifact_dir: Path,
+    state_path: Path,
+) -> dict[str, Any]:
+    """Review official Gazette evidence for rights, hashes, and artifact completeness."""
+    records = list(records)
+    missing_rights = 0
+    missing_source_url = 0
+    missing_hash = 0
+    missing_artifact_path = 0
+    blocked_artifacts = 0
+    artifact_types = Counter()
+
+    for record in records:
+        artifact_type = str(record.get("artifact_type") or "other")
+        artifact_types[artifact_type] += 1
+        if not str(record.get("rights_note") or "").strip():
+            missing_rights += 1
+        if not str(record.get("source_url") or "").strip():
+            missing_source_url += 1
+        if not str(record.get("content_sha256") or "").strip():
+            missing_hash += 1
+        raw_artifact_path = str(record.get("raw_artifact_path") or "").strip()
+        if not raw_artifact_path:
+            missing_artifact_path += 1
+            continue
+        if not (raw_artifact_dir / raw_artifact_path).exists():
+            blocked_artifacts += 1
+
+    missing_manifest_hash = int(
+        not str(manifest.get("manifest_sha256") or "").strip()
+        or not str(manifest.get("content_sha256") or "").strip()
+    )
+    missing_artifacts = [
+        path.as_posix()
+        for path in [source_records_path, raw_artifact_dir, state_path]
+        if not path.exists()
+    ]
+    ok = not any(
+        [
+            missing_rights,
+            missing_source_url,
+            missing_hash,
+            missing_artifact_path,
+            blocked_artifacts,
+            missing_manifest_hash,
+            missing_artifacts,
+        ]
+    )
+    coverage_warning = (
+        "Official Gazette source archive evidence is source-specific. "
+        "It remains separate from canonical comparison outputs and external publication."
+    )
+    if not ok:
+        coverage_warning = (
+            "Official Gazette review failed. "
+            f"rights={missing_rights}, source_url={missing_source_url}, "
+            f"hash={missing_hash}, artifact_path={missing_artifact_path}, "
+            f"blocked_artifacts={blocked_artifacts}, manifest_hash_missing={missing_manifest_hash}."
+        )
+    return {
+        "schema_version": "1.0",
+        "ok": ok,
+        "source_id": OFFICIAL_GAZETTE_SOURCE_ID,
+        "source_name": OFFICIAL_GAZETTE_SOURCE_NAME,
+        "source_tier": OFFICIAL_GAZETTE_SOURCE_TIER,
+        "record_count": len(records),
+        "artifact_type_counts": dict(sorted(artifact_types.items())),
+        "missing_rights_count": missing_rights,
+        "missing_source_url_count": missing_source_url,
+        "missing_hash_count": missing_hash,
+        "missing_artifact_path_count": missing_artifact_path,
+        "blocked_artifact_count": blocked_artifacts,
+        "missing_manifest_hash": bool(missing_manifest_hash),
+        "manifest_sha256": str(manifest.get("manifest_sha256") or "").strip(),
+        "content_sha256": str(manifest.get("content_sha256") or "").strip(),
+        "source_records_path": str(source_records_path),
+        "raw_artifact_dir": str(raw_artifact_dir),
+        "state_path": str(state_path),
+        "coverage_warning": coverage_warning,
+    }
+
+
+def build_official_gazette_coverage_report(
+    *,
+    records: Iterable[Mapping[str, Any]],
+    review: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    source_listing_url: str = OFFICIAL_GAZETTE_LISTING_URL,
+) -> dict[str, Any]:
+    """Summarize official Gazette source coverage and review state."""
+    records = list(records)
+    coverage = {
+        "schema_version": "1.0",
+        "source_id": OFFICIAL_GAZETTE_SOURCE_ID,
+        "source_name": OFFICIAL_GAZETTE_SOURCE_NAME,
+        "source_tier": OFFICIAL_GAZETTE_SOURCE_TIER,
+        "source_listing_url": normalize_official_gazette_url(source_listing_url),
+        "record_count": len(records),
+        "artifact_type_counts": manifest.get("artifact_type_counts") or {},
+        "rights_covered_count": len(records) - int(review.get("missing_rights_count") or 0),
+        "missing_rights_count": int(review.get("missing_rights_count") or 0),
+        "missing_source_url_count": int(review.get("missing_source_url_count") or 0),
+        "missing_hash_count": int(review.get("missing_hash_count") or 0),
+        "blocked_artifact_count": int(review.get("blocked_artifact_count") or 0),
+        "coverage_warning": str(review.get("coverage_warning") or ""),
+    }
+    coverage["content_sha256"] = sha256_text(
+        json.dumps(coverage, sort_keys=True, ensure_ascii=False)
+    )
+    coverage["manifest_sha256"] = sha256_text(
+        json.dumps(
+            {k: v for k, v in coverage.items() if k != "manifest_sha256"},
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+    )
+    return coverage
+
+
 def build_official_gazette_archive(
     source_dir: Path,
     output_dir: Path,
@@ -232,13 +356,50 @@ def build_official_gazette_archive(
         source_listing_url=source_listing_url,
         output_path=manifest_path,
     )
+    state_path = output_dir / "_state" / "official_archive_state.json"
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(
+        state_path,
+        {
+            "schema_version": "1.0",
+            "source_id": OFFICIAL_GAZETTE_SOURCE_ID,
+            "source_listing_url": normalize_official_gazette_url(source_listing_url),
+            "record_count": len(records),
+            "archive_path": str(bundle["archive_path"]),
+            "manifest_path": str(manifest_path),
+            "retrieved_at_utc": manifest["generated_at_utc"],
+        },
+    )
+    review_path = output_dir / f"{OFFICIAL_GAZETTE_ARCHIVE_PREFIX}-{year}.validation_report.json"
+    review = build_official_gazette_review(
+        records=records,
+        manifest=manifest,
+        source_records_path=records_jsonl,
+        raw_artifact_dir=source_dir,
+        state_path=state_path,
+    )
+    write_json(review_path, review)
+    coverage_path = output_dir / f"{OFFICIAL_GAZETTE_ARCHIVE_PREFIX}-{year}.coverage_report.json"
+    coverage = build_official_gazette_coverage_report(
+        records=records,
+        review=review,
+        manifest=manifest,
+        source_listing_url=source_listing_url,
+    )
+    write_json(coverage_path, coverage)
     provenance_path = (
         output_dir / f"{OFFICIAL_GAZETTE_ARCHIVE_PREFIX}-{year}.official-evidence.json"
     )
     build_release_evidence(
         artifact_class="official_gazette_source_archive",
         output_path=provenance_path,
-        subjects=[Path(bundle["archive_path"]), manifest_path],
+        subjects=[
+            Path(bundle["archive_path"]),
+            manifest_path,
+            review_path,
+            coverage_path,
+            state_path,
+        ],
         manifest=manifest,
         coverage_statement=(
             "Official Gazette source archive evidence is source-specific and must remain "
@@ -250,14 +411,23 @@ def build_official_gazette_archive(
     lines = [
         f"{sha256_file(Path(bundle['archive_path']))}  {Path(bundle['archive_path']).name}",
         f"{sha256_file(manifest_path)}  {manifest_path.name}",
+        f"{sha256_file(review_path)}  {review_path.name}",
+        f"{sha256_file(coverage_path)}  {coverage_path.name}",
+        f"{sha256_file(state_path)}  {state_path.name}",
         f"{sha256_file(provenance_path)}  {provenance_path.name}",
     ]
     checksums_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return {
         **bundle,
         "manifest_path": str(manifest_path),
+        "review_path": str(review_path),
+        "coverage_path": str(coverage_path),
+        "state_path": str(state_path),
         "provenance_path": str(provenance_path),
         "checksums_path": str(checksums_path),
         "official_manifest_sha256": manifest["manifest_sha256"],
         "official_manifest_content_sha256": manifest["content_sha256"],
+        "official_review_ok": review["ok"],
+        "official_coverage_content_sha256": coverage["content_sha256"],
+        "official_coverage_manifest_sha256": coverage["manifest_sha256"],
     }

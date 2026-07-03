@@ -28,6 +28,8 @@ The command writes:
 
 - a source bundle tarball
 - a source manifest
+- a validation report
+- a coverage report
 - a release evidence file
 - a SHA256 checksum file
 

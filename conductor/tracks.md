@@ -1524,8 +1524,8 @@ by comparing independent source archives without replacing raw source evidence.
 
 ---
 
-- [ ] **Track: Gazette archive workflow, review, and publication staging**
-*Link: [./tracks/track_47_gazette_archive_workflow_review_publication_staging/](./tracks/track_47_gazette_archive_workflow_review_publication_staging/)*
+- [x] **Track: Gazette archive workflow, review, and publication staging**
+*Link: [./archive/track_47_gazette_archive_workflow_review_publication_staging/](./archive/track_47_gazette_archive_workflow_review_publication_staging/)*
 
 Goal: Stage workflows and review gates for source-specific Gazette archives and
 the derived canonical Gazette archive, keeping publication artifact-first and

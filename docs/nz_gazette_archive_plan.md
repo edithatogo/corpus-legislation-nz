@@ -51,6 +51,12 @@ the archive work.
 Track 44 now uses a conservative historical index-page parser and keeps
 rights/access caveats attached to every historical record.
 
+Track 47 stages the archive workflows that consume those source layers and the
+derived canonical layer. The operator-facing entrypoint is
+`.github/workflows/nz_gazette_archive_staging.yml`, which stages source
+archives, the canonical rebuild, and the resulting review/coverage evidence
+without enabling external publication.
+
 ## Implementation Contract
 
 Tracks 42-47 must treat the registry, raw archive schema, and canonical schema
