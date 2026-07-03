@@ -1500,15 +1500,6 @@ feeds, official website fallback retrieval, and NZLII redundancy.
 
 ---
 
-- [~] **Track: DigitalNZ Gazette source archive**
-*Link: [./tracks/track_43_digitalnz_gazette_source_archive/](./tracks/track_43_digitalnz_gazette_source_archive/)*
-
-Goal: Archive DigitalNZ New Zealand Gazette records through the local `dnz`
-CLI/resource repo as a separate source evidence layer for comparison and
-corroboration.
-
----
-
 - [ ] **Track: Victoria/LexisNexis historical Gazette archive**
 *Link: [./tracks/track_44_victoria_lexisnexis_historical_gazette_archive/](./tracks/track_44_victoria_lexisnexis_historical_gazette_archive/)*
 
