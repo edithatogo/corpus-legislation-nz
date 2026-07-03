@@ -47,3 +47,4 @@
 - Operator doc: `docs/nz_gazette_workflow_staging.md`
 - Official source archive now emits validation and coverage reports.
 - Validation: `uv run pytest tests/test_official_gazette_archive.py tests/test_nz_gazette_workflow_staging.py tests/test_nz_gazette_canonical.py tests/test_nz_gazette_source_registry.py -q`
+- Implementation commit: `7698de5`
