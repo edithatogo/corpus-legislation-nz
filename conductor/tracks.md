@@ -1533,8 +1533,8 @@ approval-gated.
 
 ---
 
-- [ ] **Track: Gazette freshness and change detection**
-*Link: [./tracks/track_48_gazette_freshness_change_detection/](./tracks/track_48_gazette_freshness_change_detection/)*
+- [x] **Track: Gazette freshness and change detection**
+*Link: [./archive/track_48_gazette_freshness_change_detection/](./archive/track_48_gazette_freshness_change_detection/)*
 
 Goal: Detect new and changed NZ Gazette material across official and DigitalNZ
 sources, persist freshness state, and enqueue targeted source refreshes and
