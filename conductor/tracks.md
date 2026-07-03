@@ -1516,8 +1516,8 @@ redundancy source if access, rights, and coverage checks permit it.
 
 ---
 
-- [ ] **Track: Cross-source comparison and canonical Gazette builder**
-*Link: [./tracks/track_46_cross_source_comparison_canonical_gazette_builder/](./tracks/track_46_cross_source_comparison_canonical_gazette_builder/)*
+- [x] **Track: Cross-source comparison and canonical Gazette builder**
+*Link: [./archive/track_46_cross_source_comparison_canonical_gazette_builder/](./archive/track_46_cross_source_comparison_canonical_gazette_builder/)*
 
 Goal: Build a derived, reproducible, conflict-aware canonical NZ Gazette layer
 by comparing independent source archives without replacing raw source evidence.

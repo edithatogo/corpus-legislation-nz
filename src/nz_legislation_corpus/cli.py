@@ -33,6 +33,7 @@ from .manifest import build_change_report, build_manifest
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
+from .nz_gazette_canonical import build_nz_gazette_canonical_archive
 from .nzlii_gazette_archive import (
     NZLII_GAZETTE_ROBOTS_URL,
     NZLII_GAZETTE_SOURCE_URLS,
@@ -986,6 +987,45 @@ def nzlii_gazette_archive_cmd(
 ) -> None:
     result = build_nzlii_gazette_archive(source_dir, output_dir, year=year)
     console.print_json(data=result)
+
+
+@app.command("nz-gazette-canonical-archive")
+def nz_gazette_canonical_archive_cmd(
+    official_source_dir: Annotated[
+        Path,
+        typer.Option(help="Official Gazette source archive directory."),
+    ] = Path("data/official-gazette"),
+    digitalnz_source_dir: Annotated[
+        Path,
+        typer.Option(help="DigitalNZ Gazette source archive directory."),
+    ] = Path("data/digitalnz-gazette"),
+    historical_source_dir: Annotated[
+        Path,
+        typer.Option(help="Victoria/LexisNexis historical Gazette source archive directory."),
+    ] = Path("data/victoria-lexisnexis-gazette"),
+    nzlii_source_dir: Annotated[
+        Path,
+        typer.Option(help="NZLII Gazette redundancy source archive directory."),
+    ] = Path("data/nzlii-gazette"),
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Canonical archive output directory."),
+    ] = Path("data/nz-gazette-canonical"),
+    year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
+) -> None:
+    result = build_nz_gazette_canonical_archive(
+        [
+            {"source_id": "official_gazette", "source_dir": official_source_dir},
+            {"source_id": "digitalnz_gazette", "source_dir": digitalnz_source_dir},
+            {"source_id": "victoria_lexisnexis_gazette", "source_dir": historical_source_dir},
+            {"source_id": "nzlii_gazette", "source_dir": nzlii_source_dir},
+        ],
+        output_dir,
+        year=year,
+    )
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
 
 
 @app.command("zenodo-upload")
