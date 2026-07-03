@@ -1508,8 +1508,8 @@ separate rights-caveated source layer after access and rights checks.
 
 ---
 
-- [ ] **Track: NZLII Gazette redundancy archive**
-*Link: [./tracks/track_45_nzlii_gazette_redundancy_archive/](./tracks/track_45_nzlii_gazette_redundancy_archive/)*
+- [x] **Track: NZLII Gazette redundancy archive**
+*Link: [./archive/track_45_nzlii_gazette_redundancy_archive/](./archive/track_45_nzlii_gazette_redundancy_archive/)*
 
 Goal: Evaluate and archive NZLII Gazette material as a separate secondary
 redundancy source if access, rights, and coverage checks permit it.

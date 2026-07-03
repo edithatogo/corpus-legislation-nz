@@ -33,6 +33,12 @@ from .manifest import build_change_report, build_manifest
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
+from .nzlii_gazette_archive import (
+    NZLII_GAZETTE_ROBOTS_URL,
+    NZLII_GAZETTE_SOURCE_URLS,
+    build_nzlii_gazette_archive,
+    export_nzlii_gazette_source,
+)
 from .nzlii_reconcile import NZLII_SOURCE_INVENTORY, write_nzlii_reconciliation_report
 from .official_gazette import build_official_gazette_archive
 from .parquet_writer import write_partitioned_parquet
@@ -942,6 +948,43 @@ def digitalnz_gazette_archive_cmd(
     year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
 ) -> None:
     result = build_digitalnz_gazette_archive(source_dir, output_dir, year=year)
+    console.print_json(data=result)
+
+
+@app.command("nzlii-gazette-probe")
+def nzlii_gazette_probe_cmd(
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory for the NZLII Gazette access probe evidence.")
+    ] = Path("data/nzlii-gazette"),
+    robots_url: Annotated[
+        str, typer.Option(help="robots.txt URL to probe.")
+    ] = NZLII_GAZETTE_ROBOTS_URL,
+    candidate_urls: Annotated[
+        str | None,
+        typer.Option(help="Comma-separated candidate Gazette URLs to probe."),
+    ] = None,
+) -> None:
+    result = export_nzlii_gazette_source(
+        output_dir=output_dir,
+        robots_url=robots_url,
+        candidate_urls=_split_option(candidate_urls, default=list(NZLII_GAZETTE_SOURCE_URLS)),
+    )
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("nzlii-gazette-archive")
+def nzlii_gazette_archive_cmd(
+    source_dir: Annotated[
+        Path, typer.Option(help="Directory containing the exported NZLII Gazette source tree.")
+    ] = Path("data/nzlii-gazette"),
+    output_dir: Annotated[
+        Path, typer.Option(help="Archive output directory.")
+    ] = Path("dist/nzlii-gazette"),
+    year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
+) -> None:
+    result = build_nzlii_gazette_archive(source_dir, output_dir, year=year)
     console.print_json(data=result)
 
 
