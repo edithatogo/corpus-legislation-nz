@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/corpus-legislation-nz/schemas/nz_gazette_raw_source_record.schema.json",
+  "title": "NZ Gazette raw source archive record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stable_id",
+    "source_id",
+    "source_name",
+    "source_tier",
+    "record_kind",
+    "source_url",
+    "retrieval_method",
+    "retrieved_at",
+    "content_sha256",
+    "raw_artifact_path",
+    "rights_note",
+    "source_local_id",
+    "coverage_state",
+    "provenance"
+  ],
+  "properties": {
+    "stable_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "enum": [
+        "official_gazette",
+        "digitalnz_gazette",
+        "victoria_lexisnexis_gazette",
+        "nzlii_gazette"
+      ]
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_tier": {
+      "type": "string",
+      "enum": [
+        "official",
+        "discovery",
+        "historical",
+        "redundancy"
+      ]
+    },
+    "record_kind": {
+      "type": "string",
+      "enum": [
+        "issue_listing",
+        "issue_page",
+        "issue_pdf",
+        "notice_page",
+        "notice_pdf",
+        "digitalnz_item",
+        "historical_index",
+        "historical_page",
+        "historical_pdf",
+        "redundancy_item",
+        "blocked_evidence"
+      ]
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "retrieval_method": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retrieved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "raw_artifact_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rights_note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_local_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coverage_state": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "gap",
+        "blocked",
+        "unknown"
+      ]
+    },
+    "http_metadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "extraction": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "pipeline_name",
+        "pipeline_version",
+        "source_name",
+        "source_record_id",
+        "source_retrieved_at",
+        "release_version",
+        "release_commit",
+        "license_note"
+      ],
+      "properties": {
+        "pipeline_name": { "type": "string", "minLength": 1 },
+        "pipeline_version": { "type": "string", "minLength": 1 },
+        "source_name": { "type": "string", "minLength": 1 },
+        "source_record_id": { "type": "string", "minLength": 1 },
+        "source_retrieved_at": { "type": ["string", "null"], "format": "date-time" },
+        "release_version": { "type": "string", "minLength": 1 },
+        "release_commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "license_note": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
+

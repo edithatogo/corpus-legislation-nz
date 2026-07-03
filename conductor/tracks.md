@@ -1500,15 +1500,6 @@ feeds, official website fallback retrieval, and NZLII redundancy.
 
 ---
 
-- [ ] **Track: Gazette source registry, rights, and shared schema**
-*Link: [./tracks/track_41_gazette_source_registry_rights_shared_schema/](./tracks/track_41_gazette_source_registry_rights_shared_schema/)*
-
-Goal: Define the NZ Gazette source registry, rights boundary, retrieval limits,
-and shared raw/canonical schema for independent source archives and derived
-canonical records.
-
----
-
 - [ ] **Track: Official Gazette source archive**
 *Link: [./tracks/track_42_official_gazette_source_archive/](./tracks/track_42_official_gazette_source_archive/)*
 

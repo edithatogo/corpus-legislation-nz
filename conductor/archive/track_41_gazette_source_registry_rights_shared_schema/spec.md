@@ -48,6 +48,24 @@ canonical Gazette layer remains a derived, reproducible comparison output.
 - Future source-specific tracks can validate their outputs against this shared
   contract.
 
+## Completion Evidence
+
+- Registry documentation:
+  `docs/nz_gazette_source_registry.md`
+- Machine-readable registry:
+  `docs/nz_gazette_source_registry.json`
+- Registry schema:
+  `schemas/nz_gazette_source_registry.schema.json`
+- Raw archive schema:
+  `schemas/nz_gazette_raw_source_record.schema.json`
+- Canonical archive schema:
+  `schemas/nz_gazette_canonical_record.schema.json`
+- Validation tests:
+  `tests/test_nz_gazette_source_registry.py`
+- Validation commands:
+  `uv run pytest -q tests/test_nz_gazette_source_registry.py`
+  and `uv run pytest -q tests/test_shared_core_schema.py`
+
 ## Out of Scope
 
 - Implementing source harvesters.

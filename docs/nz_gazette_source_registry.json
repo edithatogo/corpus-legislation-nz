@@ -1,0 +1,113 @@
+{
+  "registry_version": "1.0",
+  "updated_at": "2026-07-03T00:00:00Z",
+  "canonical_precedence": [
+    "official_gazette",
+    "digitalnz_gazette",
+    "victoria_lexisnexis_gazette",
+    "nzlii_gazette"
+  ],
+  "coverage_dimensions": [
+    "source_id",
+    "year",
+    "issue_id",
+    "notice_id",
+    "page_start",
+    "page_end",
+    "artifact_type",
+    "coverage_state"
+  ],
+  "retrieval_policy": {
+    "identifiable_requests": true,
+    "rate_limited": true,
+    "min_seconds_between_requests": 1.0,
+    "bounded_smoke_run_only": false,
+    "stealth_scraping_allowed": false,
+    "captcha_bypass_allowed": false,
+    "access_control_bypass_allowed": false,
+    "preserve_http_metadata": true,
+    "preserve_request_response_metadata": true,
+    "notes": "The Gazette archive must use conservative, identifiable retrieval and fail closed on bot protection or rights ambiguity."
+  },
+  "sources": [
+    {
+      "source_id": "official_gazette",
+      "source_name": "NZ Gazette official website",
+      "source_tier": "official",
+      "base_url": "https://gazette.govt.nz/issues",
+      "expected_artifacts": [
+        "issue_listing_pages",
+        "issue_detail_pages",
+        "issue_pdfs",
+        "notice_pages"
+      ],
+      "canonical_eligible": true,
+      "rights_note": "Preferred canonical evidence when available through public issue pages or PDFs.",
+      "access_notes": "Respect public access limits and avoid trailing-slash or other problematic URL forms that trigger bot protection.",
+      "retrieval_policy": {
+        "min_seconds_between_requests": 1.0,
+        "bounded_smoke_run_limit": 1,
+        "allow_head_requests": true
+      }
+    },
+    {
+      "source_id": "digitalnz_gazette",
+      "source_name": "DigitalNZ Gazette discovery/export",
+      "source_tier": "discovery",
+      "base_url": "https://digitalnz.org/",
+      "expected_artifacts": [
+        "raw_api_pages",
+        "normalized_jsonl_records",
+        "export_manifest"
+      ],
+      "canonical_eligible": false,
+      "rights_note": "DigitalNZ metadata and full text are source evidence, not canonical truth.",
+      "access_notes": "Use the local dnz exporter or a documented DigitalNZ API path with deterministic paging and resumable state.",
+      "retrieval_policy": {
+        "min_seconds_between_requests": 1.0,
+        "bounded_smoke_run_limit": 1,
+        "allow_head_requests": false
+      }
+    },
+    {
+      "source_id": "victoria_lexisnexis_gazette",
+      "source_name": "Victoria University / LexisNexis historical Gazette archive",
+      "source_tier": "historical",
+      "base_url": "https://library.victoria.ac.nz/databases/nzgazettearchive/Html/2008.html",
+      "expected_artifacts": [
+        "historical_index_pages",
+        "historical_issue_pages",
+        "historical_pdf_or_html_pages"
+      ],
+      "canonical_eligible": false,
+      "rights_note": "Historical-only evidence with rights caveats attached to every record.",
+      "access_notes": "Confirm rights, robots, and permitted retrieval boundaries before any bulk retrieval.",
+      "retrieval_policy": {
+        "min_seconds_between_requests": 2.0,
+        "bounded_smoke_run_limit": 1,
+        "allow_head_requests": true
+      }
+    },
+    {
+      "source_id": "nzlii_gazette",
+      "source_name": "NZLII Gazette redundancy archive",
+      "source_tier": "redundancy",
+      "base_url": "https://www.nzlii.org/",
+      "expected_artifacts": [
+        "redundancy_html_pages",
+        "redundancy_pdf_pages",
+        "blocked_source_evidence"
+      ],
+      "canonical_eligible": false,
+      "rights_note": "Fallback source only; never canonical without comparison evidence.",
+      "access_notes": "Confirm robots, access, and coverage before retrieval; record blocked states explicitly.",
+      "retrieval_policy": {
+        "min_seconds_between_requests": 2.0,
+        "bounded_smoke_run_limit": 1,
+        "allow_head_requests": true
+      }
+    }
+  ],
+  "coverage_matrix": []
+}
+

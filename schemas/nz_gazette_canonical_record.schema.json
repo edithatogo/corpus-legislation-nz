@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/corpus-legislation-nz/schemas/nz_gazette_canonical_record.schema.json",
+  "title": "NZ Gazette canonical comparison record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "canonical_id",
+    "canonical_uri",
+    "canonical_source",
+    "supporting_sources",
+    "confidence",
+    "normalization_version",
+    "rights_note",
+    "coverage_state",
+    "provenance"
+  ],
+  "properties": {
+    "canonical_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "canonical_source": {
+      "type": "string",
+      "enum": [
+        "official_gazette",
+        "digitalnz_gazette",
+        "victoria_lexisnexis_gazette",
+        "nzlii_gazette"
+      ]
+    },
+    "supporting_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/supporting_source"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/conflict"
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "unknown"
+      ]
+    },
+    "normalization_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": ["string", "null"],
+      "format": "uri"
+    },
+    "rights_note": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coverage_state": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "gap",
+        "blocked",
+        "unknown"
+      ]
+    },
+    "historical_only": {
+      "type": "boolean"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "pipeline_name",
+        "pipeline_version",
+        "comparison_run_id",
+        "source_manifest_sha256",
+        "release_version",
+        "release_commit",
+        "license_note"
+      ],
+      "properties": {
+        "pipeline_name": { "type": "string", "minLength": 1 },
+        "pipeline_version": { "type": "string", "minLength": 1 },
+        "comparison_run_id": { "type": "string", "minLength": 1 },
+        "source_manifest_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "release_version": { "type": "string", "minLength": 1 },
+        "release_commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "license_note": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "supporting_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_record_id",
+        "source_url",
+        "source_tier",
+        "source_manifest_sha256",
+        "content_sha256"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "enum": [
+            "official_gazette",
+            "digitalnz_gazette",
+            "victoria_lexisnexis_gazette",
+            "nzlii_gazette"
+          ]
+        },
+        "source_record_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "source_tier": {
+          "type": "string",
+          "enum": [
+            "official",
+            "discovery",
+            "historical",
+            "redundancy"
+          ]
+        },
+        "source_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field_name",
+        "candidate_values",
+        "source_ids",
+        "resolution_state"
+      ],
+      "properties": {
+        "field_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate_values": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_ids": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string",
+            "enum": [
+              "official_gazette",
+              "digitalnz_gazette",
+              "victoria_lexisnexis_gazette",
+              "nzlii_gazette"
+            ]
+          }
+        },
+        "resolution_state": {
+          "type": "string",
+          "enum": [
+            "unreviewed",
+            "reviewed",
+            "accepted",
+            "rejected"
+          ]
+        },
+        "review_note": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}
+

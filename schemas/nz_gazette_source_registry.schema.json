@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/corpus-legislation-nz/schemas/nz_gazette_source_registry.schema.json",
+  "title": "NZ Gazette source registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry_version",
+    "updated_at",
+    "canonical_precedence",
+    "coverage_dimensions",
+    "retrieval_policy",
+    "sources",
+    "coverage_matrix"
+  ],
+  "properties": {
+    "registry_version": {
+      "type": "string",
+      "pattern": "^v?[0-9]+(\\.[0-9]+){0,2}$"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "canonical_precedence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/source_id"
+      }
+    },
+    "coverage_dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/coverage_dimension"
+      }
+    },
+    "retrieval_policy": {
+      "$ref": "#/$defs/retrieval_policy"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "coverage_matrix": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/coverage_entry"
+      }
+    }
+  },
+  "$defs": {
+    "source_id": {
+      "type": "string",
+      "enum": [
+        "official_gazette",
+        "digitalnz_gazette",
+        "victoria_lexisnexis_gazette",
+        "nzlii_gazette"
+      ]
+    },
+    "source_tier": {
+      "type": "string",
+      "enum": [
+        "official",
+        "discovery",
+        "historical",
+        "redundancy"
+      ]
+    },
+    "coverage_dimension": {
+      "type": "string",
+      "enum": [
+        "source_id",
+        "year",
+        "issue_id",
+        "notice_id",
+        "page_start",
+        "page_end",
+        "artifact_type",
+        "coverage_state"
+      ]
+    },
+    "coverage_state": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "gap",
+        "overlap",
+        "blocked",
+        "unknown"
+      ]
+    },
+    "retrieval_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifiable_requests",
+        "rate_limited",
+        "min_seconds_between_requests",
+        "bounded_smoke_run_only",
+        "stealth_scraping_allowed",
+        "captcha_bypass_allowed",
+        "access_control_bypass_allowed",
+        "preserve_http_metadata",
+        "preserve_request_response_metadata",
+        "notes"
+      ],
+      "properties": {
+        "identifiable_requests": { "type": "boolean" },
+        "rate_limited": { "type": "boolean" },
+        "min_seconds_between_requests": { "type": "number", "minimum": 0 },
+        "bounded_smoke_run_only": { "type": "boolean" },
+        "stealth_scraping_allowed": { "type": "boolean", "const": false },
+        "captcha_bypass_allowed": { "type": "boolean", "const": false },
+        "access_control_bypass_allowed": { "type": "boolean", "const": false },
+        "preserve_http_metadata": { "type": "boolean" },
+        "preserve_request_response_metadata": { "type": "boolean" },
+        "notes": { "type": "string", "minLength": 1 }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_name",
+        "source_tier",
+        "base_url",
+        "expected_artifacts",
+        "canonical_eligible",
+        "rights_note",
+        "access_notes",
+        "retrieval_policy"
+      ],
+      "properties": {
+        "source_id": {
+          "$ref": "#/$defs/source_id"
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_tier": {
+          "$ref": "#/$defs/source_tier"
+        },
+        "base_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "expected_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "canonical_eligible": {
+          "type": "boolean"
+        },
+        "rights_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "access_notes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieval_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min_seconds_between_requests",
+            "bounded_smoke_run_limit",
+            "allow_head_requests"
+          ],
+          "properties": {
+            "min_seconds_between_requests": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bounded_smoke_run_limit": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "allow_head_requests": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "coverage_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "artifact_type",
+        "coverage_state"
+      ],
+      "properties": {
+        "source_id": {
+          "$ref": "#/$defs/source_id"
+        },
+        "year": {
+          "type": ["integer", "null"]
+        },
+        "issue_id": {
+          "type": ["string", "null"]
+        },
+        "notice_id": {
+          "type": ["string", "null"]
+        },
+        "page_start": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "page_end": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "artifact_type": {
+          "type": "string",
+          "enum": [
+            "issue_listing",
+            "issue_page",
+            "issue_pdf",
+            "notice_page",
+            "notice_pdf",
+            "api_page",
+            "html_page",
+            "index_page",
+            "blocked_evidence",
+            "other"
+          ]
+        },
+        "coverage_state": {
+          "$ref": "#/$defs/coverage_state"
+        },
+        "notes": {
+          "type": ["string", "null"]
+        },
+        "evidence_path": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}
+
