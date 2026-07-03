@@ -26,6 +26,7 @@ from .metadata_packages import build_metadata_packages, validate_metadata_packag
 from .normalize import normalize_version_record
 from .nz_api import NZLegislationClient
 from .nzlii_reconcile import NZLII_SOURCE_INVENTORY, write_nzlii_reconciliation_report
+from .official_gazette import build_official_gazette_archive
 from .parquet_writer import write_partitioned_parquet
 from .period_shards import split_period_seed_files
 from .rss_feed import FEED_FILENAME, build_feed
@@ -787,6 +788,28 @@ def archive_cmd(
 ) -> None:
     settings = Settings()
     result = build_archive(settings.output_dir, output_dir, year=year)
+    console.print_json(data=result)
+
+
+@app.command("official-gazette-archive")
+def official_gazette_archive_cmd(
+    records_jsonl: Annotated[
+        Path, typer.Option(help="JSONL file containing official Gazette raw source records.")
+    ] = Path("data/official-gazette/records.jsonl"),
+    source_dir: Annotated[
+        Path, typer.Option(help="Directory containing official Gazette raw artifacts.")
+    ] = Path("data/official-gazette/raw"),
+    year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
+    output_dir: Annotated[Path, typer.Option(help="Archive output directory.")] = Path(
+        "dist/official-gazette"
+    ),
+) -> None:
+    result = build_official_gazette_archive(
+        source_dir,
+        output_dir,
+        records_jsonl=records_jsonl,
+        year=year,
+    )
     console.print_json(data=result)
 
 

@@ -1500,15 +1500,6 @@ feeds, official website fallback retrieval, and NZLII redundancy.
 
 ---
 
-- [ ] **Track: Official Gazette source archive**
-*Link: [./tracks/track_42_official_gazette_source_archive/](./tracks/track_42_official_gazette_source_archive/)*
-
-Goal: Archive official NZ Gazette issue PDFs and notice pages as their own
-source evidence layer with raw artifacts, HTTP metadata, hashes, extraction
-outputs, and provenance.
-
----
-
 - [ ] **Track: DigitalNZ Gazette source archive**
 *Link: [./tracks/track_43_digitalnz_gazette_source_archive/](./tracks/track_43_digitalnz_gazette_source_archive/)*
 

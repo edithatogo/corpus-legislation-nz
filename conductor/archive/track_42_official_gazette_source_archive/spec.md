@@ -46,3 +46,15 @@ checksums, and extraction outputs for the official source.
 - DigitalNZ harvesting.
 - Historical Victoria/LexisNexis or NZLII retrieval.
 - Public publication of the official source archive.
+
+## Completion Evidence
+
+- `docs/official_gazette_archive.md`
+- `schemas/official_gazette_archive_manifest.schema.json`
+- `src/nz_legislation_corpus/official_gazette.py`
+- `src/nz_legislation_corpus/archive.py`
+- `src/nz_legislation_corpus/cli.py`
+- `tests/test_official_gazette_archive.py`
+- Validation commands:
+  - `uv run pytest -q tests/test_official_gazette_archive.py tests/test_manifest.py tests/test_nz_gazette_source_registry.py tests/test_shared_core_schema.py tests/smoke/test_cli_smoke.py`
+  - `uv run ruff check src/nz_legislation_corpus/archive.py src/nz_legislation_corpus/cli.py src/nz_legislation_corpus/official_gazette.py tests/test_official_gazette_archive.py`

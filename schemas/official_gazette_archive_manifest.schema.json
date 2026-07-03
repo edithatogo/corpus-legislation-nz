@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/corpus-legislation-nz/schemas/official_gazette_archive_manifest.schema.json",
+  "title": "Official Gazette archive manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_id",
+    "source_name",
+    "source_tier",
+    "source_listing_url",
+    "generated_at_utc",
+    "record_count",
+    "artifact_type_counts",
+    "records",
+    "content_sha256",
+    "manifest_sha256",
+    "coverage_warning"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "source_id": {
+      "const": "official_gazette"
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_tier": {
+      "const": "official"
+    },
+    "source_listing_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "artifact_type_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/record"
+      }
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "coverage_warning": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_type",
+        "raw_artifact_path",
+        "source_url",
+        "retrieved_at",
+        "content_sha256",
+        "rights_note",
+        "source_local_id",
+        "coverage_state",
+        "source_id",
+        "source_name",
+        "source_tier"
+      ],
+      "properties": {
+        "artifact_type": {
+          "type": "string",
+          "enum": [
+            "issue_listing",
+            "issue_page",
+            "issue_pdf",
+            "notice_page",
+            "notice_pdf",
+            "blocked_evidence",
+            "html_page",
+            "index_page",
+            "other"
+          ]
+        },
+        "raw_artifact_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rights_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_local_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverage_state": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "gap",
+            "blocked",
+            "unknown"
+          ]
+        },
+        "source_id": {
+          "const": "official_gazette"
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_tier": {
+          "const": "official"
+        },
+        "http_metadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "extraction": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

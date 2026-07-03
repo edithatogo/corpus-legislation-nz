@@ -29,10 +29,22 @@ def _tar_filter(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
 
 
 def build_archive(
-    input_dir: Path, output_dir: Path, *, year: str, prefer_zstd: bool = True
+    input_dir: Path,
+    output_dir: Path,
+    *,
+    year: str,
+    prefer_zstd: bool = True,
+    archive_name_prefix: str = "corpus-legislation-nz",
+    manifest_name_prefix: str | None = None,
+    tar_root_name: str = "corpus-legislation-nz",
+    artifact_class: str = "annual_zenodo_archive",
+    publication_target: str = "zenodo",
+    coverage_statement: str | None = None,
 ) -> dict[str, str]:
+    """Build a deterministic source archive bundle and release evidence."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    base = f"corpus-legislation-nz-{year}.tar"
+    manifest_prefix = manifest_name_prefix or archive_name_prefix
+    base = f"{archive_name_prefix}-{year}.tar"
     archive_path = output_dir / (base + ".zst")
     compression = "zstd"
 
@@ -46,38 +58,37 @@ def build_archive(
                 cctx.stream_writer(raw_out) as compressor,
                 tarfile.open(fileobj=compressor, mode="w|") as tar,
             ):
-                tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
+                tar.add(input_dir, arcname=tar_root_name, filter=_tar_filter)
         except Exception:
             archive_path = output_dir / (base + ".gz")
             compression = "gzip"
             with tarfile.open(archive_path, mode="w:gz") as tar:
-                tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
+                tar.add(input_dir, arcname=tar_root_name, filter=_tar_filter)
     else:
         archive_path = output_dir / (base + ".gz")
         compression = "gzip"
         with tarfile.open(archive_path, mode="w:gz") as tar:
-            tar.add(input_dir, arcname="corpus-legislation-nz", filter=_tar_filter)
+            tar.add(input_dir, arcname=tar_root_name, filter=_tar_filter)
 
-    manifest_path = output_dir / f"corpus-legislation-nz-{year}.manifest.json"
+    manifest_path = output_dir / f"{manifest_prefix}-{year}.manifest.json"
     manifest = build_manifest(input_dir)
     manifest["archive_file"] = archive_path.name
     manifest["archive_sha256"] = sha256_file(archive_path)
     manifest["archive_compression"] = compression
     write_json(manifest_path, manifest)
 
-    provenance_path = output_dir / f"corpus-legislation-nz-{year}.release-evidence.json"
+    provenance_path = output_dir / f"{manifest_prefix}-{year}.release-evidence.json"
     build_release_evidence(
-        artifact_class="annual_zenodo_archive",
+        artifact_class=artifact_class,
         output_path=provenance_path,
         subjects=[archive_path, manifest_path],
         manifest=manifest,
-        coverage_statement=(
-            "Coverage is not proven complete until reconciled against an authoritative inventory."
-        ),
-        publication_target="zenodo",
+        coverage_statement=coverage_statement
+        or "Coverage is not proven complete until reconciled against an authoritative inventory.",
+        publication_target=publication_target,
     )
 
-    checksums_path = output_dir / f"corpus-legislation-nz-{year}.SHA256SUMS.txt"
+    checksums_path = output_dir / f"{manifest_prefix}-{year}.SHA256SUMS.txt"
     lines = []
     for path in [archive_path, manifest_path, provenance_path]:
         lines.append(f"{sha256_file(path)}  {path.name}")
