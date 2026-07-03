@@ -25,6 +25,7 @@ from .discovery import (
     normalize_work_ids,
 )
 from .feed_change import write_feed_change_artifacts
+from .gazette_freshness import build_gazette_freshness_report
 from .historical_gazette import (
     build_historical_gazette_archive,
     export_historical_gazette_source,
@@ -1239,6 +1240,99 @@ def feed_change_detect_cmd(
         feed_url=feed_url,
         retrieved_at=retrieved_at,
         previous_state=previous_state,
+    )
+    console.print_json(data=report)
+
+
+@app.command("gazette-freshness-detect")
+def gazette_freshness_detect_cmd(
+    official_feed_path: Annotated[
+        Path,
+        typer.Option(help="Downloaded official Gazette RSS/Atom feed file."),
+    ] = Path("generated/nz-gazette-freshness-detection/official/feed.xml"),
+    output_dir: Annotated[
+        Path,
+        typer.Option(help="Directory for freshness state, queues, and reports."),
+    ] = Path("generated/nz-gazette-freshness-detection"),
+    official_feed_url: Annotated[
+        str,
+        typer.Option(help="Recorded official feed URL."),
+    ] = "",
+    previous_state_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional previous freshness_state.jsonl for idempotent queues."),
+    ] = None,
+    retrieved_at: Annotated[
+        str | None,
+        typer.Option(help="Optional retrieval timestamp override for deterministic tests."),
+    ] = None,
+    digitalnz_api_key: Annotated[
+        str | None,
+        typer.Option(help="DigitalNZ API key. Defaults to DIGITALNZ_API_KEY."),
+    ] = None,
+    digitalnz_query_text: Annotated[
+        str,
+        typer.Option(help="DigitalNZ Gazette freshness query text."),
+    ] = "Gazette",
+    digitalnz_collection_filter: Annotated[
+        str,
+        typer.Option(help="DigitalNZ collection filter."),
+    ] = "New Zealand Gazette",
+    digitalnz_page_size: Annotated[
+        int,
+        typer.Option(help="DigitalNZ records per page."),
+    ] = 100,
+    digitalnz_start_page: Annotated[
+        int,
+        typer.Option(help="First DigitalNZ page to request."),
+    ] = 1,
+    digitalnz_max_pages: Annotated[
+        int | None,
+        typer.Option(help="Optional DigitalNZ page limit for bounded freshness polling."),
+    ] = 1,
+    digitalnz_sort_field: Annotated[
+        str,
+        typer.Option(help="DigitalNZ sort field."),
+    ] = "date",
+    digitalnz_sort_direction: Annotated[
+        str,
+        typer.Option(help="DigitalNZ sort direction."),
+    ] = "asc",
+    digitalnz_api_access_mode: Annotated[
+        str,
+        typer.Option(help="Recorded DigitalNZ API access mode."),
+    ] = "key_required",
+    digitalnz_api_url: Annotated[
+        str,
+        typer.Option(help="DigitalNZ API endpoint."),
+    ] = "https://api.digitalnz.org/v3/records.json",
+    digitalnz_dnz_repo_root: Annotated[
+        Path | None,
+        typer.Option(help="Optional local dnz repository root for dependency tracing."),
+    ] = None,
+) -> None:
+    """Build multi-source NZ Gazette freshness state and targeted refresh queues."""
+    if not official_feed_path.exists():
+        raise typer.BadParameter(f"Official feed path does not exist: {official_feed_path}")
+    resolved_digitalnz_api_key = digitalnz_api_key or os.getenv("DIGITALNZ_API_KEY")
+
+    report = build_gazette_freshness_report(
+        official_feed_path=official_feed_path,
+        digitalnz_api_key=resolved_digitalnz_api_key,
+        output_dir=output_dir,
+        official_feed_url=official_feed_url,
+        previous_state_path=previous_state_path,
+        retrieved_at_utc=retrieved_at,
+        digitalnz_query_text=digitalnz_query_text,
+        digitalnz_collection_filter=digitalnz_collection_filter,
+        digitalnz_page_size=digitalnz_page_size,
+        digitalnz_start_page=digitalnz_start_page,
+        digitalnz_max_pages=digitalnz_max_pages,
+        digitalnz_sort_field=digitalnz_sort_field,
+        digitalnz_sort_direction=digitalnz_sort_direction,
+        digitalnz_api_access_mode=digitalnz_api_access_mode,
+        digitalnz_api_url=digitalnz_api_url,
+        digitalnz_dnz_repo_root=digitalnz_dnz_repo_root,
     )
     console.print_json(data=report)
 

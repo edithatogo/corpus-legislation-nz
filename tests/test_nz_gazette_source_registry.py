@@ -37,7 +37,7 @@ def _valid_raw_record() -> dict[str, Any]:
         "http_metadata": {
             "status_code": 200,
             "content_type": "application/pdf",
-            "etag": "\"abc\"",
+            "etag": '"abc"',
         },
         "extraction": {
             "text_sha256": "b" * 64,
@@ -111,6 +111,7 @@ def test_registry_document_mentions_required_sources() -> None:
         "canonical_precedence",
         "Tracks 42",
         "Tracks 47",
+        "Track 48",
     ):
         assert snippet in text
 
@@ -170,4 +171,3 @@ def test_registry_contract_canonical_precedence_is_stable() -> None:
         "artifact_type",
         "coverage_state",
     ]
-

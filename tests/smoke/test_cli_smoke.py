@@ -113,6 +113,13 @@ def test_coverage_report_help() -> None:
 
 
 @pytest.mark.smoke
+def test_gazette_freshness_detect_help() -> None:
+    result = runner.invoke(app, ["gazette-freshness-detect", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "gazette-freshness-detect" in result.output
+
+
+@pytest.mark.smoke
 def test_review_full_corpus_bootstrap_command(tmp_path: Path) -> None:
     data = tmp_path / "data"
     write_jsonl(data / "records.jsonl", [{"stable_id": "act_public_2026_26", "text": "text"}])

@@ -114,3 +114,5 @@ shared registry is defined.
     archives.
   - Track 47 adds the workflow, review, and publication staging around those
     layers.
+  - Track 48 adds freshness and change detection across the official and
+    DigitalNZ surfaces and emits targeted refresh queues into Tracks 42-46.

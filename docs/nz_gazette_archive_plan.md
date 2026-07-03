@@ -57,9 +57,18 @@ derived canonical layer. The operator-facing entrypoint is
 archives, the canonical rebuild, and the resulting review/coverage evidence
 without enabling external publication.
 
+Track 48 adds the freshness layer that watches official and DigitalNZ change
+signals and emits bounded refresh queues into Tracks 42-46. It keeps the source
+archives immutable and uses the combined freshness report only as an advisory
+trigger for the next targeted refresh or canonical rebuild.
+
 ## Implementation Contract
 
 Tracks 42-47 must treat the registry, raw archive schema, and canonical schema
 as the shared contract for all Gazette source work. Raw source archives remain
 independent evidence layers; canonical records remain derived outputs that are
 reproducible from source manifests and review evidence.
+
+Track 48 must use the same registry as its source contract and must persist
+freshness state separately from the raw archives so reruns stay deterministic
+and resumable.

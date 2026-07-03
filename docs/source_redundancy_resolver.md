@@ -43,6 +43,11 @@ coverage comparisons, and text-rescue triage candidates. NZLII evidence remains
 non-canonical and review-only unless a future approved policy explicitly permits
 promotion.
 
+Track 48 Gazette freshness and change detection turns official and DigitalNZ
+change signals into deterministic refresh queues for Tracks 42-46. Freshness
+signals remain advisory evidence and do not replace the immutable source
+archives or the canonical comparison layer.
+
 None of these tracks override official-source primacy without explicit manual
 review. Fallback-assisted or NZLII-derived records remain non-canonical until a
 human reviewer records approval and the source-specific rights caveat is

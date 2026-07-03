@@ -1,0 +1,122 @@
+name: NZ Gazette freshness detection
+
+on:
+  workflow_dispatch:
+    inputs:
+      official_feed_url:
+        description: "Search-based official NZ Gazette RSS/Atom feed URL"
+        required: true
+        type: string
+      previous_state_path:
+        description: "Optional checked-in or restored freshness_state.jsonl path"
+        required: false
+        type: string
+        default: ""
+      digitalnz_max_pages:
+        description: "Optional DigitalNZ page limit for a bounded freshness poll"
+        required: false
+        type: number
+        default: 1
+  schedule:
+    - cron: "27 13 * * *"
+
+concurrency:
+  group: nz-gazette-freshness-detection-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FEED_URL: ${{ inputs.official_feed_url || vars.NZLC_OFFICIAL_FEED_URL }}
+      PREVIOUS_STATE_PATH: ${{ inputs.previous_state_path || '' }}
+      DIGITALNZ_MAX_PAGES: ${{ inputs.digitalnz_max_pages || 1 }}
+      OUTPUT_DIR: generated/nz-gazette-freshness-detection
+      DIGITALNZ_API_KEY: ${{ secrets.DIGITALNZ_API_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check official feed URL
+        run: |
+          set -euo pipefail
+          : "${FEED_URL:?Set the official_feed_url input or NZLC_OFFICIAL_FEED_URL repository variable}"
+          case "$FEED_URL" in
+            https://api.legislation.govt.nz/*|https://*.legislation.govt.nz/*|https://legislation.govt.nz/*) ;;
+            *)
+              echo "Refusing non-official feed URL: $FEED_URL" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          uv sync --frozen
+
+      - name: Download official feed
+        env:
+          NZ_LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUTPUT_DIR/official"
+          curl_args=(
+            --fail
+            --location
+            --retry 3
+            --retry-delay 5
+            --user-agent "corpus-legislation-nz gazette freshness detection"
+          )
+          if [ -n "${NZ_LEGISLATION_API_KEY:-}" ]; then
+            curl_args+=(--header "X-Api-Key: ${NZ_LEGISLATION_API_KEY}")
+          fi
+          curl "${curl_args[@]}" \
+            "$FEED_URL" \
+            --output "$OUTPUT_DIR/official/feed.xml"
+
+      - name: Build freshness state and queues
+        run: |
+          set -euo pipefail
+          args=(
+            --official-feed-path "$OUTPUT_DIR/official/feed.xml"
+            --output-dir "$OUTPUT_DIR"
+            --official-feed-url "$FEED_URL"
+            --digitalnz-max-pages "$DIGITALNZ_MAX_PAGES"
+          )
+          if [ -n "$DIGITALNZ_API_KEY" ]; then
+            args+=(--digitalnz-api-key "$DIGITALNZ_API_KEY")
+          fi
+          if [ -n "$PREVIOUS_STATE_PATH" ] && [ -f "$PREVIOUS_STATE_PATH" ]; then
+            args+=(--previous-state-path "$PREVIOUS_STATE_PATH")
+          fi
+          uv run nzlc gazette-freshness-detect "${args[@]}"
+
+      - name: Upload freshness artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nz-gazette-freshness-detection
+          path: generated/nz-gazette-freshness-detection/
+          if-no-files-found: error
+
+      - name: Freshness summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## NZ Gazette freshness detection" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Feed URL: $FEED_URL" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$OUTPUT_DIR/freshness_report.json" ]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$OUTPUT_DIR/freshness_report.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
