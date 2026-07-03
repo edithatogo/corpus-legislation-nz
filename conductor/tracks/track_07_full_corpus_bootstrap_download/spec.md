@@ -1,7 +1,7 @@
 # Spec - Full Corpus Bootstrap Download
 
 ## Status
-in_progress
+done
 
 ## Goal
 download the full corpus into local `data/` using the proven discovery method and conservative pacing.
@@ -37,9 +37,14 @@ download the full corpus into local `data/` using the proven discovery method an
   refreshed: run `27898963687`,
   `https://github.com/edithatogo/corpus-legislation-nz/actions/runs/27898963687`.
   The run remains `in_progress` pending completion of the `serial` job.
+- 2026-07-03: Batch 0068 completed successfully in run `28635745595` with
+  `ok=true`, 298 validated records, 0 failed records, 0 deferred records,
+  0 warnings, 0 missing text/XML risk indicators, and manifest hash
+  `0feea3b522e9c121450d2d2751b02661f6472c044a62ce8e5f2d284a689982d1`.
+  The merged artifact root was
+  `generated/full-corpus-bootstrap/downloaded-batches/full-corpus-batch-0068-download`.
 
 ## Remaining Tasks
 
-- Run remaining 68 historical batches through the no-upload -> review -> confirmed-upload cycle.
-- Run full live corpus sync after historical batches are verified.
-- Review validation, manifest, coverage evidence for each batch.
+- None. The full bootstrap completed through batch 0068 and the corpus is now
+  fully validated for the current seed set.

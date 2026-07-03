@@ -225,7 +225,7 @@ Current evidence:
 
 ## Track 07 - Full Corpus Bootstrap Download
 
-Status: `in_progress`
+Status: `done`
 
 Goal: download the full corpus into local `data/` using the proven discovery method and conservative pacing.
 
@@ -260,7 +260,7 @@ Current state:
 - 68 pre-split batches available in `generated/historical-discovery-27313765016/batches/`.
 - Historical batches 0001-0003 confirmed-uploaded to `edithatogo/corpus-legislation-nz-historical`.
 - Batch 0004 no-upload triggered: run `27362894765`.
-- Batches 0005-0068 (64 batches) still require the no-upload -> review -> confirmed-upload cycle.
+- Batches 0005-0067 (63 batches) required the no-upload -> review -> confirmed-upload cycle.
 - Full bootstrap workflow is now present in `.github/workflows/full_corpus_bootstrap.yml`.
 - Full corpus operations runbook is now documented in `docs/full_corpus_operations.md`.
 - Pilot run `27396415830` completed batch 0001 (500 work IDs) with full validate/manifest/coverage cycle in 5h14m at 1.0s pacing.
@@ -440,6 +440,12 @@ Current state:
   and 48 Parquet files written across the five downloaded batch artifacts.
   Track 07 is validated through batch 0067, and the scheduler is retargeted
   to start at batch 0068.
+- **2026-07-03 batch 0068 probe**: run `28635745595` succeeded for batch 0068.
+  The merged review was `ok=true` with 298 validated records, 0 failed
+  records, 0 deferred records, 0 warnings, and 0 missing text/XML risk
+  indicators. Sync state recorded 193 works checked, 203 versions checked,
+  203 records added, and 9 Parquet files written. Track 07 is validated
+  through batch 0068. No further batches remain in the current full bootstrap.
 
 ## Track 08 - Full Hugging Face Corpus Upload
 
