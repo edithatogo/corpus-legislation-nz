@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/corpus-legislation-nz/schemas/digitalnz_gazette_export_manifest.schema.json",
+  "title": "DigitalNZ Gazette export manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_id",
+    "source_name",
+    "source_tier",
+    "source_listing_url",
+    "generated_at_utc",
+    "api_access_mode",
+    "query",
+    "page_count",
+    "raw_record_count",
+    "normalized_record_count",
+    "record_count",
+    "source_records_path",
+    "records_path",
+    "raw_pages_path",
+    "state_path",
+    "pages",
+    "records",
+    "content_sha256",
+    "manifest_sha256",
+    "coverage_warning"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "source_id": {
+      "const": "digitalnz_gazette"
+    },
+    "source_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_tier": {
+      "const": "discovery"
+    },
+    "source_listing_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "api_access_mode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dnz_dependency_issue_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "dnz_repo_root": {
+      "type": ["string", "null"]
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "query_text",
+        "collection_filter",
+        "page_size",
+        "start_page",
+        "max_pages",
+        "sort_field",
+        "sort_direction",
+        "query_sha256",
+        "api_url"
+      ],
+      "properties": {
+        "query_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "collection_filter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "start_page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_pages": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "sort_field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sort_direction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "query_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "api_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "raw_record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "normalized_record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_records_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "records_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "raw_pages_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/record"
+      }
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "coverage_warning": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "page_number",
+        "raw_page_path",
+        "raw_page_sha256",
+        "page_request_sha256",
+        "page_response_sha256",
+        "result_count",
+        "retrieved_at_utc",
+        "api_url"
+      ],
+      "properties": {
+        "page_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "raw_page_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "raw_page_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "page_request_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "page_response_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "result_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retrieved_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "api_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "stable_id",
+        "source_id",
+        "source_name",
+        "source_tier",
+        "record_kind",
+        "source_local_id",
+        "title",
+        "landing_url",
+        "source_url",
+        "rights_note",
+        "coverage_state",
+        "page_number",
+        "page_position",
+        "content_sha256",
+        "raw_artifact_path"
+      ],
+      "properties": {
+        "stable_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "const": "digitalnz_gazette"
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_tier": {
+          "const": "discovery"
+        },
+        "record_kind": {
+          "const": "digitalnz_item"
+        },
+        "source_local_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "landing_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "rights_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverage_state": {
+          "type": "string",
+          "enum": ["complete", "partial", "gap", "blocked", "unknown"]
+        },
+        "page_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "page_position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "content_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "raw_artifact_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

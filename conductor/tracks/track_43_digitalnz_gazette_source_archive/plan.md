@@ -2,11 +2,13 @@
 
 ## Phase 1 - dnz Integration Contract
 
-- [ ] Task: Validate the local `dnz` CLI path and capabilities.
+- [~] Task: Validate the local `dnz` CLI path and capabilities.
     - [ ] Confirm `dnz search` can express `primary_collection=New Zealand
       Gazette`.
-    - [ ] Decide whether anonymous public API support or `DIGITALNZ_API_KEY`
+    - [x] Decide whether anonymous public API support or `DIGITALNZ_API_KEY`
       is required for regular harvesting.
+      - Decision: require `DIGITALNZ_API_KEY` for live export runs and track
+        the reusable exporter gap in `edithatogo/dnz` issue #1.
 - [ ] Task: Create or link the `dnz` dependency track.
     - [ ] Track Gazette export mode, deterministic paging, JSONL/page
       manifests, and validation evidence in the `dnz` repo.

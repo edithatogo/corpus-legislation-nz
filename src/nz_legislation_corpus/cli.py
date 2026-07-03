@@ -14,6 +14,10 @@ from .archive import build_archive
 from .bootstrap_merge import build_coverage_report, merge_bootstrap_artifacts
 from .bootstrap_review import write_full_corpus_bootstrap_review
 from .config import Settings, require
+from .digitalnz_gazette import (
+    build_digitalnz_gazette_archive,
+    export_digitalnz_gazette_source,
+)
 from .discovery import (
     build_work_id_batch_manifest,
     build_work_id_inventory,
@@ -810,6 +814,72 @@ def official_gazette_archive_cmd(
         records_jsonl=records_jsonl,
         year=year,
     )
+    console.print_json(data=result)
+
+
+@app.command("digitalnz-gazette-export")
+def digitalnz_gazette_export_cmd(
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory where the DigitalNZ Gazette source export is written.")
+    ] = Path("data/digitalnz-gazette"),
+    api_key: Annotated[
+        str | None,
+        typer.Option(help="DigitalNZ API key. Defaults to DIGITALNZ_API_KEY."),
+    ] = None,
+    query_text: Annotated[
+        str, typer.Option(help="Search text used to anchor the Gazette export.")
+    ] = "Gazette",
+    collection_filter: Annotated[
+        str, typer.Option(help="DigitalNZ collection filter for the Gazette export.")
+    ] = "New Zealand Gazette",
+    page_size: Annotated[int, typer.Option(help="Records per page.")] = 100,
+    start_page: Annotated[int, typer.Option(help="First page to request.")] = 1,
+    max_pages: Annotated[
+        int | None, typer.Option(help="Optional page limit for a bounded smoke export.")
+    ] = None,
+    sort_field: Annotated[str, typer.Option(help="Sort field.")] = "date",
+    sort_direction: Annotated[str, typer.Option(help="Sort direction.")] = "asc",
+    api_access_mode: Annotated[
+        str,
+        typer.Option(help="Recorded API access mode used in the export manifest."),
+    ] = "key_required",
+    dnz_repo_root: Annotated[
+        Path | None,
+        typer.Option(help="Optional local dnz repository root for dependency tracing."),
+    ] = None,
+) -> None:
+    resolved_api_key = api_key or os.getenv("DIGITALNZ_API_KEY")
+    if not resolved_api_key:
+        raise typer.BadParameter("Set DIGITALNZ_API_KEY or pass --api-key.")
+    result = export_digitalnz_gazette_source(
+        output_dir=output_dir,
+        api_key=resolved_api_key,
+        query_text=query_text,
+        collection_filter=collection_filter,
+        page_size=page_size,
+        start_page=start_page,
+        max_pages=max_pages,
+        sort_field=sort_field,
+        sort_direction=sort_direction,
+        api_access_mode=api_access_mode,
+        dnz_repo_root=dnz_repo_root,
+    )
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("digitalnz-gazette-archive")
+def digitalnz_gazette_archive_cmd(
+    source_dir: Annotated[
+        Path, typer.Option(help="Directory containing the exported DigitalNZ Gazette source tree.")
+    ] = Path("data/digitalnz-gazette"),
+    output_dir: Annotated[
+        Path, typer.Option(help="Archive output directory.")
+    ] = Path("dist/digitalnz-gazette"),
+    year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
+) -> None:
+    result = build_digitalnz_gazette_archive(source_dir, output_dir, year=year)
     console.print_json(data=result)
 
 

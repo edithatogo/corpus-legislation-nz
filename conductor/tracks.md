@@ -1500,7 +1500,7 @@ feeds, official website fallback retrieval, and NZLII redundancy.
 
 ---
 
-- [ ] **Track: DigitalNZ Gazette source archive**
+- [~] **Track: DigitalNZ Gazette source archive**
 *Link: [./tracks/track_43_digitalnz_gazette_source_archive/](./tracks/track_43_digitalnz_gazette_source_archive/)*
 
 Goal: Archive DigitalNZ New Zealand Gazette records through the local `dnz`

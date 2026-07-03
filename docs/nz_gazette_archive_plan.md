@@ -42,10 +42,11 @@ The shared registry and schema contract for this track lives in:
 
 ## Tooling Note
 
-A quick search of the current repo and nearby `edithatogo` repos did not reveal
-a Gazette-specific CLI to reuse. Track 41 should confirm whether the archive
-work can reuse an existing exporter, or whether a Gazette-specific
-scraper/export helper needs to be added alongside the track work.
+A quick search of the current repo and nearby `edithatogo` repos initially did
+not reveal a Gazette-specific CLI to reuse. Track 43 now uses a corpus-side
+DigitalNZ Gazette export wrapper and records the reusable-exporter gap in
+`edithatogo/dnz` issue #1 so the dependency can be hardened without blocking
+the archive work.
 
 ## Implementation Contract
 
@@ -53,4 +54,3 @@ Tracks 42-47 must treat the registry, raw archive schema, and canonical schema
 as the shared contract for all Gazette source work. Raw source archives remain
 independent evidence layers; canonical records remain derived outputs that are
 reproducible from source manifests and review evidence.
-
