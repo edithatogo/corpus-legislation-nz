@@ -25,6 +25,10 @@ from .discovery import (
     normalize_work_ids,
 )
 from .feed_change import write_feed_change_artifacts
+from .historical_gazette import (
+    build_historical_gazette_archive,
+    export_historical_gazette_source,
+)
 from .manifest import build_change_report, build_manifest
 from .metadata_packages import build_metadata_packages, validate_metadata_packages
 from .normalize import normalize_version_record
@@ -809,6 +813,64 @@ def official_gazette_archive_cmd(
     ),
 ) -> None:
     result = build_official_gazette_archive(
+        source_dir,
+        output_dir,
+        records_jsonl=records_jsonl,
+        year=year,
+    )
+    console.print_json(data=result)
+
+
+@app.command("historical-gazette-export")
+def historical_gazette_export_cmd(
+    output_dir: Annotated[
+        Path, typer.Option(help="Directory where the historical Gazette source export is written.")
+    ] = Path("data/victoria-lexisnexis-gazette"),
+    source_index_url: Annotated[
+        str,
+        typer.Option(
+            help=(
+                "Historical archive year-page URL. Defaults to the documented Victoria "
+                "University / LexisNexis archive surface."
+            )
+        ),
+    ] = "https://library.victoria.ac.nz/databases/nzgazettearchive/Html/2008.html",
+    source_year: Annotated[str, typer.Option(help="Historical archive year, e.g. 2008.")] = "2008",
+    index_html_path: Annotated[
+        Path | None,
+        typer.Option(help="Optional local HTML file for an offline historical smoke export."),
+    ] = None,
+    max_issue_rows: Annotated[
+        int | None,
+        typer.Option(help="Optional row limit for a bounded smoke export."),
+    ] = None,
+) -> None:
+    result = export_historical_gazette_source(
+        output_dir=output_dir,
+        source_year=source_year,
+        source_index_url=source_index_url,
+        index_html_path=index_html_path,
+        max_issue_rows=max_issue_rows,
+    )
+    console.print_json(data=result)
+    if not result["ok"]:
+        raise typer.Exit(code=2)
+
+
+@app.command("historical-gazette-archive")
+def historical_gazette_archive_cmd(
+    records_jsonl: Annotated[
+        Path, typer.Option(help="JSONL file containing historical Gazette raw source records.")
+    ] = Path("data/victoria-lexisnexis-gazette/records.jsonl"),
+    source_dir: Annotated[
+        Path, typer.Option(help="Directory containing historical Gazette raw artifacts.")
+    ] = Path("data/victoria-lexisnexis-gazette/raw"),
+    year: Annotated[str, typer.Option(help="Archive year, e.g. 2008.")] = "2008",
+    output_dir: Annotated[Path, typer.Option(help="Archive output directory.")] = Path(
+        "dist/victoria-lexisnexis-gazette"
+    ),
+) -> None:
+    result = build_historical_gazette_archive(
         source_dir,
         output_dir,
         records_jsonl=records_jsonl,

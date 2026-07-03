@@ -48,6 +48,9 @@ DigitalNZ Gazette export wrapper and records the reusable-exporter gap in
 `edithatogo/dnz` issue #1 so the dependency can be hardened without blocking
 the archive work.
 
+Track 44 now uses a conservative historical index-page parser and keeps
+rights/access caveats attached to every historical record.
+
 ## Implementation Contract
 
 Tracks 42-47 must treat the registry, raw archive schema, and canonical schema
