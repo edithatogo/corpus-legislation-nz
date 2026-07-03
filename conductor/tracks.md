@@ -1500,7 +1500,7 @@ feeds, official website fallback retrieval, and NZLII redundancy.
 
 ---
 
-- [ ] **Track: Victoria/LexisNexis historical Gazette archive**
+- [x] **Track: Victoria/LexisNexis historical Gazette archive**
 *Link: [./tracks/track_44_victoria_lexisnexis_historical_gazette_archive/](./tracks/track_44_victoria_lexisnexis_historical_gazette_archive/)*
 
 Goal: Archive Victoria/LexisNexis historical NZ Gazette index and content as a
