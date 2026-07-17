@@ -33,7 +33,7 @@ dev = [
   "hypothesis>=6.100.0",
   "scalene>=1.5.44",
 ]
-embeddings = ["FlagEmbedding>=1.2.0", "torch>=2.0.0", "transformers>=5.10.2"]
+embeddings = ["FlagEmbedding>=1.2.0", "torch>=2.13.0", "transformers>=5.10.2"]
 
 [project.scripts]
 nzlc = "nz_legislation_corpus.cli:app"
