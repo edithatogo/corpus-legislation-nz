@@ -1,5 +1,9 @@
 # Project Tracks
 
+## [ ] Track: dataset_identifier_interlinking_20260721
+
+[Specification and plan](./tracks/dataset_identifier_interlinking_20260721/)
+
 This file tracks the major work items for `corpus-legislation-nz`.
 
 ---
