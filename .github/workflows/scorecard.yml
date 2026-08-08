@@ -26,3 +26,5 @@ jobs:
       - uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7 # v4
         with:
           sarif_file: results.sarif
+      - name: Fail on blocking code-scanning alerts
+        uses: edithatogo/.github/.github/actions/code-scanning-gate@main
