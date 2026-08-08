@@ -46,11 +46,7 @@ class _FakeSession:
 
 
 def _blocked_responses() -> dict[str, _FakeResponse]:
-    robots_text = (
-        "User-agent: *\n"
-        "Disallow:\n"
-        "Content-Signal: search=yes,ai-train=no,use=reference\n"
-    )
+    robots_text = "User-agent: *\nDisallow:\nContent-Signal: search=yes,ai-train=no,use=reference\n"
     challenge_text = "<html><body>Just a moment...</body></html>"
     return {
         NZLII_GAZETTE_ROBOTS_URL: _FakeResponse(

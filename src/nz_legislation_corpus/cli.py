@@ -944,9 +944,9 @@ def digitalnz_gazette_archive_cmd(
     source_dir: Annotated[
         Path, typer.Option(help="Directory containing the exported DigitalNZ Gazette source tree.")
     ] = Path("data/digitalnz-gazette"),
-    output_dir: Annotated[
-        Path, typer.Option(help="Archive output directory.")
-    ] = Path("dist/digitalnz-gazette"),
+    output_dir: Annotated[Path, typer.Option(help="Archive output directory.")] = Path(
+        "dist/digitalnz-gazette"
+    ),
     year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
 ) -> None:
     result = build_digitalnz_gazette_archive(source_dir, output_dir, year=year)
@@ -981,9 +981,9 @@ def nzlii_gazette_archive_cmd(
     source_dir: Annotated[
         Path, typer.Option(help="Directory containing the exported NZLII Gazette source tree.")
     ] = Path("data/nzlii-gazette"),
-    output_dir: Annotated[
-        Path, typer.Option(help="Archive output directory.")
-    ] = Path("dist/nzlii-gazette"),
+    output_dir: Annotated[Path, typer.Option(help="Archive output directory.")] = Path(
+        "dist/nzlii-gazette"
+    ),
     year: Annotated[str, typer.Option(help="Archive year, e.g. 2026.")] = "2026",
 ) -> None:
     result = build_nzlii_gazette_archive(source_dir, output_dir, year=year)

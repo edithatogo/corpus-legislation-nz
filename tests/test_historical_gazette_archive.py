@@ -128,9 +128,9 @@ def test_build_historical_gazette_manifest_writes_expected_schema(tmp_path: Path
         ),
     ]
     schema = json.loads(
-        (
-            Path.cwd() / "schemas" / "historical_gazette_archive_manifest.schema.json"
-        ).read_text(encoding="utf-8")
+        (Path.cwd() / "schemas" / "historical_gazette_archive_manifest.schema.json").read_text(
+            encoding="utf-8"
+        )
     )
     manifest_path = tmp_path / "historical-manifest.json"
 
@@ -144,7 +144,10 @@ def test_build_historical_gazette_manifest_writes_expected_schema(tmp_path: Path
     validate(manifest, schema)
 
     assert manifest_path.exists()
-    assert manifest["source_index_url"] == "https://library.victoria.ac.nz/databases/nzgazettearchive/Html/2008.html"
+    assert (
+        manifest["source_index_url"]
+        == "https://library.victoria.ac.nz/databases/nzgazettearchive/Html/2008.html"
+    )
     assert manifest["record_kind_counts"] == {"historical_index": 1, "historical_page": 1}
     assert manifest["index_page_count"] == 1
     assert manifest["issue_row_count"] == 1
@@ -207,9 +210,9 @@ def test_historical_export_and_archive_smoke(tmp_path: Path) -> None:
     )
 
     manifest_schema = json.loads(
-        (
-            Path.cwd() / "schemas" / "historical_gazette_archive_manifest.schema.json"
-        ).read_text(encoding="utf-8")
+        (Path.cwd() / "schemas" / "historical_gazette_archive_manifest.schema.json").read_text(
+            encoding="utf-8"
+        )
     )
     manifest = json.loads(
         (export_dir / "manifests" / "latest_manifest.json").read_text(encoding="utf-8")

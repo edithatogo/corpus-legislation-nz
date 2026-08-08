@@ -423,7 +423,11 @@ def build_historical_gazette_coverage_report(
         json.dumps(coverage, sort_keys=True, ensure_ascii=False)
     )
     coverage["manifest_sha256"] = sha256_text(
-        json.dumps({k: v for k, v in coverage.items() if k != "manifest_sha256"}, sort_keys=True, ensure_ascii=False)
+        json.dumps(
+            {k: v for k, v in coverage.items() if k != "manifest_sha256"},
+            sort_keys=True,
+            ensure_ascii=False,
+        )
     )
     return coverage
 
@@ -571,9 +575,9 @@ def export_historical_gazette_source(
             retrieved_at=retrieved_at,
             record_kind="historical_page",
             source_local_id=source_local_id,
-        stable_id=str(row["stable_id"]),
-        coverage_state="partial",
-        extraction={
+            stable_id=str(row["stable_id"]),
+            coverage_state="partial",
+            extraction={
                 "issue_number": issue_number,
                 "issue_label": row["issue_label"],
                 "page_start": row["page_start"],
@@ -714,9 +718,7 @@ def build_historical_gazette_archive(
         ),
         publication_target="source_evidence",
     )
-    checksums_path = (
-        output_dir / f"{HISTORICAL_GAZETTE_ARCHIVE_PREFIX}-{year}.SHA256SUMS.txt"
-    )
+    checksums_path = output_dir / f"{HISTORICAL_GAZETTE_ARCHIVE_PREFIX}-{year}.SHA256SUMS.txt"
     lines = [
         f"{sha256_file(Path(bundle['archive_path']))}  {Path(bundle['archive_path']).name}",
         f"{sha256_file(manifest_path)}  {manifest_path.name}",

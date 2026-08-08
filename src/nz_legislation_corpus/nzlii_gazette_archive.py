@@ -90,12 +90,16 @@ def probe_nzlii_gazette_access(
         robots_response = client.get(robots_url, headers={"User-Agent": "nzlc-nzlii-probe/1.0"})
         robots_text = _response_text(robots_response)
         content_signal = _parse_content_signal(robots_text)
-        probes = [_probe_candidate(client, url) for url in candidate_urls or NZLII_GAZETTE_SOURCE_URLS]
+        probes = [
+            _probe_candidate(client, url) for url in candidate_urls or NZLII_GAZETTE_SOURCE_URLS
+        ]
     finally:
         if close_client:
             client.close()
 
-    usable_candidates = [probe for probe in probes if not probe["blocked"] and probe["status_code"] < 400]
+    usable_candidates = [
+        probe for probe in probes if not probe["blocked"] and probe["status_code"] < 400
+    ]
     if usable_candidates:
         access_status = "usable"
         blocked_reason = ""
@@ -383,7 +387,11 @@ def build_nzlii_gazette_coverage_report(
         json.dumps(coverage, sort_keys=True, ensure_ascii=False)
     )
     coverage["manifest_sha256"] = sha256_text(
-        json.dumps({k: v for k, v in coverage.items() if k != "manifest_sha256"}, sort_keys=True, ensure_ascii=False)
+        json.dumps(
+            {k: v for k, v in coverage.items() if k != "manifest_sha256"},
+            sort_keys=True,
+            ensure_ascii=False,
+        )
     )
     return coverage
 
@@ -545,7 +553,9 @@ def build_nzlii_gazette_archive(
     """Bundle NZLII Gazette source-state or raw archive artifacts."""
     records = read_jsonl(source_dir / "records.jsonl")
     if not records:
-        raise RuntimeError(f"No NZLII Gazette source records found in {source_dir / 'records.jsonl'}")
+        raise RuntimeError(
+            f"No NZLII Gazette source records found in {source_dir / 'records.jsonl'}"
+        )
     output_dir.mkdir(parents=True, exist_ok=True)
     source_state = read_json(source_dir / "_state" / "source_state.json", default={}) or {}
     bundle = build_archive(

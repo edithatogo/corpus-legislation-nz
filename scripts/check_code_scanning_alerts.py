@@ -21,7 +21,9 @@ BLOCKING_SEVERITIES = {"high", "critical"}
 class AlertHit:
     """A blocking code-scanning alert."""
 
-    def __init__(self, number: int, rule_id: str, severity: str, message: str, html_url: str) -> None:
+    def __init__(
+        self, number: int, rule_id: str, severity: str, message: str, html_url: str
+    ) -> None:
         self.number = number
         self.rule_id = rule_id
         self.severity = severity
@@ -58,7 +60,9 @@ def _http_get_json(url: str, token: str | None) -> tuple[Any, dict[str, str]]:
     return json.loads(payload), dict(response.headers.items())
 
 
-def _fetch_page(repository: str, token: str | None, page: int, per_page: int) -> list[dict[str, Any]]:
+def _fetch_page(
+    repository: str, token: str | None, page: int, per_page: int
+) -> list[dict[str, Any]]:
     url = (
         f"https://api.github.com/repos/{repository}/code-scanning/alerts"
         f"?state=open&per_page={per_page}&page={page}"

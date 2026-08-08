@@ -106,7 +106,9 @@ def _write_source_tree(
     return root
 
 
-def test_build_canonical_records_prefers_official_and_handles_metadata_only_matches(tmp_path: Path) -> None:
+def test_build_canonical_records_prefers_official_and_handles_metadata_only_matches(
+    tmp_path: Path,
+) -> None:
     official_dir = _write_source_tree(
         tmp_path / "data" / "official-gazette",
         source_id="official_gazette",
@@ -184,9 +186,13 @@ def test_build_canonical_records_prefers_official_and_handles_metadata_only_matc
     assert comparison["comparison_report"]["conflicting_record_count"] == 0
 
     canonical_records = comparison["canonical_records"]
-    official_record = next(record for record in canonical_records if record["canonical_source"] == "official_gazette")
+    official_record = next(
+        record for record in canonical_records if record["canonical_source"] == "official_gazette"
+    )
     historical_record = next(
-        record for record in canonical_records if record["canonical_source"] == "victoria_lexisnexis_gazette"
+        record
+        for record in canonical_records
+        if record["canonical_source"] == "victoria_lexisnexis_gazette"
     )
     validate(official_record, canonical_schema)
     validate(historical_record, canonical_schema)
@@ -278,17 +284,14 @@ def test_build_canonical_review_requires_conflict_decisions(tmp_path: Path) -> N
             {"source_id": "official_gazette", "source_dir": official_dir},
             {"source_id": "digitalnz_gazette", "source_dir": digitalnz_dir},
         ],
-        decisions=json.loads(decisions_path.read_text(encoding="utf-8").strip()) and [
-            json.loads(decisions_path.read_text(encoding="utf-8").strip())
-        ],
+        decisions=json.loads(decisions_path.read_text(encoding="utf-8").strip())
+        and [json.loads(decisions_path.read_text(encoding="utf-8").strip())],
         comparison_run_id="gazette-compare-test-002",
     )
     reviewed = build_nz_gazette_canonical_review(
         canonical_records=comparison_with_decision["canonical_records"],
         conflict_queue=comparison_with_decision["conflict_queue"],
-        decisions=[
-            json.loads(decisions_path.read_text(encoding="utf-8").strip())
-        ],
+        decisions=[json.loads(decisions_path.read_text(encoding="utf-8").strip())],
     )
     assert reviewed["ok"]
 

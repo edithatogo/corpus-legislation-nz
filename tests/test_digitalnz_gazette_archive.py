@@ -279,7 +279,9 @@ def test_export_and_archive_build_smoke(tmp_path: Path, monkeypatch) -> None:
             encoding="utf-8"
         )
     )
-    manifest = json.loads((export_dir / "manifests" / "latest_manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (export_dir / "manifests" / "latest_manifest.json").read_text(encoding="utf-8")
+    )
     validate(manifest, manifest_schema)
 
     assert result["ok"]

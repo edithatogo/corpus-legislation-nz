@@ -126,8 +126,12 @@ def _comparison_key(record: Mapping[str, Any]) -> tuple[str, str]:
     if text_hash:
         return ("text", text_hash)
 
-    notice_id = _first_nonempty(record, ("notice_id",)) or _extract_from_mapping(record, ("notice_id",))
-    issue_id = _first_nonempty(record, ("issue_id",)) or _extract_from_mapping(record, ("issue_id",))
+    notice_id = _first_nonempty(record, ("notice_id",)) or _extract_from_mapping(
+        record, ("notice_id",)
+    )
+    issue_id = _first_nonempty(record, ("issue_id",)) or _extract_from_mapping(
+        record, ("issue_id",)
+    )
     title = _normalize_text(_source_title(record))
     date = _source_date(record)
     page_start = _source_page_start(record)
@@ -178,7 +182,9 @@ def _load_source_archive(source_dir: Path) -> dict[str, Any]:
         "manifest_path": manifest_path,
         "manifest": manifest,
         "source_id": source_id,
-        "source_name": str(manifest.get("source_name") or records[0].get("source_name") or source_id),
+        "source_name": str(
+            manifest.get("source_name") or records[0].get("source_name") or source_id
+        ),
         "source_tier": str(manifest.get("source_tier") or records[0].get("source_tier") or ""),
         "records": records,
     }
@@ -228,9 +234,8 @@ def _supporting_source(record: Mapping[str, Any], source_manifest_sha256: str) -
         "source_url": _source_url(record),
         "source_tier": record["source_tier"],
         "source_manifest_sha256": source_manifest_sha256,
-        "content_sha256": _source_content_hash(record) or sha256_text(
-            json.dumps(record, sort_keys=True, ensure_ascii=False)
-        ),
+        "content_sha256": _source_content_hash(record)
+        or sha256_text(json.dumps(record, sort_keys=True, ensure_ascii=False)),
     }
 
 
@@ -257,7 +262,9 @@ def _collect_candidates(records: Sequence[Mapping[str, Any]], field_name: str) -
     elif field_name == "page_end":
         values = [_source_page_end(record) for record in records if _source_page_end(record)]
     elif field_name == "content_sha256":
-        values = [_source_content_hash(record) for record in records if _source_content_hash(record)]
+        values = [
+            _source_content_hash(record) for record in records if _source_content_hash(record)
+        ]
     elif field_name == "text_sha256":
         values = [_source_text_hash(record) for record in records if _source_text_hash(record)]
     elif field_name == "rights_note":
@@ -282,7 +289,9 @@ def _conflict_records(records: Sequence[Mapping[str, Any]]) -> list[dict[str, An
         "rights_note",
     ]
     conflicts: list[dict[str, Any]] = []
-    source_ids = [str(record.get("source_id") or "") for record in records if record.get("source_id")]
+    source_ids = [
+        str(record.get("source_id") or "") for record in records if record.get("source_id")
+    ]
     for field_name in conflict_fields:
         candidate_values = _collect_candidates(records, field_name)
         if len(candidate_values) < 2:
@@ -321,11 +330,17 @@ def _effective_conflicts(
     return resolved
 
 
-def _confidence_for_group(records: Sequence[Mapping[str, Any]], conflicts: Sequence[Mapping[str, Any]]) -> str:
+def _confidence_for_group(
+    records: Sequence[Mapping[str, Any]], conflicts: Sequence[Mapping[str, Any]]
+) -> str:
     if conflicts:
         return "low"
-    source_ids = {str(record.get("source_id") or "") for record in records if record.get("source_id")}
-    content_hashes = {_source_content_hash(record) for record in records if _source_content_hash(record)}
+    source_ids = {
+        str(record.get("source_id") or "") for record in records if record.get("source_id")
+    }
+    content_hashes = {
+        _source_content_hash(record) for record in records if _source_content_hash(record)
+    }
     if len(source_ids) >= 2 and len(content_hashes) <= 1:
         return "high"
     if len(source_ids) >= 2:
@@ -342,13 +357,19 @@ def _coverage_state_for_group(records: Sequence[Mapping[str, Any]]) -> str:
 
 
 def _historical_only(records: Sequence[Mapping[str, Any]]) -> bool:
-    source_tiers = {str(record.get("source_tier") or "") for record in records if record.get("source_tier")}
-    source_ids = {str(record.get("source_id") or "") for record in records if record.get("source_id")}
+    source_tiers = {
+        str(record.get("source_tier") or "") for record in records if record.get("source_tier")
+    }
+    source_ids = {
+        str(record.get("source_id") or "") for record in records if record.get("source_id")
+    }
     return source_tiers == {"historical"} and bool(source_ids)
 
 
 def _canonical_source_id(records: Sequence[Mapping[str, Any]]) -> str:
-    ordered = sorted(records, key=lambda record: _precedence_index(str(record.get("source_id") or "")))
+    ordered = sorted(
+        records, key=lambda record: _precedence_index(str(record.get("source_id") or ""))
+    )
     return str(ordered[0].get("source_id") or "")
 
 
@@ -356,7 +377,9 @@ def _canonical_uri(canonical_id: str) -> str:
     return f"{CANONICAL_URI_PREFIX}/{canonical_id}"
 
 
-def _canonical_id(group_key: tuple[str, str], canonical_source: str, records: Sequence[Mapping[str, Any]]) -> str:
+def _canonical_id(
+    group_key: tuple[str, str], canonical_source: str, records: Sequence[Mapping[str, Any]]
+) -> str:
     stable_bits = [
         group_key[0],
         group_key[1],
@@ -366,7 +389,9 @@ def _canonical_id(group_key: tuple[str, str], canonical_source: str, records: Se
     ]
     digest = sha256_text("|".join(bit for bit in stable_bits if bit))
     title_bit = _normalize_text(_choose_value(records, fields=_TITLE_FIELDS))[:24].replace(" ", "-")
-    date_bit = _choose_value(records, fields=("publication_date", "issue_date", "date", "notice_date"))[:10]
+    date_bit = _choose_value(
+        records, fields=("publication_date", "issue_date", "date", "notice_date")
+    )[:10]
     prefix = "gazette"
     if date_bit:
         prefix = f"gazette-{date_bit}"
@@ -397,9 +422,13 @@ def build_nz_gazette_canonical_records(
             missing_sources.append(
                 {
                     "source_id": loaded.get("source_id") or str(source_tree.get("source_id") or ""),
-                    "source_name": loaded.get("source_name") or str(source_tree.get("source_name") or ""),
-                    "source_tier": loaded.get("source_tier") or str(source_tree.get("source_tier") or ""),
-                    "source_dir": str(loaded.get("source_dir") or source_tree.get("source_dir") or ""),
+                    "source_name": loaded.get("source_name")
+                    or str(source_tree.get("source_name") or ""),
+                    "source_tier": loaded.get("source_tier")
+                    or str(source_tree.get("source_tier") or ""),
+                    "source_dir": str(
+                        loaded.get("source_dir") or source_tree.get("source_dir") or ""
+                    ),
                     "missing_reason": loaded.get("missing_reason") or "missing_source_archive",
                 }
             )
@@ -471,13 +500,25 @@ def build_nz_gazette_canonical_records(
             low_confidence_count += 1
         if len(items) > 1:
             matched_count += 1
-            if len({_source_content_hash(record) for record in records if _source_content_hash(record)}) <= 1:
+            if (
+                len(
+                    {
+                        _source_content_hash(record)
+                        for record in records
+                        if _source_content_hash(record)
+                    }
+                )
+                <= 1
+            ):
                 exact_match_count += 1
         else:
             unmatched_count += 1
         if conflicts:
             conflict_count += 1
-            if not all(conflict.get("resolution_state") in {"reviewed", "accepted"} for conflict in conflicts):
+            if not all(
+                conflict.get("resolution_state") in {"reviewed", "accepted"}
+                for conflict in conflicts
+            ):
                 conflict_queue.append(
                     {
                         "canonical_id": canonical_id,
@@ -508,9 +549,8 @@ def build_nz_gazette_canonical_records(
             "normalization_version": CANONICAL_BUILDER_VERSION,
             "title": _choose_value(records, fields=_TITLE_FIELDS) or None,
             "source_url": _source_url(selected) or None,
-            "rights_note": _choose_value(records, fields=("rights_note",)) or (
-                str(selected.get("rights_note") or "").strip()
-            ),
+            "rights_note": _choose_value(records, fields=("rights_note",))
+            or (str(selected.get("rights_note") or "").strip()),
             "coverage_state": coverage_state,
             "historical_only": historical_only,
             "provenance": {
@@ -551,7 +591,14 @@ def build_nz_gazette_canonical_records(
                 "group_value": group_key[1],
                 "source_ids": [str(record.get("source_id") or "") for record in records],
                 "supporting_source_count": len(records),
-                "exact_content_match": len({_source_content_hash(record) for record in records if _source_content_hash(record)}) <= 1,
+                "exact_content_match": len(
+                    {
+                        _source_content_hash(record)
+                        for record in records
+                        if _source_content_hash(record)
+                    }
+                )
+                <= 1,
                 "confidence": confidence,
                 "historical_only": historical_only,
                 "conflict_count": len(conflicts),
@@ -607,7 +654,10 @@ def build_nz_gazette_canonical_review(
             missing_canonical_id += 1
         if not str(record.get("rights_note") or "").strip():
             missing_rights += 1
-        if not isinstance(record.get("supporting_sources"), list) or not record["supporting_sources"]:
+        if (
+            not isinstance(record.get("supporting_sources"), list)
+            or not record["supporting_sources"]
+        ):
             missing_supporting_sources += 1
         provenance = record.get("provenance")
         if not isinstance(provenance, dict):
@@ -615,7 +665,10 @@ def build_nz_gazette_canonical_review(
         if record.get("conflicts"):
             for conflict in record["conflicts"]:
                 key = (str(record.get("canonical_id") or ""), str(conflict.get("field_name") or ""))
-                if conflict.get("resolution_state") not in {"reviewed", "accepted"} and key not in conflict_decision_ids:
+                if (
+                    conflict.get("resolution_state") not in {"reviewed", "accepted"}
+                    and key not in conflict_decision_ids
+                ):
                     unresolved_conflicts += 1
 
     ok = not any(
@@ -656,7 +709,9 @@ def build_nz_gazette_canonical_coverage_report(
     comparison_report: Mapping[str, Any],
     review_report: Mapping[str, Any],
 ) -> dict[str, Any]:
-    confidence_counts = Counter(str(record.get("confidence") or "unknown") for record in canonical_records)
+    confidence_counts = Counter(
+        str(record.get("confidence") or "unknown") for record in canonical_records
+    )
     canonical_source_counts = Counter(
         str(record.get("canonical_source") or "") for record in canonical_records
     )
@@ -668,8 +723,12 @@ def build_nz_gazette_canonical_coverage_report(
         "matched_record_count": int(comparison_report.get("matched_record_count") or 0),
         "unmatched_record_count": int(comparison_report.get("unmatched_record_count") or 0),
         "conflicting_record_count": int(comparison_report.get("conflicting_record_count") or 0),
-        "historical_only_record_count": int(comparison_report.get("historical_only_record_count") or 0),
-        "low_confidence_record_count": int(comparison_report.get("low_confidence_record_count") or 0),
+        "historical_only_record_count": int(
+            comparison_report.get("historical_only_record_count") or 0
+        ),
+        "low_confidence_record_count": int(
+            comparison_report.get("low_confidence_record_count") or 0
+        ),
         "confidence_counts": dict(sorted(confidence_counts.items())),
         "canonical_source_counts": dict(sorted(canonical_source_counts.items())),
         "review_ok": bool(review_report.get("ok")),
@@ -679,7 +738,11 @@ def build_nz_gazette_canonical_coverage_report(
         json.dumps(coverage, sort_keys=True, ensure_ascii=False)
     )
     coverage["manifest_sha256"] = sha256_text(
-        json.dumps({k: v for k, v in coverage.items() if k not in {"content_sha256", "manifest_sha256"}}, sort_keys=True, ensure_ascii=False)
+        json.dumps(
+            {k: v for k, v in coverage.items() if k not in {"content_sha256", "manifest_sha256"}},
+            sort_keys=True,
+            ensure_ascii=False,
+        )
     )
     return coverage
 
@@ -735,7 +798,9 @@ def export_nz_gazette_canonical_layer(
     if not source_dirs:
         raise RuntimeError("At least one source archive directory is required")
 
-    decision_records = read_jsonl(decisions_path) if decisions_path and decisions_path.exists() else []
+    decision_records = (
+        read_jsonl(decisions_path) if decisions_path and decisions_path.exists() else []
+    )
     comparison = build_nz_gazette_canonical_records(
         source_dirs,
         decisions=decision_records,

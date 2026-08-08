@@ -164,7 +164,9 @@ def test_build_gazette_freshness_report_writes_combined_and_source_artifacts(
     tmp_path: Path, monkeypatch
 ) -> None:
     official_feed = tmp_path / "official.xml"
-    official_feed.write_text("<?xml version='1.0'?><rss version='2.0'><channel></channel></rss>", encoding="utf-8")
+    official_feed.write_text(
+        "<?xml version='1.0'?><rss version='2.0'><channel></channel></rss>", encoding="utf-8"
+    )
 
     official_rows = [
         {

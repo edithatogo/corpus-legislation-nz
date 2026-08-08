@@ -309,8 +309,7 @@ def _normalized_record(
     return {
         key: value
         for key, value in normalized.items()
-        if (value is not None and value != "")
-        or key in {"description", "source_manifest_sha256"}
+        if (value is not None and value != "") or key in {"description", "source_manifest_sha256"}
     }
 
 
@@ -565,12 +564,16 @@ def build_digitalnz_gazette_review(
         and not row.get("extraction", {}).get("original_source_url")
     ]
     missing_landing_url = [
-        row["stable_id"] for row in source_records if not row.get("extraction", {}).get("landing_url")
+        row["stable_id"]
+        for row in source_records
+        if not row.get("extraction", {}).get("landing_url")
     ]
     missing_ids = [row["stable_id"] for row in source_records if not row.get("source_local_id")]
     metadata_only = [row["stable_id"] for row in normalized_records if not row.get("description")]
     text_bearing = [row["stable_id"] for row in normalized_records if row.get("description")]
-    missing_manifest_hash = not manifest.get("manifest_sha256") or not manifest.get("content_sha256")
+    missing_manifest_hash = not manifest.get("manifest_sha256") or not manifest.get(
+        "content_sha256"
+    )
     page_mismatch = len(page_summaries) != int(manifest.get("page_count") or 0)
     count_mismatch = (
         len(source_records) != int(manifest.get("raw_record_count") or 0)
@@ -717,14 +720,14 @@ def export_digitalnz_gazette_source(
             raw_source_records.append(raw_record)
             normalized_records.append(normalized)
 
-        page_summary = _page_summary(
-            next_page, raw_page_path, page_meta, len(raw_results)
-        )
+        page_summary = _page_summary(next_page, raw_page_path, page_meta, len(raw_results))
         page_summaries.append(page_summary)
 
         next_page += 1
         completed_pages.add(page_summary["page_number"])
-        reached_limit = plan["max_pages"] is not None and len(page_summaries) >= int(plan["max_pages"])
+        reached_limit = plan["max_pages"] is not None and len(page_summaries) >= int(
+            plan["max_pages"]
+        )
         exhausted = len(raw_results) == 0
         if total_result_count and len(normalized_records) >= total_result_count:
             exhausted = True
@@ -764,7 +767,9 @@ def export_digitalnz_gazette_source(
             "query_sha256": plan["query_sha256"],
             "next_page": next_page,
             "completed_pages": sorted(completed_pages),
-            "last_page": page_summaries_sorted[-1]["page_number"] if page_summaries_sorted else None,
+            "last_page": page_summaries_sorted[-1]["page_number"]
+            if page_summaries_sorted
+            else None,
             "last_page_retrieved_at_utc": page_summaries_sorted[-1]["retrieved_at_utc"]
             if page_summaries_sorted
             else None,
@@ -806,7 +811,9 @@ def export_digitalnz_gazette_source(
         "coverage_warning": review["coverage_warning"],
     }
     coverage["content_sha256"] = sha256_text(_stable_json(coverage))
-    coverage["manifest_sha256"] = sha256_text(_stable_json({k: v for k, v in coverage.items() if k != "manifest_sha256"}))
+    coverage["manifest_sha256"] = sha256_text(
+        _stable_json({k: v for k, v in coverage.items() if k != "manifest_sha256"})
+    )
 
     write_json(validation_path, review)
     write_json(coverage_path, coverage)

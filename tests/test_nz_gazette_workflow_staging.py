@@ -5,10 +5,7 @@ from pathlib import Path
 import yaml
 
 WORKFLOW_PATH = (
-    Path(__file__).resolve().parents[1]
-    / ".github"
-    / "workflows"
-    / "nz_gazette_archive_staging.yml"
+    Path(__file__).resolve().parents[1] / ".github" / "workflows" / "nz_gazette_archive_staging.yml"
 )
 DOC_PATH = Path(__file__).resolve().parents[1] / "docs" / "nz_gazette_workflow_staging.md"
 

@@ -197,7 +197,11 @@ def _combine_observations(
                 status = "unchanged"
 
         previous = previous_lookup.get(key)
-        first_seen_at = str(previous.get("first_seen_at_utc") or observation.retrieved_at_utc) if previous else observation.retrieved_at_utc
+        first_seen_at = (
+            str(previous.get("first_seen_at_utc") or observation.retrieved_at_utc)
+            if previous
+            else observation.retrieved_at_utc
+        )
         last_seen_at = observation.retrieved_at_utc
         record = {
             "schema_version": "1.0",
@@ -279,8 +283,12 @@ def _combine_observations(
         source_id, item_id = key
         source_tier = str(previous.get("source_tier") or _source_tier(source_id))
         missing_status = "deleted" if source_id == DIGITALNZ_GAZETTE_SOURCE_ID else "withdrawn"
-        first_seen_at = str(previous.get("first_seen_at_utc") or previous.get("retrieved_at_utc") or "")
-        last_seen_at = str(previous.get("last_seen_at_utc") or previous.get("retrieved_at_utc") or "")
+        first_seen_at = str(
+            previous.get("first_seen_at_utc") or previous.get("retrieved_at_utc") or ""
+        )
+        last_seen_at = str(
+            previous.get("last_seen_at_utc") or previous.get("retrieved_at_utc") or ""
+        )
         record = {
             "schema_version": "1.0",
             "source_id": source_id,
