@@ -1,0 +1,186 @@
+name: Target bounded live canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmed_execution:
+        description: "Confirm one five-work live revalidation from proven state"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: target-bounded-live-canary
+  cancel-in-progress: false
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      TARGET_COMMIT: d9abc05fa648f8b2049fb443477bc8f97691cf7f
+      PRIOR_RUN_ID: "32477973065"
+      PRIOR_ARTIFACT: target-legislation-one-batch-32477973065
+      PRIOR_MANIFEST_SHA256: a32dc371a1a47ae30a4afd58a9cbde2a439f3536d7705eb776e0fa68b4cd16db
+      PRIOR_INVENTORY_SHA256: 2abf0d8b76cc60e9b4e442724987b81848698dbdd98e56266f8726d468b33eaf
+      BATCH_ID: bounded-live-canary-0001
+      BATCH_PATH: seeds/reviewed/bounded-live-canary-0001.txt
+      BATCH_SHA256: ec71247b90e84d8c66f5d7fbd6283a9869abd647194feab22a4bc62510587743
+      BATCH_SIZE: "5"
+    steps:
+      - name: Check out donor canary scope
+        uses: actions/checkout@v6
+
+      - name: Check out exact target implementation
+        uses: actions/checkout@v6
+        with:
+          repository: edithatogo/archive-govt-nz
+          ref: ${{ env.TARGET_COMMIT }}
+          path: target
+          persist-credentials: false
+
+      - name: Download proven one-batch state
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PRIOR_ARTIFACT }}
+          path: prior-state
+          github-token: ${{ github.token }}
+          run-id: ${{ env.PRIOR_RUN_ID }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Authenticate prior state and execution authority
+        env:
+          CONFIRMED_EXECUTION: ${{ inputs.confirmed_execution }}
+          LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMED_EXECUTION" = "true"
+          test -n "$LEGISLATION_API_KEY"
+          test "$(git -C target rev-parse HEAD)" = "$TARGET_COMMIT"
+          test "$(wc -l < "$BATCH_PATH" | tr -d ' ')" = "$BATCH_SIZE"
+          echo "$BATCH_SHA256  $BATCH_PATH" | sha256sum --check --strict
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path("prior-state/target/build/legislation-state")
+          manifest = json.loads((root / "manifest.json").read_text())
+          checkpoint = json.loads((root / "checkpoint.json").read_text())
+          harvest = json.loads((root / "receipts/harvest.json").read_text())
+          reconciliation = json.loads(
+              (root / "receipts/reconciliation.json").read_text()
+          )
+          assert manifest["manifest_sha256"] == os.environ["PRIOR_MANIFEST_SHA256"]
+          assert manifest["discovered_inventory_sha256"] == os.environ["PRIOR_INVENTORY_SHA256"]
+          assert manifest["total_records"] == 500
+          assert checkpoint["metadata"]["manifest_sha256"] == os.environ["PRIOR_MANIFEST_SHA256"]
+          assert checkpoint["metadata"]["discovered_inventory_sha256"] == os.environ["PRIOR_INVENTORY_SHA256"]
+          assert checkpoint["total_records_preserved"] == 500
+          assert harvest["outcome"] == "changed" and harvest["state_committed"] is True
+          assert reconciliation["status"] == "passed"
+          assert reconciliation["mismatch_count"] == 0
+          PY
+          mkdir -p target/build
+          cp -R prior-state/target/build/legislation-state target/build/
+
+      - name: Install exact target dependencies
+        working-directory: target
+        run: uv sync --frozen
+
+      - name: Revalidate five exact works against the live service
+        id: harvest
+        working-directory: target
+        env:
+          LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set +e
+          uv run --locked python tools/run_legislation_harvest.py \
+            --source-set-config config/source-sets/legislation.yml \
+            --checkpoint-path build/legislation-state/checkpoint.json \
+            --manifest-path build/legislation-state/manifest.json \
+            --cas-path build/legislation-state/cas \
+            --receipt-path build/legislation-state/receipts/canary-harvest.json \
+            --batch-id "$BATCH_ID" \
+            --work-ids-file "../$BATCH_PATH" \
+            --max-works "$BATCH_SIZE" \
+            --force-resync
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Reconcile canary identities and cumulative state
+        id: reconciliation
+        working-directory: target
+        run: |
+          set +e
+          uv run --locked python tools/reconcile_one_legislation_batch.py \
+            --batch-id "$BATCH_ID" \
+            --batch-path "../$BATCH_PATH" \
+            --expected-batch-sha256 "$BATCH_SHA256" \
+            --manifest-path build/legislation-state/manifest.json \
+            --checkpoint-path build/legislation-state/checkpoint.json \
+            --cas-path build/legislation-state/cas \
+            --receipt-path build/legislation-state/receipts/canary-reconciliation.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Validate live canary receipts
+        id: receipt_validation
+        working-directory: target
+        run: |
+          set +e
+          uv run --locked python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("build/legislation-state/receipts")
+          harvest = json.loads((root / "canary-harvest.json").read_text())
+          reconciliation = json.loads((root / "canary-reconciliation.json").read_text())
+          assert harvest["force_resync"] is True
+          assert harvest["works_attempted"] == 5
+          assert harvest["outcome"] in {"changed", "no_change"}
+          assert harvest["state_committed"] is True
+          assert harvest["errors"] == []
+          assert reconciliation["status"] == "passed"
+          assert reconciliation["mismatch_count"] == 0
+          assert reconciliation["batch_work_ids_count"] == 5
+          assert reconciliation["manifest_total_records"] >= 500
+          PY
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload cumulative canary state and receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-legislation-live-canary-${{ github.run_id }}
+          path: |
+            target/build/legislation-state/
+            seeds/reviewed/bounded-live-canary-0001.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce fail-closed canary outcome
+        env:
+          HARVEST_EXIT_CODE: ${{ steps.harvest.outputs.exit_code }}
+          RECONCILIATION_EXIT_CODE: ${{ steps.reconciliation.outputs.exit_code }}
+          RECEIPT_VALIDATION_EXIT_CODE: ${{ steps.receipt_validation.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          test "$HARVEST_EXIT_CODE" = "0"
+          test "$RECONCILIATION_EXIT_CODE" = "0"
+          test "$RECEIPT_VALIDATION_EXIT_CODE" = "0"
