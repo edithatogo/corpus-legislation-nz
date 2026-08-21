@@ -1,0 +1,221 @@
+name: Target weekly legislation cycle
+
+on:
+  schedule:
+    - cron: "17 16 * * 0"
+  workflow_dispatch:
+    inputs:
+      confirmed_execution:
+        description: "Confirm one manual full-inventory weekly cycle"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: target-weekly-legislation-cycle
+  cancel-in-progress: false
+
+jobs:
+  weekly-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      TARGET_COMMIT: d9abc05fa648f8b2049fb443477bc8f97691cf7f
+      BOOTSTRAP_RUN_ID: "32487223314"
+      BOOTSTRAP_ARTIFACT: target-legislation-live-canary-32487223314
+      BATCH_PATH: seeds/reviewed/historical-work-ids-0001.txt
+      BATCH_SHA256: 59923176fa34796d7673a20b880af9abe5520fe484595edb220f2bbc0e3b33e7
+      BATCH_SIZE: "500"
+    steps:
+      - name: Check out donor inventory
+        uses: actions/checkout@v6
+
+      - name: Check out exact target implementation
+        uses: actions/checkout@v6
+        with:
+          repository: edithatogo/archive-govt-nz
+          ref: ${{ env.TARGET_COMMIT }}
+          path: target
+          persist-credentials: false
+
+      - name: Select and download latest verified continuation state
+        id: prior_state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            test "${{ inputs.confirmed_execution }}" = "true"
+          fi
+          prior_run_id=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow target_weekly_legislation_cycle.yml \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty')
+          if [ -n "$prior_run_id" ]; then
+            prior_artifact="target-legislation-weekly-$prior_run_id"
+          else
+            prior_run_id="$BOOTSTRAP_RUN_ID"
+            prior_artifact="$BOOTSTRAP_ARTIFACT"
+          fi
+          case "$prior_run_id" in (*[!0-9]*|'') exit 2;; esac
+          gh run download "$prior_run_id" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "$prior_artifact" \
+            --dir prior-state
+          echo "run_id=$prior_run_id" >> "$GITHUB_OUTPUT"
+          echo "artifact=$prior_artifact" >> "$GITHUB_OUTPUT"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Validate execution inputs and restore cumulative state
+        env:
+          LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$LEGISLATION_API_KEY"
+          test "$(git -C target rev-parse HEAD)" = "$TARGET_COMMIT"
+          test "$(wc -l < "$BATCH_PATH" | tr -d ' ')" = "$BATCH_SIZE"
+          echo "$BATCH_SHA256  $BATCH_PATH" | sha256sum --check --strict
+          test -f prior-state/target/build/legislation-state/manifest.json
+          test -f prior-state/target/build/legislation-state/checkpoint.json
+          test -d prior-state/target/build/legislation-state/cas/sha256
+          mkdir -p target/build
+          cp -R prior-state/target/build/legislation-state target/build/
+
+      - name: Install exact target dependencies
+        working-directory: target
+        run: uv sync --frozen
+
+      - name: Verify every incoming CAS object
+        working-directory: target
+        run: |
+          uv run --locked python tools/verify_object_store.py \
+            --root build/legislation-state/cas \
+            --output build/legislation-state/receipts/incoming-cas-verification.json
+          uv run --locked python - <<'PY'
+          import json
+          from pathlib import Path
+
+          receipt = json.loads(
+              Path("build/legislation-state/receipts/incoming-cas-verification.json").read_text()
+          )
+          assert receipt["object_count"] >= 500
+          assert receipt["verified"] == receipt["object_count"]
+          assert receipt["failed"] == 0
+          PY
+
+      - name: Revalidate complete reviewed inventory against live service
+        id: harvest
+        working-directory: target
+        env:
+          LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+          BATCH_ID: weekly-${{ github.run_id }}
+        run: |
+          set +e
+          uv run --locked python tools/run_legislation_harvest.py \
+            --source-set-config config/source-sets/legislation.yml \
+            --checkpoint-path build/legislation-state/checkpoint.json \
+            --manifest-path build/legislation-state/manifest.json \
+            --cas-path build/legislation-state/cas \
+            --receipt-path build/legislation-state/receipts/weekly-harvest.json \
+            --batch-id "$BATCH_ID" \
+            --work-ids-file "../$BATCH_PATH" \
+            --max-works "$BATCH_SIZE" \
+            --force-resync
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Reconcile weekly identities and cumulative state
+        id: reconciliation
+        working-directory: target
+        env:
+          BATCH_ID: weekly-${{ github.run_id }}
+        run: |
+          set +e
+          uv run --locked python tools/reconcile_one_legislation_batch.py \
+            --batch-id "$BATCH_ID" \
+            --batch-path "../$BATCH_PATH" \
+            --expected-batch-sha256 "$BATCH_SHA256" \
+            --manifest-path build/legislation-state/manifest.json \
+            --checkpoint-path build/legislation-state/checkpoint.json \
+            --cas-path build/legislation-state/cas \
+            --receipt-path build/legislation-state/receipts/weekly-reconciliation.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Validate weekly receipts
+        id: receipt_validation
+        working-directory: target
+        env:
+          PRIOR_STATE_RUN_ID: ${{ steps.prior_state.outputs.run_id }}
+          PRIOR_STATE_ARTIFACT: ${{ steps.prior_state.outputs.artifact }}
+        run: |
+          set +e
+          uv run --locked python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path("build/legislation-state/receipts")
+          harvest = json.loads((root / "weekly-harvest.json").read_text())
+          reconciliation = json.loads((root / "weekly-reconciliation.json").read_text())
+          assert harvest["force_resync"] is True
+          assert harvest["works_attempted"] == 500
+          assert harvest["outcome"] in {"changed", "no_change"}
+          assert harvest["state_committed"] is True
+          assert harvest["errors"] == []
+          assert reconciliation["status"] == "passed"
+          assert reconciliation["mismatch_count"] == 0
+          assert reconciliation["batch_work_ids_count"] == 500
+          assert reconciliation["manifest_total_records"] >= 500
+          lineage = {
+              "schema_version": "corpus-legislation-nz.weekly-state-lineage/v1",
+              "prior_run_id": int(os.environ["PRIOR_STATE_RUN_ID"]),
+              "prior_artifact": os.environ["PRIOR_STATE_ARTIFACT"],
+              "manifest_sha256": harvest["manifest_sha256"],
+              "discovered_works_count": harvest["discovered_works_count"],
+          }
+          (root / "weekly-state-lineage.json").write_text(
+              json.dumps(lineage, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload cumulative weekly state and receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-legislation-weekly-${{ github.run_id }}
+          path: |
+            target/build/legislation-state/
+            seeds/reviewed/historical-work-ids-0001.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce fail-closed weekly outcome
+        env:
+          HARVEST_EXIT_CODE: ${{ steps.harvest.outputs.exit_code }}
+          RECONCILIATION_EXIT_CODE: ${{ steps.reconciliation.outputs.exit_code }}
+          RECEIPT_VALIDATION_EXIT_CODE: ${{ steps.receipt_validation.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          test "$HARVEST_EXIT_CODE" = "0"
+          test "$RECONCILIATION_EXIT_CODE" = "0"
+          test "$RECEIPT_VALIDATION_EXIT_CODE" = "0"
