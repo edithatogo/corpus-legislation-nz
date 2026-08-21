@@ -1,0 +1,120 @@
+name: Target one-batch reconciliation
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmed_execution:
+        description: "Confirm one artifact-only target batch execution"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: target-one-batch-reconciliation
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      TARGET_COMMIT: 8f4f6fa2459f4991eba95499cf69360045b10b27
+      BATCH_ID: historical-work-ids-0001
+      BATCH_PATH: seeds/reviewed/historical-work-ids-0001.txt
+      BATCH_SHA256: 59923176fa34796d7673a20b880af9abe5520fe484595edb220f2bbc0e3b33e7
+      BATCH_SIZE: "500"
+    steps:
+      - name: Check out donor batch
+        uses: actions/checkout@v6
+
+      - name: Check out exact target implementation
+        uses: actions/checkout@v6
+        with:
+          repository: edithatogo/archive-govt-nz
+          ref: ${{ env.TARGET_COMMIT }}
+          path: target
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Validate authority, secret, target, and donor batch
+        env:
+          CONFIRMED_EXECUTION: ${{ inputs.confirmed_execution }}
+          LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMED_EXECUTION" = "true"
+          test -n "$LEGISLATION_API_KEY"
+          test "$(git -C target rev-parse HEAD)" = "$TARGET_COMMIT"
+          test "$(wc -l < "$BATCH_PATH" | tr -d ' ')" = "$BATCH_SIZE"
+          echo "$BATCH_SHA256  $BATCH_PATH" | sha256sum --check --strict
+
+      - name: Install exact target dependencies
+        working-directory: target
+        run: uv sync --frozen
+
+      - name: Execute one exact service-backed batch
+        id: harvest
+        working-directory: target
+        env:
+          LEGISLATION_API_KEY: ${{ secrets.NZ_LEGISLATION_API_KEY }}
+        run: |
+          set +e
+          uv run --locked python tools/run_legislation_harvest.py \
+            --source-set-config config/source-sets/legislation.yml \
+            --checkpoint-path build/legislation-state/checkpoint.json \
+            --manifest-path build/legislation-state/manifest.json \
+            --cas-path build/legislation-state/cas \
+            --receipt-path build/legislation-state/receipts/harvest.json \
+            --batch-id "$BATCH_ID" \
+            --work-ids-file "../$BATCH_PATH" \
+            --max-works "$BATCH_SIZE"
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Reconcile the explicit batch against target state
+        id: reconciliation
+        working-directory: target
+        run: |
+          set +e
+          uv run --locked python tools/reconcile_one_legislation_batch.py \
+            --batch-id "$BATCH_ID" \
+            --batch-path "../$BATCH_PATH" \
+            --expected-batch-sha256 "$BATCH_SHA256" \
+            --manifest-path build/legislation-state/manifest.json \
+            --checkpoint-path build/legislation-state/checkpoint.json \
+            --cas-path build/legislation-state/cas \
+            --receipt-path build/legislation-state/receipts/reconciliation.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload bounded target state and receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: target-legislation-one-batch-${{ github.run_id }}
+          path: |
+            target/build/legislation-state/
+            seeds/reviewed/historical-work-ids-0001.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce fail-closed outcome
+        env:
+          HARVEST_EXIT_CODE: ${{ steps.harvest.outputs.exit_code }}
+          RECONCILIATION_EXIT_CODE: ${{ steps.reconciliation.outputs.exit_code }}
+        run: |
+          set -euo pipefail
+          test "$HARVEST_EXIT_CODE" = "0"
+          test "$RECONCILIATION_EXIT_CODE" = "0"
