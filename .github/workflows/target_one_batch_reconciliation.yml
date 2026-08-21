@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
-      TARGET_COMMIT: f1aefdc18c987f018567872c6caea0039c7328b6
+      TARGET_COMMIT: e67a3e3772b216be8f08c52753f8e2b7a6cc3ef3
       BATCH_ID: historical-work-ids-0001
       BATCH_PATH: seeds/reviewed/historical-work-ids-0001.txt
       BATCH_SHA256: 59923176fa34796d7673a20b880af9abe5520fe484595edb220f2bbc0e3b33e7
