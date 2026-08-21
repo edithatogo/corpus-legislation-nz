@@ -7,7 +7,7 @@ WORKFLOW = Path(".github/workflows/target_one_batch_reconciliation.yml")
 
 def test_target_one_batch_bridge_is_exact_and_artifact_only() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
-    assert "a2dd97ac6112e9985a6f19404b24a9f8199e5074" in text
+    assert "6b13c523056fe6998bed7a53655fa7600d8d67a9" in text
     assert "59923176fa34796d7673a20b880af9abe5520fe484595edb220f2bbc0e3b33e7" in text
     assert "--work-ids-file" in text
     assert "working-directory: target" in text
