@@ -1,242 +1,48 @@
-# NZ Legislation Corpus Pipeline
+# corpus-legislation-nz — archived migration source
 
-Low-maintenance, API-first pipeline for an evolving New Zealand legislation corpus.
+> [!IMPORTANT]
+> This repository is archived and frozen. The canonical repository for ongoing
+> New Zealand government archive preservation work is
+> [`edithatogo/archive-govt-nz`](https://github.com/edithatogo/archive-govt-nz).
 
-```mermaid
-flowchart TD
-  A[Official NZ Legislation API] --> B[nzlc sync]
-  B --> C[Normalized records.jsonl]
-  B --> D[Raw XML/HTML provenance]
-  C --> E[Optimized Parquet shards]
-  D --> F[Manifest + checksums]
-  E --> F
-  F --> G[Hugging Face Dataset / Xet live hub]
-  G --> H[Annual archive builder]
-  H --> I[Zenodo draft / DOI snapshot]
-```
+The final operational donor commit is
+[`b40587f1b1aec7356a0f623916fcc8212397d283`](https://github.com/edithatogo/corpus-legislation-nz/commit/b40587f1b1aec7356a0f623916fcc8212397d283),
+committed on 21 August 2026. The repository was subsequently archived. Its Git
+history remains public as migration provenance; new runtime development belongs
+in `archive-govt-nz`.
 
-## Design goals
+## Public dataset and citation identities
 
-- Keep GitHub code-only: workflows, source, tests, docs, schemas, and tiny fixtures.
-- Keep the live corpus on Hugging Face Datasets, using Xet-aware uploads.
-- Store user-facing data as stable, partitioned Parquet plus provenance files.
-- Avoid upload churn by preserving unchanged records and comparing `content_sha256`.
-- Keep Zenodo annual snapshots draft-only unless explicitly published.
-- Make all workflows idempotent and safe to rerun.
+- Living Hugging Face dataset: [`edithatogo/corpus-legislation-nz`](https://huggingface.co/datasets/edithatogo/corpus-legislation-nz)
+- Historical Hugging Face dataset: [`edithatogo/corpus-legislation-nz-historical`](https://huggingface.co/datasets/edithatogo/corpus-legislation-nz-historical)
+- Zenodo concept DOI: [`10.5281/zenodo.20592539`](https://doi.org/10.5281/zenodo.20592539)
+- 2026 Zenodo version DOI: [`10.5281/zenodo.20592540`](https://doi.org/10.5281/zenodo.20592540)
+- Canonical source and preservation authority: [`edithatogo/archive-govt-nz`](https://github.com/edithatogo/archive-govt-nz)
 
-## Fresh GitHub repository bootstrap
+For a fixed citation, use the relevant immutable Zenodo version DOI and its
+record metadata. For current dataset access, cite the exact Hugging Face commit
+revision in addition to the dataset identity. Migration and restoration
+evidence is maintained in the canonical repository under
+[`evidence/migrations/corpus-legislation-nz/`](https://github.com/edithatogo/archive-govt-nz/tree/main/evidence/migrations/corpus-legislation-nz).
 
-This project should be pushed to a new repository. After installing and authenticating the GitHub CLI:
+The separate [`edithatogo/legislation`](https://github.com/edithatogo/legislation)
+product is independent. It was not absorbed into this migration and this redirect
+does not change its authority or release history.
 
-```bash
-gh auth login
+## Licence and source-content boundary
 
-export REPO_OWNER=edithatogo
-export REPO_NAME=corpus-legislation-nz
-export REPO_VISIBILITY=public
-export HF_REPO_ID=edithatogo/corpus-legislation-nz
-export ARCHIVE_CREATORS_JSON='[{"name":"Your Name","affiliation":"Your Institution"}]'
+Repository software retains its applicable open-source licence and attribution.
+Legislation, website presentation, incorporated material, archives, and other
+source content retain their own copyright, licence, access, provenance, and
+reuse conditions. Archiving this Git history, linking public datasets, or moving
+canonical development does **not** relicense all source content and does not by
+itself prove complete legislative coverage.
 
-# Optional but recommended before first push; skipped if unset.
-export NZ_LEGISLATION_API_KEY='...'
-export HF_TOKEN='...'
-export ZENODO_TOKEN='...'
+## Restore
 
-./scripts/bootstrap_github.sh --owner "$REPO_OWNER" --repo "$REPO_NAME" --public --protect-production
-```
-
-Aliases are provided for older docs:
-
-```bash
-./scripts/bootstrap_github_repo.sh --owner edithatogo --repo corpus-legislation-nz --public
-./scripts/setup_github_repo.sh --owner edithatogo --repo corpus-legislation-nz --public
-```
-
-The bootstrap script creates or updates the fresh repository, pushes this code, sets GitHub Actions variables, sets secrets from environment variables, and creates `zenodo-sandbox` and `zenodo-production` environments.
-
-See `docs/GITHUB_SETUP.md` and `docs/github_setup.md`.
-
-## Hugging Face dataset repo
-
-Create or confirm the live dataset repository:
-
-```bash
-HF_TOKEN='...' ./scripts/create_huggingface_dataset_repo.sh edithatogo/corpus-legislation-nz
-```
-
-## Required GitHub Actions secrets
-
-```text
-NZ_LEGISLATION_API_KEY
-HF_TOKEN
-ZENODO_TOKEN
-ZENODO_SANDBOX_TOKEN  # optional; use when sandbox and production Zenodo tokens differ
-```
-
-## Core repository variables
-
-```text
-HF_REPO_ID
-DATA_DIR
-NZLC_SEARCH_TERMS
-NZLC_SEARCH_FIELD
-NZLC_SEARCH_SORT_BY
-NZLC_LEGISLATION_TYPES
-ARCHIVE_TITLE
-ARCHIVE_CREATORS_JSON
-ARCHIVE_LICENSE
-ARCHIVE_PUBLISH
-ZENODO_API_URL
-ZENODO_SANDBOX_API_URL
-ZENODO_DEPOSITION_ID   # optional after first production Zenodo record
-```
-
-## Local install
-
-```bash
-uv sync --extra dev --frozen
-uv run nzlc doctor
-```
-
-## Local no-network smoke test
-
-```bash
-./scripts/first_run_local.sh
-```
-
-Or manually:
-
-```bash
-ARCHIVE_CREATORS_JSON='[{"name":"Test Maintainer"}]' uv run nzlc smoke-fixture --output-dir data
-NZLC_OUTPUT_DIR=data uv run nzlc validate
-NZLC_OUTPUT_DIR=data uv run nzlc manifest
-NZLC_OUTPUT_DIR=data uv run nzlc coverage-report
-```
-
-## Live sync
-
-```bash
-export NZ_LEGISLATION_API_KEY='...'
-export NZLC_SEARCH_TERMS='act,bill,regulation,order,notice'
-export HF_TOKEN='...'
-export HF_REPO_ID='edithatogo/corpus-legislation-nz'
-
-uv run nzlc sync --latest-only
-uv run nzlc validate
-uv run nzlc manifest
-uv run nzlc hf-upload
-```
-
-For the first manual bootstrap run, keep the sync conservative:
-
-```bash
-export NZLC_MIN_SECONDS_BETWEEN_REQUESTS=1.0
-uv run nzlc sync --seed-work-ids seeds/work_ids.txt --max-works 5
-```
-
-For deterministic bootstraps, use seed work IDs:
-
-```bash
-uv run nzlc sync --seed-work-ids seeds/work_ids.txt
-```
-
-For first-bootstrap batching, resume, disk budget, and cleanup rules, see `docs/runtime_capacity_runbook.md`.
-For the full-corpus workflow sequence and operator inputs, see
-`docs/full_corpus_operations.md`.
-
-Search-based discovery is useful, but do not claim complete coverage until it is reconciled against a seed inventory or official bulk source.
-
-## Coverage, licensing, and citation
-
-Current coverage status: not proven complete. The pipeline is API-first and currently search-based unless a provenance-backed `seeds/work_ids.txt`, official inventory, or documented reconciliation is supplied.
-
-The repository code is licensed under this repository's code license. The legislation text and source material are not relicensed by this project. The official NZ Legislation copyright page should be treated as the source for Crown copyright and attribution terms for legislation website material. Incorporated-by-reference material, third-party material, agency website text, logos, emblems, and non-legislative linked content may have separate rights or restrictions. See `NOTICE.md` and `docs/zenodo_rights_metadata_zenodraft.md` for the Zenodo archive rights-scope note.
-
-For live/current use, cite the Hugging Face dataset repository together with the manifest hash from `data/manifests/latest_manifest.json`. For academic or fixed-version citation, cite the Zenodo snapshot DOI `10.5281/zenodo.20592540`.
-
-For downstream querying and field definitions, see `docs/researcher_quickstart.md` and `docs/data_dictionary.md`.
-For validation gates, schema versioning, warning severity, and coverage history, see `docs/schema_governance.md`.
-For the public launch gate and release-note template, see `docs/public_launch_decision.md` and `docs/public_launch_release_note.md`.
-
-## Corpus family naming
-
-This project is part of the NZ corpus-family roadmap. The preferred systematic
-label for future metadata and planning is `corpus-nz-legislation`; the current
-published GitHub and Hugging Face surfaces intentionally remain
-`corpus-legislation-nz` until a migration plan protects existing citations and
-redirects. The sibling Hansard corpus is `corpus-nz-hansard`.
-
-See `docs/naming_publication_alignment.md` and
-`docs/corpus-family-design.md`.
-
-## Annual Zenodo archive
-
-Production draft first:
-
-```bash
-export ZENODO_API_URL=https://zenodo.org/api
-export ZENODO_TOKEN='...'
-export ARCHIVE_CREATORS_JSON='[{"name":"Your Name"}]'
-export ARCHIVE_LICENSE=cc-by-4.0
-
-uv run nzlc archive --year 2026 --output-dir dist/archive
-uv run nzlc zenodo-upload --year 2026 --archive-dir dist/archive
-```
-
-Production publication should use the GitHub workflow with `use_sandbox=false` and `publish=true`, after reviewing a production draft and approving through the `zenodo-production` environment.
-
-Zenodo metadata and future `zenodraft` migration policy are documented in
-`docs/zenodo_rights_metadata_zenodraft.md`. The current workflow remains
-draft-first by default; `zenodraft deposition publish` must stay separate from
-ordinary upload/update steps and behind protected environment approval.
-
-## Workflows
-
-- `hf_sync.yml`: scheduled/manual live corpus sync to Hugging Face.
-- `init_historical_hf_shell.yml`: manual initialization of the historical
-  Hugging Face dataset shell.
-- `historical_batch_review.yml`: manual GitHub-hosted batch fan-out for
-  reviewed historical no-upload validation.
-- `historical_hf_upload.yml`: manual historical upload and review path.
-- `historical_seed_reconciliation.yml`: historical seed comparison before
-  promotion.
-- `full_corpus_bootstrap.yml`: full-corpus batch bootstrap and serial fallback.
-- `full_corpus_hf_upload.yml`: full-corpus Hugging Face upload and review path.
-- `monthly_full_reconciliation.yml`: monthly seed reconciliation and optional
-  full sync/upload review path.
-- `annual_zenodo_archive.yml`: annual production draft archive and optional production publish.
-- `tests.yml`: unit tests, shell syntax checks, fixture sync, validation, and manifest generation.
-- `doctor.yml`: non-destructive weekly connectivity/config check.
-- `codeql.yml` and `scorecard.yml`: optional low-touch security/supply-chain checks.
-
-## Maintenance checklist
-
-Weekly or monthly:
-
-- Check GitHub Actions summaries.
-- Review Dependabot PRs.
-- Inspect `manifests/latest_changes.json` on Hugging Face.
-- Review `coverage_report.json` for missing text, missing XML URLs, and ephemeral IDs.
-
-Annually:
-
-- Run a Zenodo production draft archive with `publish=false`.
-- Review metadata, licensing, and citation text.
-- Publish the production Zenodo snapshot only after approval.
-- Update DOI references in `CITATION.cff` and `DATASET_CARD.md`.
-
-## Caveats
-
-This implementation is conservative. It uses the official API first, but complete corpus coverage may require a curated seed list or official bulk inventory if there is no complete modified-since endpoint. Verify source licensing, attribution, and third-party material before redistribution or public release.
-
-## Hugging Face setup shortcut
-
-Create and initialise the live dataset repository:
-
-```bash
-export HF_TOKEN="hf_..."
-export HF_REPO_ID="edithatogo/corpus-legislation-nz"
-./scripts/create_huggingface_dataset_repo.sh "$HF_REPO_ID"
-```
-
-See `docs/HUGGINGFACE_SETUP.md` for details.
+Use the canonical Prompt 19 bundle-verification receipt and its exact SHA-256
+before restoring a preservation bundle. Verify with Git-native `git bundle
+verify`, clone into a new isolated directory, run strict object-graph checks,
+and compare the bundle's advertised refs with the receipt. Do not treat a draft
+release, an expiring Actions artifact, or a successful clone alone as durable or
+complete preservation evidence.
